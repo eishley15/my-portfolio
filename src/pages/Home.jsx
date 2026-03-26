@@ -65,7 +65,7 @@ export default function Home() {
           muted
           loop
           playsInline
-          src="/reel.mp4"
+          src="https://pub-e86b35011c934cbdb04427950905ae44.r2.dev/kylepayawal-portfolio/reel.mp4"
           style={{
             position: "absolute",
             inset: 0,
