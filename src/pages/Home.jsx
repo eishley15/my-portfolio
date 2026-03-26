@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useFeaturedPortfolio, usePortfolio } from "../hooks/usePortfolio";
 
@@ -602,7 +602,7 @@ export default function Home() {
           ).map((item, i) => (
             <Link
               key={item.id}
-              to="/work"
+              to={`/work?category=${encodeURIComponent(item.category?.toLowerCase())}`}
               style={{
                 display: "block",
                 aspectRatio: i === 0 ? "16/10" : "4/3",

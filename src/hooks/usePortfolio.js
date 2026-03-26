@@ -48,23 +48,41 @@ export function usePortfolio(category = null) {
 
       const { data } = await supabase
         .from('portfolio')
-        .select('category, url')
+        .select('category, url, type')
         .order('sort_order', { ascending: true })
 
       if (data) {
         const categoryMap = {}
+        
+        // Initialize categories and count items
         data.forEach(item => {
           if (!categoryMap[item.category]) {
             categoryMap[item.category] = {
               name: item.category,
               count: 0,
-              thumbnail: item.url,
-              hasVideo: true
+              firstItem: null,
+              firstImage: null
             }
           }
           categoryMap[item.category].count += 1
+          
+          // Track first item and first image
+          if (!categoryMap[item.category].firstItem) {
+            categoryMap[item.category].firstItem = item.url
+          }
+          if (!categoryMap[item.category].firstImage && (item.type === 'image' || !item.type)) {
+            categoryMap[item.category].firstImage = item.url
+          }
         })
+        
+        // Set thumbnail to first image if available, otherwise first item
         const categoryList = Object.values(categoryMap)
+          .map(cat => ({
+            ...cat,
+            thumbnail: cat.firstImage || cat.firstItem
+          }))
+          .filter(cat => cat.thumbnail)
+          
         setCategories(categoryList)
         categoriesCache.data = categoryList
         categoriesCache.fetched = true
@@ -117,10 +135,21 @@ export function useFeaturedPortfolio(limit = 8) {
       const { data, error } = await supabase
         .from('portfolio')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit)
+        .order('sort_order', { ascending: true })
 
-      if (!error) setItems(data || [])
+      if (!error && data) {
+        // Group by category and take first item from each
+        const categoryMap = {}
+        data.forEach(item => {
+          if (!categoryMap[item.category]) {
+            categoryMap[item.category] = item
+          }
+        })
+        
+        // Convert to array and limit to specified number
+        const categoryItems = Object.values(categoryMap).slice(0, limit)
+        setItems(categoryItems)
+      }
       setLoading(false)
     }
     fetch()
