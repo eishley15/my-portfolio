@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 // Client-side cache
 const portfolioCache = {}
 const categoriesCache = { data: null, fetched: false }
+const featuredCache = { data: null, fetched: false }
 
 export function usePortfolio(category = null) {
   const [items, setItems] = useState([])
@@ -46,43 +47,28 @@ export function usePortfolio(category = null) {
         return
       }
 
-      const { data } = await supabase
+      // Only fetch category counts and metadata, not full portfolio
+      const { data, error } = await supabase
         .from('portfolio')
-        .select('category, url, type')
+        .select('category', { count: 'exact' })
         .order('sort_order', { ascending: true })
 
-      if (data) {
+      if (!error && data) {
         const categoryMap = {}
         
-        // Initialize categories and count items
+        // Count items per category
         data.forEach(item => {
           if (!categoryMap[item.category]) {
             categoryMap[item.category] = {
               name: item.category,
               count: 0,
-              firstItem: null,
-              firstImage: null
+              thumbnail: null
             }
           }
           categoryMap[item.category].count += 1
-          
-          // Track first item and first image
-          if (!categoryMap[item.category].firstItem) {
-            categoryMap[item.category].firstItem = item.url
-          }
-          if (!categoryMap[item.category].firstImage && (item.type === 'image' || !item.type)) {
-            categoryMap[item.category].firstImage = item.url
-          }
         })
         
-        // Set thumbnail to first image if available, otherwise first item
         const categoryList = Object.values(categoryMap)
-          .map(cat => ({
-            ...cat,
-            thumbnail: cat.firstImage || cat.firstItem
-          }))
-          .filter(cat => cat.thumbnail)
-          
         setCategories(categoryList)
         categoriesCache.data = categoryList
         categoriesCache.fetched = true
@@ -132,10 +118,19 @@ export function useFeaturedPortfolio(limit = 8) {
 
   useEffect(() => {
     async function fetch() {
+      // Check cache first
+      const cacheKey = `featured_${limit}`
+      if (portfolioCache[cacheKey]) {
+        setItems(portfolioCache[cacheKey])
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('portfolio')
         .select('*')
         .order('sort_order', { ascending: true })
+        .limit(50) // Only fetch first 50 to find one per category
 
       if (!error && data) {
         // Group by category and take first item from each
@@ -149,6 +144,7 @@ export function useFeaturedPortfolio(limit = 8) {
         // Convert to array and limit to specified number
         const categoryItems = Object.values(categoryMap).slice(0, limit)
         setItems(categoryItems)
+        portfolioCache[cacheKey] = categoryItems
       }
       setLoading(false)
     }

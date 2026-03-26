@@ -64,7 +64,7 @@ export default function About() {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative overflow-hidden">
+            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative overflow-hidden w-full max-h-[580px]">
               <LazyImage
                 src="/kylepayawalprofile.webp"
                 alt="Kyle Payawal"
@@ -94,7 +94,7 @@ export default function About() {
             <h1 className="font-display text-[clamp(56px,8vw,96px)] leading-[0.88] mb-2">
               KYLE
             </h1>
-            <h2 className="italic-accent text-[clamp(48px,7vw,80px)] mb-8">
+            <h2 className="italic-accent text-[clamp(48px,7vw,80px)] leading-[0.6] mb-8">
               Payawal
             </h2>
 

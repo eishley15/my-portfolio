@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Download, Lock, Play, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
+import JSZip from "jszip";
 
 // Lazy load image component
 function LazyImage({ src, alt, className }) {
@@ -44,6 +45,7 @@ export default function Gallery() {
   const [error, setError] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
   const [videoModal, setVideoModal] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   // Call hook unconditionally at top level
   const { photos, videos, loading } = useClientGallery(
@@ -73,7 +75,11 @@ export default function Gallery() {
   const handleDownload = async (url, filename) => {
     if (!client) return;
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: "GET",
+        mode: "cors",
+        cache: "no-store",
+      });
       if (!response.ok) {
         alert("Failed to download file. Please try again.");
         return;
@@ -99,6 +105,168 @@ export default function Gallery() {
     );
   };
 
+  const handleDownloadAll = async () => {
+    if (!client) return;
+    setDownloading(true);
+
+    try {
+      const zip = new JSZip();
+      const allFiles = [...photos, ...videos];
+
+      // Fetch all files and add to zip
+      for (let i = 0; i < allFiles.length; i++) {
+        const file = allFiles[i];
+        try {
+          const response = await fetch(file.url, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-store",
+          });
+
+          if (!response.ok) {
+            console.error(`Failed to fetch ${file.url}: ${response.status}`);
+            continue;
+          }
+
+          const blob = await response.blob();
+
+          // Ensure we have a valid blob with content
+          if (blob.size === 0) {
+            console.error(`Empty blob for ${file.url}`);
+            continue;
+          }
+
+          // Get file extension from URL or use default
+          const urlParts = file.url.split(".");
+          const extension = urlParts[urlParts.length - 1].split("?")[0];
+          const filename =
+            file.filename || file.name || `file-${i + 1}.${extension}`;
+
+          zip.file(filename, blob);
+          console.log(`Added ${filename} (${blob.size} bytes)`);
+        } catch (err) {
+          console.error(`Failed to download ${file.url}:`, err);
+        }
+      }
+
+      // Check if zip has any files
+      const fileCount = Object.keys(zip.files).length;
+      if (fileCount === 0) {
+        alert(
+          "No files could be added to the ZIP. Please check console for errors.",
+        );
+        setDownloading(false);
+        return;
+      }
+
+      console.log(`Generating ZIP with ${fileCount} files...`);
+
+      // Generate and download zip
+      const content = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+      });
+
+      console.log(`ZIP generated: ${content.size} bytes`);
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(content);
+      a.download = `${client.client_name.replace(/\s+/g, "-").toLowerCase()}-gallery.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      console.error("ZIP creation failed:", err);
+      alert("Failed to create ZIP file. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownloadSelected = async () => {
+    if (!client || selectedItems.length === 0) return;
+    setDownloading(true);
+
+    try {
+      const zip = new JSZip();
+      const selectedFiles = [...photos, ...videos].filter((file) =>
+        selectedItems.includes(file.id),
+      );
+
+      // Fetch selected files and add to zip
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        try {
+          const response = await fetch(file.url, {
+            method: "GET",
+            mode: "cors",
+            cache: "no-store",
+          });
+
+          if (!response.ok) {
+            console.error(`Failed to fetch ${file.url}: ${response.status}`);
+            continue;
+          }
+
+          const blob = await response.blob();
+
+          // Ensure we have a valid blob with content
+          if (blob.size === 0) {
+            console.error(`Empty blob for ${file.url}`);
+            continue;
+          }
+
+          // Get file extension from URL or use default
+          const urlParts = file.url.split(".");
+          const extension = urlParts[urlParts.length - 1].split("?")[0];
+          const filename =
+            file.filename || file.name || `file-${i + 1}.${extension}`;
+
+          zip.file(filename, blob);
+          console.log(`Added ${filename} (${blob.size} bytes)`);
+        } catch (err) {
+          console.error(`Failed to download ${file.url}:`, err);
+        }
+      }
+
+      // Check if zip has any files
+      const fileCount = Object.keys(zip.files).length;
+      if (fileCount === 0) {
+        alert(
+          "No files could be added to the ZIP. Please check console for errors.",
+        );
+        setDownloading(false);
+        return;
+      }
+
+      console.log(`Generating ZIP with ${fileCount} files...`);
+
+      // Generate and download zip
+      const content = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+      });
+
+      console.log(`ZIP generated: ${content.size} bytes`);
+
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(content);
+      a.download = `${client.client_name.replace(/\s+/g, "-").toLowerCase()}-selected.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      console.error("ZIP creation failed:", err);
+      alert("Failed to create ZIP file. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (client) {
     return (
       <motion.div
@@ -114,9 +282,6 @@ export default function Gallery() {
             </h1>
             <div className="flex flex-wrap gap-6 text-sm text-[var(--gray-light)]">
               <span>{client.event_date}</span>
-              <span>·</span>
-              <span>{client.location}</span>
-              <span>·</span>
               <span>{client.event_type}</span>
             </div>
             <div className="flex gap-8 mt-4 text-xs">
@@ -127,26 +292,24 @@ export default function Gallery() {
 
           <div className="sticky top-20 z-20 bg-[var(--off-white)] py-4 mb-8 flex gap-4 border-b border-[var(--gray-light)]/20">
             <button
-              onClick={() =>
-                alert(
-                  "ZIP download — coming soon. Use individual downloads for now.",
-                )
-              }
-              className="px-6 py-3 bg-[var(--red)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red-dim)] transition-colors flex items-center gap-2"
+              onClick={handleDownloadAll}
+              disabled={downloading}
+              className="px-6 py-3 bg-[var(--red)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download size={16} />
-              Download All (ZIP)
+              {downloading ? "Creating ZIP..." : "Download All (ZIP)"}
             </button>
             {selectedItems.length > 0 && (
               <button
-                onClick={() =>
-                  alert(`Downloading ${selectedItems.length} selected items`)
-                }
-                className="px-6 py-3 bg-transparent text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--black)] hover:text-[var(--off-white)] transition-all flex items-center gap-2"
+                onClick={handleDownloadSelected}
+                disabled={downloading}
+                className="px-6 py-3 bg-transparent text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--black)] hover:text-[var(--off-white)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ border: "0.5px solid var(--black)" }}
               >
                 <Download size={16} />
-                Download Selected ({selectedItems.length})
+                {downloading
+                  ? "Creating ZIP..."
+                  : `Download Selected (${selectedItems.length})`}
               </button>
             )}
           </div>
@@ -154,24 +317,71 @@ export default function Gallery() {
           <div className="mb-16">
             <div className="eyebrow mb-6">PHOTOS</div>
             {loading ? (
-              <div className="col-span-full text-center py-20">Loading...</div>
+              <div className="text-center py-20">Loading...</div>
             ) : (
-              photos.map((photo) => (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
+                  >
+                    <LazyImage
+                      src={photo.url}
+                      alt={photo.filename}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center">
+                      <button
+                        onClick={() =>
+                          handleDownload(
+                            photo.url,
+                            photo.filename || photo.name || `photo-${photo.id}`,
+                          )
+                        }
+                        className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
+                      >
+                        <Download size={14} />
+                        Download
+                      </button>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(photo.id)}
+                      onChange={() => toggleSelect(photo.id)}
+                      className="absolute top-2 right-2 w-5 h-5 z-10"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div className="eyebrow mb-6">VIDEOS</div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+              {videos.map((video) => (
                 <div
-                  key={photo.id}
+                  key={video.id}
                   className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
                 >
-                  <LazyImage
-                    src={photo.url}
-                    alt={photo.filename}
+                  <video
+                    src={video.url}
                     className="w-full h-full object-cover"
+                    muted
                   />
-                  <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4">
+                    <button
+                      onClick={() => setVideoModal(video)}
+                      className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
+                    >
+                      <Play size={14} />
+                      Play
+                    </button>
                     <button
                       onClick={() =>
                         handleDownload(
-                          photo.url,
-                          photo.filename || photo.name || `photo-${photo.id}`,
+                          video.url,
+                          video.filename || video.name || `video-${video.id}`,
                         )
                       }
                       className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
@@ -180,52 +390,9 @@ export default function Gallery() {
                       Download
                     </button>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.includes(photo.id)}
-                    onChange={() => toggleSelect(photo.id)}
-                    className="absolute top-2 right-2 w-5 h-5 z-10"
-                  />
                 </div>
-              ))
-            )}
-          </div>
-
-          <div>
-            <div className="eyebrow mb-6">VIDEOS</div>
-            {videos.map((video) => (
-              <div
-                key={video.id}
-                className="aspect-video bg-[var(--gray-dark)] relative group overflow-hidden"
-              >
-                <video
-                  src={video.url}
-                  className="w-full h-full object-cover"
-                  muted
-                />
-                <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4">
-                  <button
-                    onClick={() => setVideoModal(video)}
-                    className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
-                  >
-                    <Play size={14} />
-                    Play
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleDownload(
-                        video.url,
-                        video.filename || video.name || `video-${video.id}`,
-                      )
-                    }
-                    className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
-                  >
-                    <Download size={14} />
-                    Download
-                  </button>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 

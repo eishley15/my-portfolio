@@ -23,6 +23,13 @@
   --font-body: 'DM Sans', sans-serif;
 }
 
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+    letter-spacing: -0.04em;
+  }
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

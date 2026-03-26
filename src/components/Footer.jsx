@@ -22,16 +22,22 @@ export default function Footer() {
     >
       <div
         style={{
-          display: "grid",
-          gridTemplateColumns: !isMobile ? "1fr auto 1fr" : "1fr",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "start",
           gap: !isMobile ? "40px" : "48px",
-          alignItems: !isMobile ? "start" : "center",
           marginBottom: "48px",
           textAlign: !isMobile ? "left" : "center",
+          flexDirection: !isMobile ? "row" : "column",
         }}
       >
         {/* Left */}
-        <div style={{ gridColumn: !isMobile ? "auto" : "1 / -1" }}>
+        <div
+          style={{
+            textAlign: !isMobile ? "left" : "center",
+            width: !isMobile ? "auto" : "100%",
+          }}
+        >
           <p
             style={{
               fontFamily: "var(--font-display)",
@@ -44,8 +50,8 @@ export default function Footer() {
             KYLE PAYAWAL
           </p>
           <p
+            className="font-serif"
             style={{
-              fontFamily: "var(--font-serif)",
               fontStyle: "italic",
               fontSize: "13px",
               color: "var(--text-muted)",
@@ -58,34 +64,6 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* Center nav */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "14px",
-            alignItems: !isMobile ? "center" : "center",
-            gridColumn: !isMobile ? "auto" : "1 / -1",
-          }}
-        >
-          {[
-            { to: "/", label: "Home" },
-            { to: "/work", label: "Work" },
-            { to: "/about", label: "About" },
-            { to: "/contact", label: "Contact" },
-            { to: "/gallery", label: "Client Gallery" },
-          ].map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className="nav-link"
-              style={{ color: "rgba(240,235,224,0.35)" }}
-            >
-              {label}
-            </Link>
-          ))}
-        </div>
-
         {/* Right — socials */}
         <div
           style={{
@@ -93,7 +71,7 @@ export default function Footer() {
             flexDirection: "column",
             alignItems: !isMobile ? "flex-end" : "center",
             gap: "16px",
-            gridColumn: !isMobile ? "auto" : "1 / -1",
+            width: !isMobile ? "auto" : "100%",
           }}
         >
           <a

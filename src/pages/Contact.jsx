@@ -77,13 +77,28 @@ export default function Contact() {
       exit={{ opacity: 0 }}
       className="min-h-screen"
     >
-      <div className="bg-[var(--black)] text-[var(--off-white)] pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
+      <div className="relative bg-[var(--black)] text-[var(--off-white)] pt-32 pb-20 px-6 overflow-hidden">
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage:
+              "url(https://cdn.kylepayawal.studio/kylepayawal-portfolio/portfolio/commercial/DSC06393.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/70 z-[1]" />
+
+        <div className="max-w-4xl mx-auto text-center relative z-[2]">
           <motion.h1
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="font-display text-[clamp(56px,10vw,120px)] leading-[0.88] mb-4"
+            className="font-display text-[clamp(56px,10vw,120px)] leading-[0.88] mb-4 tracking-[-0.02em]"
           >
             LET'S MAKE
           </motion.h1>
@@ -92,7 +107,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="italic-accent text-[clamp(48px,8vw,100px)] mb-4"
+            className="font-serif text-[clamp(48px,8vw,100px)] mb-4 leading-[0.4]"
           >
             something
           </motion.h2>
@@ -101,7 +116,7 @@ export default function Contact() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="font-display text-[clamp(56px,10vw,120px)] leading-[0.88] mb-8"
+            className="font-display text-[clamp(56px,10vw,120px)] leading-[1.3] mb-8 tracking-[-0.02em]"
           >
             UNFORGETTABLE
           </motion.h1>
