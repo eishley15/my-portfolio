@@ -22,9 +22,15 @@ export default function Navbar() {
 
   useEffect(() => setMenuOpen(false), [location]);
 
+  const isHomePage = location.pathname === "/";
+  const isContactPage = location.pathname === "/contact";
+  const isGalleryPage = location.pathname === "/gallery";
+  const isDarkBackground = isHomePage || isContactPage || isGalleryPage;
+
   return (
     <>
       <nav
+        className={!scrolled && !isDarkBackground ? "navbar-transparent" : ""}
         style={{
           position: "fixed",
           top: 0,
@@ -37,7 +43,8 @@ export default function Navbar() {
           padding: "22px 40px",
           background: scrolled ? "rgba(14,12,11,0.88)" : "transparent",
           backdropFilter: scrolled ? "blur(16px)" : "none",
-          transition: "background 0.4s ease, backdrop-filter 0.4s ease",
+          transition:
+            "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
           borderBottom: scrolled
             ? "0.5px solid rgba(240,235,224,0.06)"
             : "none",
@@ -50,8 +57,12 @@ export default function Navbar() {
             fontFamily: "var(--font-display)",
             fontSize: "15px",
             letterSpacing: "3.5px",
-            color: "var(--off-white)",
+            color:
+              scrolled || isDarkBackground
+                ? "var(--off-white)"
+                : "var(--black)",
             textDecoration: "none",
+            transition: "color 0.4s ease",
           }}
         >
           KYLE PAYAWAL
@@ -89,9 +100,15 @@ export default function Navbar() {
               fontSize: "10px",
               letterSpacing: "2px",
               textTransform: "uppercase",
-              color: "var(--off-white)",
+              color:
+                scrolled || isDarkBackground
+                  ? "var(--off-white)"
+                  : "var(--black)",
               textDecoration: "none",
-              border: "0.5px solid rgba(240,235,224,0.25)",
+              border:
+                scrolled || isDarkBackground
+                  ? "0.5px solid rgba(240,235,224,0.25)"
+                  : "0.5px solid rgba(14,12,11,0.25)",
               padding: "9px 18px",
               transition: "all 0.2s",
             }}
@@ -101,7 +118,10 @@ export default function Navbar() {
             }}
             onMouseLeave={(e) => {
               e.target.style.background = "transparent";
-              e.target.style.borderColor = "rgba(240,235,224,0.25)";
+              e.target.style.borderColor =
+                scrolled || isDarkBackground
+                  ? "rgba(240,235,224,0.25)"
+                  : "rgba(14,12,11,0.25)";
             }}
           >
             Client Gallery
@@ -113,9 +133,13 @@ export default function Navbar() {
             style={{
               background: "none",
               border: "none",
-              color: "var(--off-white)",
+              color:
+                scrolled || isDarkBackground
+                  ? "var(--off-white)"
+                  : "var(--black)",
               cursor: "pointer",
               display: isMobile ? "block" : "none",
+              transition: "color 0.4s ease",
             }}
             aria-label="Toggle menu"
           >

@@ -1,8 +1,41 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Download, Lock, Play, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
+
+// Lazy load image component
+function LazyImage({ src, alt, className }) {
+  const [loaded, setLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setImageSrc(src);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "50px" },
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, [src]);
+
+  return (
+    <img
+      ref={imgRef}
+      src={imageSrc}
+      alt={alt}
+      className={className}
+      onLoad={() => setLoaded(true)}
+      style={{ opacity: loaded ? 1 : 0.5, transition: "opacity 0.3s" }}
+    />
+  );
+}
 
 export default function Gallery() {
   const [accessCode, setAccessCode] = useState("");
@@ -128,7 +161,7 @@ export default function Gallery() {
                   key={photo.id}
                   className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
                 >
-                  <img
+                  <LazyImage
                     src={photo.url}
                     alt={photo.filename}
                     className="w-full h-full object-cover"

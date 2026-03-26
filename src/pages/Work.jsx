@@ -1,7 +1,40 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { usePortfolio } from "../hooks/usePortfolio";
+
+// Lazy load image component
+function LazyImage({ src, alt, className }) {
+  const [loaded, setLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setImageSrc(src);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "50px" },
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, [src]);
+
+  return (
+    <img
+      ref={imgRef}
+      src={imageSrc}
+      alt={alt}
+      className={className}
+      onLoad={() => setLoaded(true)}
+      style={{ opacity: loaded ? 1 : 0.5, transition: "opacity 0.3s" }}
+    />
+  );
+}
 
 export default function Work() {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -63,7 +96,7 @@ export default function Work() {
                         playsInline
                       />
                     ) : (
-                      <img
+                      <LazyImage
                         src={item.url}
                         alt={item.title}
                         className="w-full h-full object-cover"
@@ -128,7 +161,7 @@ export default function Work() {
             >
               {/* Thumbnail background */}
               {category.thumbnail && (
-                <img
+                <LazyImage
                   src={category.thumbnail}
                   alt={category.name}
                   className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"

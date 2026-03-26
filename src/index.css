@@ -142,6 +142,19 @@ body::before {
   transform: scaleX(1);
 }
 
+/* Transparent navbar color inversion */
+.navbar-transparent .nav-link {
+  color: rgba(14,12,11,0.5);
+}
+
+.navbar-transparent .nav-link:hover {
+  color: var(--black);
+}
+
+.navbar-transparent .nav-link::after {
+  background: var(--black);
+}
+
 /* Light section overrides */
 .section-light {
   background: var(--off-white);

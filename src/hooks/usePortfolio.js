@@ -1,5 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
+
+// Client-side cache
+const portfolioCache = {}
+const categoriesCache = { data: null, fetched: false }
 
 export function usePortfolio(category = null) {
   const [items, setItems] = useState([])
@@ -11,6 +15,15 @@ export function usePortfolio(category = null) {
     setItems([])
 
     async function fetchPortfolio() {
+      const cacheKey = category || 'all'
+      
+      // Check cache first
+      if (portfolioCache[cacheKey]) {
+        setItems(portfolioCache[cacheKey])
+        setLoading(false)
+        return
+      }
+
       let query = supabase
         .from('portfolio')
         .select('*')
@@ -19,11 +32,20 @@ export function usePortfolio(category = null) {
       if (category) query = query.eq('category', category)
 
       const { data, error } = await query
-      if (!error) setItems(data || [])
+      if (!error) {
+        setItems(data || [])
+        portfolioCache[cacheKey] = data || []
+      }
       setLoading(false)
     }
 
     async function fetchCategories() {
+      // Check cache first
+      if (categoriesCache.fetched) {
+        setCategories(categoriesCache.data)
+        return
+      }
+
       const { data } = await supabase
         .from('portfolio')
         .select('category, url')
@@ -42,7 +64,10 @@ export function usePortfolio(category = null) {
           }
           categoryMap[item.category].count += 1
         })
-        setCategories(Object.values(categoryMap))
+        const categoryList = Object.values(categoryMap)
+        setCategories(categoryList)
+        categoriesCache.data = categoryList
+        categoriesCache.fetched = true
       }
     }
 

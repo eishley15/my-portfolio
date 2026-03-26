@@ -1,5 +1,39 @@
 import { motion } from "framer-motion";
 import { Instagram, Facebook } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+
+// Lazy load image component
+function LazyImage({ src, alt, className }) {
+  const [loaded, setLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setImageSrc(src);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "50px" },
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, [src]);
+
+  return (
+    <img
+      ref={imgRef}
+      src={imageSrc}
+      alt={alt}
+      className={className}
+      onLoad={() => setLoaded(true)}
+      style={{ opacity: loaded ? 1 : 0.5, transition: "opacity 0.3s" }}
+    />
+  );
+}
 
 export default function About() {
   const services = [
@@ -30,11 +64,12 @@ export default function About() {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative">
-              {/* // replace with actual portrait image */}
-              <div className="absolute inset-0 flex items-center justify-center text-[var(--gray-mid)] text-xs">
-                // portrait image
-              </div>
+            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative overflow-hidden">
+              <LazyImage
+                src="/kylepayawalprofile.webp"
+                alt="Kyle Payawal"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div
               className="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -52,7 +87,9 @@ export default function About() {
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            <div className="eyebrow mb-6">THE PHOTOGRAPHER / DIRECTOR</div>
+            <div className="eyebrow mb-6">
+              THE PHOTOGRAPHER | VIDEOGRAPHER | EDITOR
+            </div>
 
             <h1 className="font-display text-[clamp(56px,8vw,96px)] leading-[0.88] mb-2">
               KYLE
@@ -93,14 +130,14 @@ export default function About() {
               </div>
               <div className="flex gap-4">
                 <a
-                  href="#"
+                  href="https://www.instagram.com/payawalkyle/"
                   className="flex items-center gap-2 text-[var(--black)] hover:text-[var(--red)] transition-colors"
                 >
                   <Instagram size={20} />
                   <span className="text-sm">Instagram</span>
                 </a>
                 <a
-                  href="#"
+                  href="https://www.facebook.com/kyle.payawal"
                   className="flex items-center gap-2 text-[var(--black)] hover:text-[var(--red)] transition-colors"
                 >
                   <Facebook size={20} />

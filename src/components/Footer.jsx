@@ -69,6 +69,7 @@ export default function Footer() {
           }}
         >
           {[
+            { to: "/", label: "Home" },
             { to: "/work", label: "Work" },
             { to: "/about", label: "About" },
             { to: "/contact", label: "Contact" },
@@ -96,7 +97,7 @@ export default function Footer() {
           }}
         >
           <a
-            href="https://instagram.com/"
+            href="https://instagram.com/payawalkyle/"
             target="_blank"
             rel="noreferrer"
             style={{
@@ -121,9 +122,9 @@ export default function Footer() {
             <Instagram size={14} /> Instagram
           </a>
           <a
-            href="https://facebook.com/"
+            href="https://facebook.com/kyle.payawal"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             style={{
               display: "flex",
               alignItems: "center",

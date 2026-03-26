@@ -1,32 +1,74 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Instagram, Facebook } from 'lucide-react'
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Instagram, Facebook } from "lucide-react";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    eventType: '',
-    eventDate: '',
-    location: '',
-    message: ''
-  })
-  const [submitted, setSubmitted] = useState(false)
+    name: "",
+    email: "",
+    eventType: "",
+    eventDate: "",
+    location: "",
+    message: "",
+  });
+  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const eventTypes = [
-    'Wedding', 'Debut', 'Birthday', 'Christening', 'Portrait',
-    'Product', 'Lifestyle', 'Pageant', 'Commercial', 'SaaS', 'Other'
-  ]
+    "Wedding",
+    "Debut",
+    "Birthday",
+    "Christening",
+    "Portrait",
+    "Product",
+    "Lifestyle",
+    "Pageant",
+    "Commercial",
+    "SaaS",
+    "Other",
+  ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => setSubmitted(false), 5000)
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const form = new FormData(e.target);
+      form.append("access_key", import.meta.env.VITE_WEB3FORMS_ACCESS_KEY);
+
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSubmitted(true);
+        setFormData({
+          name: "",
+          email: "",
+          eventType: "",
+          eventDate: "",
+          location: "",
+          message: "",
+        });
+        setTimeout(() => setSubmitted(false), 5000);
+      } else {
+        setError("Failed to send. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   return (
     <motion.div
@@ -84,9 +126,23 @@ export default function Contact() {
             onSubmit={handleSubmit}
             className="space-y-6"
           >
+            {/* Hidden fields for web3forms */}
+            <input
+              type="hidden"
+              name="subject"
+              value="New Inquiry from kylepayawal.studio"
+            />
+            <input
+              type="hidden"
+              name="from_name"
+              value="Kyle Payawal Portfolio"
+            />
+
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">Name</label>
+                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                  Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -98,7 +154,9 @@ export default function Contact() {
               </div>
 
               <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">Email</label>
+                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -112,7 +170,9 @@ export default function Contact() {
 
             <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">Event Type</label>
+                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                  Event Type
+                </label>
                 <select
                   name="eventType"
                   value={formData.eventType}
@@ -122,13 +182,17 @@ export default function Contact() {
                 >
                   <option value="">Select event type</option>
                   {eventTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">Event Date</label>
+                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                  Event Date
+                </label>
                 <input
                   type="date"
                   name="eventDate"
@@ -141,7 +205,9 @@ export default function Contact() {
             </div>
 
             <div>
-              <label className="block text-[10px] tracking-[2px] uppercase mb-2">Location</label>
+              <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                Location
+              </label>
               <input
                 type="text"
                 name="location"
@@ -153,7 +219,9 @@ export default function Contact() {
             </div>
 
             <div>
-              <label className="block text-[10px] tracking-[2px] uppercase mb-2">Message</label>
+              <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                Message
+              </label>
               <textarea
                 name="message"
                 value={formData.message}
@@ -165,9 +233,10 @@ export default function Contact() {
 
             <button
               type="submit"
-              className="w-full px-6 py-4 bg-[var(--black)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red)] transition-all"
+              disabled={loading}
+              className="w-full px-6 py-4 bg-[var(--black)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send Inquiry
+              {loading ? "Sending..." : "Send Inquiry"}
             </button>
 
             {submitted && (
@@ -179,6 +248,16 @@ export default function Contact() {
                 Got it. I'll be in touch soon.
               </motion.div>
             )}
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center text-red-600 text-sm"
+              >
+                {error}
+              </motion.div>
+            )}
           </motion.form>
 
           <motion.div
@@ -188,17 +267,23 @@ export default function Contact() {
             transition={{ delay: 0.2 }}
             className="mt-12 text-center"
           >
-            <p className="text-sm text-[var(--gray-light)] mb-4">Or reach me directly</p>
+            <p className="text-sm text-[var(--gray-light)] mb-4">
+              Or reach me directly
+            </p>
             <div className="flex justify-center gap-6">
               <a
-                href="#"
+                href="https://www.instagram.com/payawalkyle/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 text-[var(--black)] hover:text-[var(--red)] transition-colors"
               >
                 <Instagram size={20} />
                 <span className="text-sm">Instagram</span>
               </a>
               <a
-                href="#"
+                href="https://www.facebook.com/kyle.payawal"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 text-[var(--black)] hover:text-[var(--red)] transition-colors"
               >
                 <Facebook size={20} />
@@ -209,5 +294,5 @@ export default function Contact() {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }

@@ -1,7 +1,43 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useFeaturedPortfolio } from "../hooks/usePortfolio";
+import { useFeaturedPortfolio, usePortfolio } from "../hooks/usePortfolio";
+
+// Lazy load image component
+function LazyImage({ src, alt, style }) {
+  const [loaded, setLoaded] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setImageSrc(src);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "50px" },
+    );
+
+    if (imgRef.current) observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, [src]);
+
+  return (
+    <img
+      ref={imgRef}
+      src={imageSrc}
+      alt={alt}
+      style={{
+        ...style,
+        opacity: loaded ? 1 : 0.5,
+        transition: "opacity 0.3s",
+      }}
+      onLoad={() => setLoaded(true)}
+    />
+  );
+}
 
 // Marquee placeholder items — replace src with real images when available
 const MARQUEE_ITEMS = [
@@ -27,6 +63,9 @@ const fadeUp = {
 export default function Home() {
   const revealRef = useRef([]);
   const { items } = useFeaturedPortfolio(8);
+
+  // Preload all portfolio data for faster Work page loads
+  usePortfolio(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -361,7 +400,7 @@ export default function Home() {
                       }}
                     />
                   ) : (
-                    <img
+                    <LazyImage
                       src={item.url}
                       alt={item.title}
                       style={{

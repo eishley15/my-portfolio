@@ -1,15 +1,16 @@
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
-import Home from './pages/Home'
-import Work from './pages/Work'
-import Gallery from './pages/Gallery'
-import About from './pages/About'
-import Contact from './pages/Contact'
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
+import Home from "./pages/Home";
+import Work from "./pages/Work";
+import Gallery from "./pages/Gallery";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 function AnimatedRoutes() {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
@@ -21,15 +22,16 @@ function AnimatedRoutes() {
         <Route path="/contact" element={<Contact />} />
       </Routes>
     </AnimatePresence>
-  )
+  );
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Navbar />
+      {" "}
+      <ScrollToTop /> <Navbar />
       <AnimatedRoutes />
       <Footer />
     </BrowserRouter>
-  )
+  );
 }
