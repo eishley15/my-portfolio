@@ -109,42 +109,20 @@ const fadeUp = {
 export default function Home() {
   const revealRef = useRef([]);
   const heroVideoRef = useRef(null);
-  const { items } = useFeaturedPortfolio(8);
+  const { items: selectedWork, loading } = useFeaturedPortfolio(4);
+  const { items: marqueeItems, loading: marqueeLoading } = useFeaturedPortfolio(6);
   const [enableAutoplay, setEnableAutoplay] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Preload all portfolio data for faster Work page loads (after initial render)
-  usePortfolio(null);
-
-  // Handle hero video ready state
+  // Wait for data to load before hiding loading screen
   useEffect(() => {
-    const video = heroVideoRef.current;
-    if (!video) return;
-
-    const handleCanPlay = () => {
-      // Give a bit more time to ensure smooth playback
+    if (!loading && !marqueeLoading) {
       const timer = setTimeout(() => {
         setIsLoading(false);
-      }, 500);
+      }, 400);
       return () => clearTimeout(timer);
-    };
-
-    const handleError = () => {
-      // If video fails to load, hide loading screen anyway after 3 seconds
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 3000);
-      return () => clearTimeout(timer);
-    };
-
-    video.addEventListener("canplay", handleCanPlay);
-    video.addEventListener("error", handleError);
-
-    return () => {
-      video.removeEventListener("canplay", handleCanPlay);
-      video.removeEventListener("error", handleError);
-    };
-  }, []);
+    }
+  }, [loading, marqueeLoading]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -194,6 +172,8 @@ export default function Home() {
             muted
             loop
             playsInline
+            preload="metadata"
+            poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%230e0c0b' width='1920' height='1080'/%3E%3C/svg%3E"
             src="https://cdn.kylepayawal.studio/kylepayawal-portfolio/reel.mp4"
             style={{
               position: "absolute",
@@ -466,8 +446,8 @@ export default function Home() {
           }}
         >
           <div className="marquee-track">
-            {items.length > 0
-              ? [...items, ...items].map((item, i) => (
+            {marqueeItems.length > 0
+              ? [...marqueeItems, ...marqueeItems, ...marqueeItems].map((item, i) => (
                   <div
                     key={i}
                     style={{
@@ -677,8 +657,8 @@ export default function Home() {
               gap: "4px",
             }}
           >
-            {(items.slice(0, 4).length > 0
-              ? items.slice(0, 4)
+            {(selectedWork.length > 0
+              ? selectedWork
               : [
                   { id: 1, category: "Wedding", type: "photo", url: "" },
                   { id: 2, category: "Pageant", type: "photo", url: "" },

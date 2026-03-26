@@ -6,7 +6,7 @@ export default function LoadingScreen({ isVisible }) {
       initial={{ opacity: 1 }}
       animate={{ opacity: isVisible ? 1 : 0 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
       style={{
         pointerEvents: isVisible ? "auto" : "none",
       }}

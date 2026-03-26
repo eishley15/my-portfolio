@@ -126,11 +126,13 @@ export function useFeaturedPortfolio(limit = 8) {
         return
       }
 
+      // Fetch more items than needed to ensure we get unique categories
+      const fetchLimit = Math.max(limit * 3, 30)
       const { data, error } = await supabase
         .from('portfolio')
         .select('*')
         .order('sort_order', { ascending: true })
-        .limit(50) // Only fetch first 50 to find one per category
+        .limit(fetchLimit)
 
       if (!error && data) {
         // Group by category and take first item from each
