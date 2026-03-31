@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Download, Lock, Play, X } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
+import { useToast, ToastContainer } from "../components/Toast";
+import DownloadButton from "../components/DownloadButton";
 import JSZip from "jszip";
 
 // Lazy load image component
@@ -46,6 +48,7 @@ export default function Gallery() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [videoModal, setVideoModal] = useState(null);
   const [downloading, setDownloading] = useState(false);
+  const { toasts, addToast, removeToast } = useToast();
 
   // Call hook unconditionally at top level
   const { photos, videos, loading } = useClientGallery(
@@ -269,249 +272,245 @@ export default function Gallery() {
 
   if (client) {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="min-h-screen bg-[var(--off-white)] text-[var(--black)] pt-24 pb-20 px-6"
-      >
-        <div className="max-w-[1800px] mx-auto">
-          <div className="mb-12">
-            <h1 className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-4">
-              {client.client_name}
-            </h1>
-            <div className="flex flex-wrap gap-6 text-sm text-[var(--gray-light)]">
-              <span>{client.event_date}</span>
-              <span>{client.event_type}</span>
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="min-h-screen bg-[var(--off-white)] text-[var(--black)] pt-24 pb-20 px-6"
+        >
+          <div className="max-w-[1800px] mx-auto">
+            <div className="mb-12">
+              <h1 className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-4">
+                {client.client_name}
+              </h1>
+              <div className="flex flex-wrap gap-6 text-sm text-[var(--gray-light)]">
+                <span>{client.event_date}</span>
+                <span>{client.event_type}</span>
+              </div>
+              <div className="flex gap-8 mt-4 text-xs">
+                <span>{photos.length} Photos</span>
+                <span>{videos.length} Videos</span>
+              </div>
             </div>
-            <div className="flex gap-8 mt-4 text-xs">
-              <span>{photos.length} Photos</span>
-              <span>{videos.length} Videos</span>
-            </div>
-          </div>
 
-          <div className="sticky top-20 z-20 bg-[var(--off-white)] py-4 mb-8 flex gap-4 border-b border-[var(--gray-light)]/20">
-            <button
-              onClick={handleDownloadAll}
-              disabled={downloading}
-              className="px-6 py-3 bg-[var(--red)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Download size={16} />
-              {downloading ? "Creating ZIP..." : "Download All (ZIP)"}
-            </button>
-            {selectedItems.length > 0 && (
+            <div className="sticky top-20 z-20 bg-[var(--off-white)] py-4 mb-8 flex gap-4 border-b border-[var(--gray-light)]/20">
               <button
-                onClick={handleDownloadSelected}
+                onClick={handleDownloadAll}
                 disabled={downloading}
-                className="px-6 py-3 bg-transparent text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--black)] hover:text-[var(--off-white)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ border: "0.5px solid var(--black)" }}
+                className="px-6 py-3 bg-[var(--red)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Download size={16} />
-                {downloading
-                  ? "Creating ZIP..."
-                  : `Download Selected (${selectedItems.length})`}
+                {downloading ? "Creating ZIP..." : "Download All (ZIP)"}
               </button>
-            )}
-          </div>
+              {selectedItems.length > 0 && (
+                <button
+                  onClick={handleDownloadSelected}
+                  disabled={downloading}
+                  className="px-6 py-3 bg-transparent text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--black)] hover:text-[var(--off-white)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ border: "0.5px solid var(--black)" }}
+                >
+                  <Download size={16} />
+                  {downloading
+                    ? "Creating ZIP..."
+                    : `Download Selected (${selectedItems.length})`}
+                </button>
+              )}
+            </div>
 
-          <div className="mb-16">
-            <div className="eyebrow mb-6">PHOTOS</div>
-            {loading ? (
-              <div className="text-center py-20">Loading...</div>
-            ) : (
+            <div className="mb-16">
+              <div className="eyebrow mb-6">PHOTOS</div>
+              {loading ? (
+                <div className="text-center py-20">Loading...</div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+                  {photos.map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
+                    >
+                      <LazyImage
+                        src={photo.url}
+                        alt={photo.filename}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center">
+                        <DownloadButton
+                          galleryId={client.id}
+                          fileName={
+                            photo.filename || photo.name || `photo-${photo.id}`
+                          }
+                          onError={(message) => addToast(message, "error")}
+                        />
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(photo.id)}
+                        onChange={() => toggleSelect(photo.id)}
+                        className="absolute top-2 right-2 w-5 h-5 z-10"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="eyebrow mb-6">VIDEOS</div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-                {photos.map((photo) => (
+                {videos.map((video) => (
                   <div
-                    key={photo.id}
+                    key={video.id}
                     className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
                   >
-                    <LazyImage
-                      src={photo.url}
-                      alt={photo.filename}
+                    <video
+                      src={video.url}
                       className="w-full h-full object-cover"
+                      muted
                     />
-                    <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center">
+                    <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4">
                       <button
-                        onClick={() =>
-                          handleDownload(
-                            photo.url,
-                            photo.filename || photo.name || `photo-${photo.id}`,
-                          )
-                        }
+                        onClick={() => setVideoModal(video)}
                         className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
                       >
-                        <Download size={14} />
-                        Download
+                        <Play size={14} />
+                        Play
                       </button>
+                      <DownloadButton
+                        galleryId={client.id}
+                        fileName={
+                          video.filename || video.name || `video-${video.id}`
+                        }
+                        onError={(message) => addToast(message, "error")}
+                      />
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(photo.id)}
-                      onChange={() => toggleSelect(photo.id)}
-                      className="absolute top-2 right-2 w-5 h-5 z-10"
-                    />
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          <div>
-            <div className="eyebrow mb-6">VIDEOS</div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-              {videos.map((video) => (
-                <div
-                  key={video.id}
-                  className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
-                >
-                  <video
-                    src={video.url}
-                    className="w-full h-full object-cover"
-                    muted
-                  />
-                  <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4">
-                    <button
-                      onClick={() => setVideoModal(video)}
-                      className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
-                    >
-                      <Play size={14} />
-                      Play
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleDownload(
-                          video.url,
-                          video.filename || video.name || `video-${video.id}`,
-                        )
-                      }
-                      className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
-                    >
-                      <Download size={14} />
-                      Download
-                    </button>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
-        </div>
 
-        {videoModal && (
-          <div
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-6"
-            onClick={() => setVideoModal(null)}
-          >
-            <button
+          {videoModal && (
+            <div
+              className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-6"
               onClick={() => setVideoModal(null)}
-              className="absolute top-6 right-6 text-[var(--off-white)] hover:text-[var(--red)]"
             >
-              <X size={32} />
-            </button>
-            <video
-              controls
-              src={videoModal.url}
-              className="max-w-full max-h-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Video player */}
-            </video>
-          </div>
-        )}
-      </motion.div>
+              <button
+                onClick={() => setVideoModal(null)}
+                className="absolute top-6 right-6 text-[var(--off-white)] hover:text-[var(--red)]"
+              >
+                <X size={32} />
+              </button>
+              <video
+                controls
+                src={videoModal.url}
+                className="max-w-full max-h-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Video player */}
+              </video>
+            </div>
+          )}
+        </motion.div>
+        <ToastContainer toasts={toasts} removeToast={removeToast} />
+      </>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen"
-    >
-      <div className="bg-[var(--black)] text-[var(--off-white)] pt-32 pb-20 px-6">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-          <div>
+    <>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="min-h-screen"
+      >
+        <div className="bg-[var(--black)] text-[var(--off-white)] pt-32 pb-20 px-6">
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="eyebrow text-[var(--red)] mb-6"
+              >
+                PRIVATE ACCESS
+              </motion.div>
+              <motion.h1
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-6"
+              >
+                CLIENT GALLERY
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="text-[var(--text-muted)]"
+              >
+                Your photos and videos, delivered privately. Enter your unique
+                access code to view and download your files.
+              </motion.p>
+            </div>
+
             <motion.div
               initial={{ opacity: 0, y: 32 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="eyebrow text-[var(--red)] mb-6"
+              transition={{ delay: 0.3 }}
+              className="bg-[var(--gray-dark)] p-8"
             >
-              PRIVATE ACCESS
+              <div className="mb-6">
+                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                  Access Code
+                </label>
+                <input
+                  type="text"
+                  value={accessCode}
+                  onChange={(e) => setAccessCode(e.target.value)}
+                  placeholder="santos-wedding-2024"
+                  className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] font-mono text-sm"
+                  style={{ border: "0.5px solid var(--off-white)" }}
+                />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
+                  Your Name (optional)
+                </label>
+                <input
+                  type="text"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="Juan Santos"
+                  className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] text-sm"
+                  style={{ border: "0.5px solid var(--off-white)" }}
+                />
+              </div>
+
+              {error && (
+                <div className="mb-4 text-[var(--red)] text-sm">{error}</div>
+              )}
+
+              <button
+                onClick={handleLogin}
+                className="w-full px-6 py-4 bg-[var(--off-white)] text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red)] hover:text-[var(--off-white)] transition-all"
+              >
+                Access My Gallery
+              </button>
+
+              <p className="text-xs text-[var(--gray-light)] mt-4 text-center">
+                Your access code was sent via email after your session.
+              </p>
             </motion.div>
-            <motion.h1
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-6"
-            >
-              CLIENT GALLERY
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-              className="text-[var(--text-muted)]"
-            >
-              Your photos and videos, delivered privately. Enter your unique
-              access code to view and download your files.
-            </motion.p>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="bg-[var(--gray-dark)] p-8"
-          >
-            <div className="mb-6">
-              <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                Access Code
-              </label>
-              <input
-                type="text"
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
-                placeholder="santos-wedding-2024"
-                className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] font-mono text-sm"
-                style={{ border: "0.5px solid var(--off-white)" }}
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                Your Name (optional)
-              </label>
-              <input
-                type="text"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-                placeholder="Juan Santos"
-                className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] text-sm"
-                style={{ border: "0.5px solid var(--off-white)" }}
-              />
-            </div>
-
-            {error && (
-              <div className="mb-4 text-[var(--red)] text-sm">{error}</div>
-            )}
-
-            <button
-              onClick={handleLogin}
-              className="w-full px-6 py-4 bg-[var(--off-white)] text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red)] hover:text-[var(--off-white)] transition-all"
-            >
-              Access My Gallery
-            </button>
-
-            <p className="text-xs text-[var(--gray-light)] mt-4 text-center">
-              Your access code was sent via email after your session.
-            </p>
-          </motion.div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+    </>
   );
 }
