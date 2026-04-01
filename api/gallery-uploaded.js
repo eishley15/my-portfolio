@@ -42,11 +42,6 @@ export default async function handler(req, res) {
       return await handleClientFile(supabase, pathSegments[2], pathSegments[3], res);
     }
 
-    // CASE 3: Originals, file_created
-    if (pathSegments[0] === 'Originals' && event === 'file_created' && pathSegments.length === 3) {
-      return await handleOriginalFile(supabase, pathSegments[1], pathSegments[2], res);
-    }
-
     // CASE 4: Optimized, file_created
     if (pathSegments[0] === 'Optimized' && event === 'file_created' && pathSegments.length === 3) {
       return await handleOptimizedFile(supabase, pathSegments[1], pathSegments[2], res);
