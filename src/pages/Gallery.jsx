@@ -1,11 +1,153 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Download, Lock, Play, X } from "lucide-react";
+import {
+  Download,
+  Lock,
+  Play,
+  X,
+  Menu,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
 import { useToast, ToastContainer } from "../components/Toast";
 import DownloadButton from "../components/DownloadButton";
 import JSZip from "jszip";
+
+// Custom navbar for accessed gallery (light background styling like About page)
+function GalleryNavbar({ onLogout, previewOpen }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return (
+    <nav
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: previewOpen ? 40 : 100,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "22px 40px",
+        background: scrolled ? "rgba(240,235,224,0.88)" : "transparent",
+        backdropFilter: scrolled ? "blur(16px)" : "none",
+        transition:
+          "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
+        borderBottom: scrolled ? "0.5px solid rgba(14,12,11,0.06)" : "none",
+        pointerEvents: previewOpen ? "none" : "auto",
+      }}
+    >
+      {/* Logo */}
+      <Link
+        to="/"
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: "15px",
+          letterSpacing: "3.5px",
+          color: "var(--black)",
+          textDecoration: "none",
+          transition: "color 0.4s ease",
+        }}
+      >
+        KYLE PAYAWAL
+      </Link>
+
+      {/* Desktop nav */}
+      <div
+        style={{
+          display: !isMobile ? "flex" : "none",
+          gap: "36px",
+          alignItems: "center",
+        }}
+      >
+        <Link to="/" className="nav-link" style={{ color: "var(--black)" }}>
+          Home
+        </Link>
+        <Link to="/work" className="nav-link" style={{ color: "var(--black)" }}>
+          Work
+        </Link>
+        <Link
+          to="/about"
+          className="nav-link"
+          style={{ color: "var(--black)" }}
+        >
+          About
+        </Link>
+        <Link
+          to="/contact"
+          className="nav-link"
+          style={{ color: "var(--black)" }}
+        >
+          Contact
+        </Link>
+      </div>
+
+      {/* Logout CTA */}
+      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+        <button
+          onClick={onLogout}
+          style={{
+            display: !isMobile ? "block" : "none",
+            fontFamily: "var(--font-body)",
+            fontSize: "10px",
+            letterSpacing: "2px",
+            textTransform: "uppercase",
+            color: "var(--black)",
+            textDecoration: "none",
+            border: "0.5px solid rgba(14,12,11,0.25)",
+            padding: "9px 18px",
+            background: "transparent",
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = "var(--red)";
+            e.target.style.borderColor = "var(--red)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = "transparent";
+            e.target.style.borderColor = "rgba(14,12,11,0.25)";
+          }}
+        >
+          Logout
+        </button>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--black)",
+            cursor: "pointer",
+            display: isMobile ? "block" : "none",
+            transition: "color 0.4s ease",
+          }}
+          aria-label="Toggle menu"
+        >
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+    </nav>
+  );
+}
 
 // Lazy load image component
 function LazyImage({ src, alt, className }) {
@@ -40,6 +182,109 @@ function LazyImage({ src, alt, className }) {
   );
 }
 
+// Preview modal component
+function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
+  // Detect if the item is a video by checking file extension
+  const isVideoItem = () => {
+    if (isVideo) return true; // If explicitly passed, use it
+    if (!item.url) return false;
+    const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "mkv"];
+    const url = item.url.toLowerCase();
+    return videoExtensions.some((ext) => url.includes(`.${ext}`));
+  };
+
+  const videoCheck = isVideoItem();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowRight") onNext();
+      if (e.key === "ArrowLeft") onPrev();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, onNext, onPrev]);
+
+  if (!item) return null;
+
+  const currentIndex = allItems.findIndex((i) => i.id === item.id);
+  const hasNext = currentIndex < allItems.length - 1;
+  const hasPrev = currentIndex > 0;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      className="fixed inset-0 bg-[var(--black)] z-50 flex items-center justify-center"
+      style={{ backdropFilter: "blur(4px)" }}
+    >
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-8 right-8 z-50 text-white hover:text-[var(--red)] transition-colors"
+        aria-label="Close preview"
+      >
+        <X size={32} />
+      </button>
+
+      {/* Content container */}
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full h-full flex items-center justify-center p-8"
+      >
+        {/* Media */}
+        <div className="w-full h-full max-w-5xl max-h-screen flex items-center justify-center relative">
+          {videoCheck ? (
+            <video
+              src={item.url}
+              controls
+              autoPlay
+              className="w-full h-auto max-h-screen object-contain"
+            />
+          ) : (
+            <img
+              src={item.url}
+              alt={item.filename}
+              className="w-full h-auto max-h-screen object-contain"
+            />
+          )}
+        </div>
+
+        {/* Navigation buttons - positioned outside media */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-40 pl-4">
+          <button
+            onClick={onPrev}
+            disabled={!hasPrev}
+            className="text-white hover:text-[var(--red)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Previous item"
+          >
+            <ChevronLeft size={48} />
+          </button>
+        </div>
+
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-40 pr-4">
+          <button
+            onClick={onNext}
+            disabled={!hasNext}
+            className="text-white hover:text-[var(--red)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Next item"
+          >
+            <ChevronRight size={48} />
+          </button>
+        </div>
+
+        {/* Item counter */}
+        <div className="absolute bottom-8 left-8 text-white text-sm">
+          {currentIndex + 1} / {allItems.length}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function Gallery() {
   const [accessCode, setAccessCode] = useState("");
   const [clientName, setClientName] = useState("");
@@ -47,6 +292,8 @@ export default function Gallery() {
   const [error, setError] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
   const [videoModal, setVideoModal] = useState(null);
+  const [previewItem, setPreviewItem] = useState(null);
+  const [previewType, setPreviewType] = useState(null); // 'photo' or 'video'
   const [downloading, setDownloading] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
 
@@ -54,6 +301,18 @@ export default function Gallery() {
   const { photos, videos, loading } = useClientGallery(
     client?.access_code || null,
   );
+
+  // Disable scroll when preview is open
+  useEffect(() => {
+    if (previewItem) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [previewItem]);
 
   const handleLogin = async () => {
     setError("");
@@ -270,9 +529,45 @@ export default function Gallery() {
     }
   };
 
+  const openPreview = (item, type) => {
+    setPreviewItem(item);
+    setPreviewType(type);
+  };
+
+  const closePreview = () => {
+    setPreviewItem(null);
+    setPreviewType(null);
+  };
+
+  const goToNextPreview = () => {
+    if (!previewItem) return;
+
+    const allItems = previewType === "photo" ? photos : videos;
+    const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
+
+    if (currentIndex < allItems.length - 1) {
+      setPreviewItem(allItems[currentIndex + 1]);
+    }
+  };
+
+  const goToPrevPreview = () => {
+    if (!previewItem) return;
+
+    const allItems = previewType === "photo" ? photos : videos;
+    const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
+
+    if (currentIndex > 0) {
+      setPreviewItem(allItems[currentIndex - 1]);
+    }
+  };
+
   if (client) {
     return (
       <>
+        <GalleryNavbar
+          onLogout={() => setClient(null)}
+          previewOpen={!!previewItem}
+        />
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -327,14 +622,18 @@ export default function Gallery() {
                   {photos.map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
+                      className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer"
+                      onClick={() => openPreview(photo, "photo")}
                     >
                       <LazyImage
                         src={photo.url}
                         alt={photo.filename}
                         className="w-full h-full object-cover"
                       />
-                      <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center">
+                      <div
+                        className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <DownloadButton
                           galleryId={client.id}
                           fileName={
@@ -361,16 +660,23 @@ export default function Gallery() {
                 {videos.map((video) => (
                   <div
                     key={video.id}
-                    className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden"
+                    className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer"
+                    onClick={() => openPreview(video, "video")}
                   >
                     <video
                       src={video.url}
                       className="w-full h-full object-cover"
                       muted
                     />
-                    <div className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4">
+                    <div
+                      className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
-                        onClick={() => setVideoModal(video)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPreview(video, "video");
+                        }}
                         className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
                       >
                         <Play size={14} />
@@ -411,8 +717,21 @@ export default function Gallery() {
               </video>
             </div>
           )}
+
+          {/* Preview Modal */}
+          {previewItem && (
+            <PreviewModal
+              item={previewItem}
+              allItems={previewType === "photo" ? photos : videos}
+              onClose={closePreview}
+              onNext={goToNextPreview}
+              onPrev={goToPrevPreview}
+              isVideo={previewType === "video"}
+            />
+          )}
+
+          <ToastContainer toasts={toasts} removeToast={removeToast} />
         </motion.div>
-        <ToastContainer toasts={toasts} removeToast={removeToast} />
       </>
     );
   }

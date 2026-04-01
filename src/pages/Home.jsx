@@ -31,7 +31,7 @@ function VideoWithAutoplay({ src, className }) {
 
   useEffect(() => {
     if (isIntersecting && videoRef.current) {
-      videoRef.current.play().catch(() => {}); // Added catch for safety
+      videoRef.current.play().catch(() => {});
     } else if (videoRef.current) {
       videoRef.current.pause();
     }
@@ -110,7 +110,8 @@ export default function Home() {
   const revealRef = useRef([]);
   const heroVideoRef = useRef(null);
   const { items: selectedWork, loading } = useFeaturedPortfolio(4);
-  const { items: marqueeItems, loading: marqueeLoading } = useFeaturedPortfolio(6);
+  const { items: marqueeItems, loading: marqueeLoading } =
+    useFeaturedPortfolio(6);
   const [enableAutoplay, setEnableAutoplay] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -447,50 +448,52 @@ export default function Home() {
         >
           <div className="marquee-track">
             {marqueeItems.length > 0
-              ? [...marqueeItems, ...marqueeItems, ...marqueeItems].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: "320px",
-                      height: "220px",
-                      flexShrink: 0,
-                      borderRight: "0.5px solid rgba(240,235,224,0.04)",
-                      overflow: "hidden",
-                      position: "relative",
-                    }}
-                  >
-                    {item.type === "video" ? (
-                      <VideoWithAutoplay
-                        src={item.url}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <LazyImage
-                        src={item.url}
-                        alt={item.title}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                        }}
-                      />
-                    )}
-                    <span
+              ? [...marqueeItems, ...marqueeItems, ...marqueeItems].map(
+                  (item, i) => (
+                    <div
+                      key={i}
                       style={{
-                        position: "absolute",
-                        bottom: "14px",
-                        left: "16px",
-                        fontFamily: "var(--font-body)",
-                        fontSize: "9px",
-                        letterSpacing: "2px",
-                        textTransform: "uppercase",
-                        color: "rgba(240,235,224,0.5)",
+                        width: "320px",
+                        height: "220px",
+                        flexShrink: 0,
+                        borderRight: "0.5px solid rgba(240,235,224,0.04)",
+                        overflow: "hidden",
+                        position: "relative",
                       }}
                     >
-                      {item.category}
-                    </span>
-                  </div>
-                ))
+                      {item.type === "video" ? (
+                        <VideoWithAutoplay
+                          src={item.url}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <LazyImage
+                          src={item.url}
+                          alt={item.title}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      )}
+                      <span
+                        style={{
+                          position: "absolute",
+                          bottom: "14px",
+                          left: "16px",
+                          fontFamily: "var(--font-body)",
+                          fontSize: "9px",
+                          letterSpacing: "2px",
+                          textTransform: "uppercase",
+                          color: "rgba(240,235,224,0.5)",
+                        }}
+                      >
+                        {item.category}
+                      </span>
+                    </div>
+                  ),
+                )
               : [...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
                   <div
                     key={i}
