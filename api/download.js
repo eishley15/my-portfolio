@@ -8,10 +8,10 @@ const trueNasBaseUrl = process.env.TRUENAS_DOWNLOAD_BASE;
 const corsOrigin = process.env.CORS_ORIGIN || 'https://your-domain.com';
 
 export default async function handler(req, res) {
-  // Set CORS headers
+  // Set CORS header
   res.setHeader('Access-Control-Allow-Origin', corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Handle OPTIONS preflight
   if (req.method === 'OPTIONS') {
@@ -24,57 +24,38 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Extract and validate Authorization header
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Missing or invalid authorization header' });
+    // 1. Extract and validate query parameters
+    const { accessCode, galleryId, fileName } = req.query;
+
+    if (!accessCode || !galleryId || !fileName) {
+      return res.status(400).json({ error: 'Missing accessCode, galleryId, or fileName parameter' });
     }
 
-    const token = authHeader.slice(7); // Remove "Bearer " prefix
-
-    // 2. Initialize Supabase client with service role key
+    // 2. Initialize Supabase client and verify accessCode
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify the user with the provided token
-    const { data: userData, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !userData?.user) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
-
-    const userId = userData.user.id;
-
-    // 3. Extract and validate query parameters
-    const { galleryId, fileName } = req.query;
-
-    if (!galleryId || !fileName) {
-      return res.status(400).json({ error: 'Missing galleryId or fileName parameter' });
-    }
-
-    // 4. Check gallery access permissions
-    const { data: accessData, error: accessError } = await supabase
-      .from('gallery_access')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('gallery_id', galleryId)
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('access_code', accessCode)
       .single();
 
-    if (accessError || !accessData) {
-      return res.status(403).json({ error: 'Access denied to this gallery' });
+    if (clientError || !clientData) {
+      return res.status(403).json({ error: 'Invalid access code' });
     }
 
-    // 5. Sign JWT token with 15-minute expiry
+    // 3. Sign JWT token with 15-minute expiry
     const jwtPayload = {
       galleryId,
       fileName,
-      userId,
+      accessCode,
     };
 
     const signedToken = jwt.sign(jwtPayload, downloadTokenSecret, {
       expiresIn: '15m',
     });
 
-    // 6. Return signed download URL
+    // 4. Return signed download URL
     const downloadUrl = `${trueNasBaseUrl}/dl/${galleryId}/${fileName}?token=${signedToken}`;
 
     return res.status(200).json({ url: downloadUrl });
