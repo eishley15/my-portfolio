@@ -32,14 +32,14 @@ export default async function handler(req, res) {
     // 4. Route based on path and event
     const pathSegments = path.split('/').filter(Boolean);
 
-    // CASE 1: Portfolio-Clients, folder_created
-    if (pathSegments[0] === 'Portfolio-Clients' && event === 'folder_created' && pathSegments.length === 2) {
-      return await handleClientCreated(supabase, pathSegments[1], res);
+    // CASE 1: Portfolio-Clients/clients/{accessCode} folder_created
+    if (pathSegments[0] === 'Portfolio-Clients' && pathSegments[1] === 'clients' && event === 'folder_created' && pathSegments.length === 3) {
+      return await handleClientCreated(supabase, pathSegments[2], res);
     }
 
-    // CASE 2: Portfolio-Clients, file_created
-    if (pathSegments[0] === 'Portfolio-Clients' && event === 'file_created' && pathSegments.length === 3) {
-      return await handleClientFile(supabase, pathSegments[1], pathSegments[2], res);
+    // CASE 2: Portfolio-Clients/clients/{accessCode}/{filename} file_created
+    if (pathSegments[0] === 'Portfolio-Clients' && pathSegments[1] === 'clients' && event === 'file_created' && pathSegments.length === 4) {
+      return await handleClientFile(supabase, pathSegments[2], pathSegments[3], res);
     }
 
     // CASE 3: Originals, file_created
