@@ -13,7 +13,7 @@ import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
 import { useToast, ToastContainer } from "../components/Toast";
 import DownloadButton from "../components/DownloadButton";
-import JSZip from "jszip";
+import { useDownloadZip } from "../hooks/useDownloadZip";
 
 // Custom navbar for accessed gallery
 function GalleryNavbar({ onLogout, previewOpen }) {
@@ -281,8 +281,13 @@ export default function Gallery() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [previewItem, setPreviewItem] = useState(null);
   const [previewType, setPreviewType] = useState(null);
-  const [downloading, setDownloading] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
+  const {
+    downloadZip,
+    isZipping,
+    error: zipError,
+    clearError,
+  } = useDownloadZip();
 
   const { photos, videos, loading } = useClientGallery(
     client?.access_code || null,
@@ -329,94 +334,62 @@ export default function Gallery() {
     }
   };
 
-  // Fetches a signed download URL for a single file from the API
-  const getSignedDownloadUrl = async (file) => {
-    const response = await fetch(
-      `/api/download?accessCode=${encodeURIComponent(client.access_code)}&galleryId=${encodeURIComponent(client.access_code)}&fileName=${encodeURIComponent(file.filename)}`,
-      { method: "GET" },
-    );
-    if (!response.ok)
-      throw new Error(`Failed to get signed URL for ${file.filename}`);
-    const { url } = await response.json();
-    return url;
-  };
-
-  // Bulk download: fetches originals via signed URLs and zips them
-  const handleBulkDownload = async (files, zipSuffix) => {
-    if (!client || files.length === 0) return;
-    setDownloading(true);
-
-    try {
-      const zip = new JSZip();
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        try {
-          const signedUrl = await getSignedDownloadUrl(file);
-          const response = await fetch(signedUrl, { method: "GET" });
-
-          if (!response.ok) {
-            console.error(
-              `Failed to fetch ${file.filename}: ${response.status}`,
-            );
-            continue;
-          }
-
-          const blob = await response.blob();
-          if (blob.size === 0) {
-            console.error(`Empty blob for ${file.filename}`);
-            continue;
-          }
-
-          zip.file(file.filename, blob);
-          console.log(`Added ${file.filename} (${blob.size} bytes)`);
-        } catch (err) {
-          console.error(`Failed to download ${file.filename}:`, err);
-        }
-      }
-
-      const fileCount = Object.keys(zip.files).length;
-      if (fileCount === 0) {
-        addToast("No files could be downloaded. Please try again.", "error");
-        return;
-      }
-
-      const content = await zip.generateAsync({
-        type: "blob",
-        compression: "DEFLATE",
-        compressionOptions: { level: 6 },
-      });
-
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(content);
-      a.download = `${client.client_name.replace(/\s+/g, "-").toLowerCase()}-${zipSuffix}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-    } catch (err) {
-      console.error("ZIP creation failed:", err);
-      addToast("Failed to create ZIP file. Please try again.", "error");
-    } finally {
-      setDownloading(false);
+  // Download all files as ZIP
+  const handleDownloadAll = async () => {
+    if (!client) return;
+    const clientNameFormatted = client.client_name
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    const result = await downloadZip({
+      accessCode: client.access_code,
+      clientName: clientNameFormatted,
+    });
+    if (result.success) {
+      addToast("ZIP download started!", "success");
+    } else if (result.error) {
+      addToast(result.error, "error");
     }
   };
 
-  const handleDownloadAll = () => {
-    handleBulkDownload([...photos, ...videos], "gallery");
-  };
+  // Download selected files as ZIP
+  const handleDownloadSelected = async () => {
+    if (!client || selectedItems.length === 0) return;
 
-  const handleDownloadSelected = () => {
-    const selectedFiles = [...photos, ...videos].filter((f) =>
-      selectedItems.includes(f.id),
-    );
-    handleBulkDownload(selectedFiles, "selected");
+    // Convert selectedItems (IDs) to filenames
+    const selectedFilenames = [...photos, ...videos]
+      .filter((item) => selectedItems.includes(item.id))
+      .map((item) => item.filename);
+
+    if (selectedFilenames.length === 0) return;
+
+    const clientNameFormatted = client.client_name
+      .replace(/\s+/g, "-")
+      .toLowerCase();
+    const result = await downloadZip({
+      accessCode: client.access_code,
+      files: selectedFilenames,
+      clientName: clientNameFormatted,
+    });
+    if (result.success) {
+      addToast("ZIP download started!", "success");
+    } else if (result.error) {
+      addToast(result.error, "error");
+    }
   };
 
   const toggleSelect = (id) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
+  };
+
+  const toggleSelectAll = () => {
+    const allItemIds = [...photos, ...videos].map((item) => item.id);
+    if (selectedItems.length === allItemIds.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(allItemIds);
+    }
   };
 
   const openPreview = (item, type) => {
@@ -493,29 +466,60 @@ export default function Gallery() {
             </div>
 
             {/* Bulk download toolbar */}
-            <div className="sticky top-20 z-20 bg-[var(--off-white)] py-4 mb-8 flex gap-4 border-b border-[var(--gray-light)]/20">
-              <button
-                onClick={handleDownloadAll}
-                disabled={downloading}
-                className="px-6 py-3 bg-[var(--red)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Download size={16} />
-                {downloading ? "Creating ZIP..." : "Download All (ZIP)"}
-              </button>
+            <div className="sticky top-20 z-20 bg-[var(--off-white)] py-4 mb-8 border-b border-[var(--gray-light)]/20">
+              {/* Error message */}
+              {zipError && (
+                <div className="mb-4 px-4 py-2 bg-[var(--red)]/10 text-[var(--red)] text-sm rounded flex justify-between items-center">
+                  <span>{zipError}</span>
+                  <button
+                    onClick={clearError}
+                    className="text-[var(--red)] hover:opacity-70 text-xl leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
 
-              {selectedItems.length > 0 && (
+              {/* Button group */}
+              <div className="flex gap-4 flex-wrap">
+                {/* Select All / Deselect All */}
+                {(photos.length > 0 || videos.length > 0) && (
+                  <button
+                    onClick={toggleSelectAll}
+                    disabled={isZipping}
+                    className="px-4 py-2 bg-[var(--gray-light)]/20 text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--gray-light)]/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {selectedItems.length === photos.length + videos.length
+                      ? "Deselect All"
+                      : "Select All"}
+                  </button>
+                )}
+
+                {/* Download All */}
                 <button
-                  onClick={handleDownloadSelected}
-                  disabled={downloading}
-                  className="px-6 py-3 bg-transparent text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--black)] hover:text-[var(--off-white)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ border: "0.5px solid var(--black)" }}
+                  onClick={handleDownloadAll}
+                  disabled={isZipping}
+                  className="px-6 py-3 bg-[var(--red)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red-hover)] transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Download size={16} />
-                  {downloading
-                    ? "Creating ZIP..."
-                    : `Download Selected (${selectedItems.length})`}
+                  {isZipping ? "Creating ZIP..." : "Download All (ZIP)"}
                 </button>
-              )}
+
+                {/* Download Selected */}
+                {selectedItems.length > 0 && (
+                  <button
+                    onClick={handleDownloadSelected}
+                    disabled={isZipping}
+                    className="px-6 py-3 bg-transparent text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--black)] hover:text-[var(--off-white)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ border: "0.5px solid var(--black)" }}
+                  >
+                    <Download size={16} />
+                    {isZipping
+                      ? "Creating ZIP..."
+                      : `Download Selected (${selectedItems.length})`}
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Photos */}
@@ -528,7 +532,11 @@ export default function Gallery() {
                   {photos.map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all"
+                      className={`aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
+                        selectedItems.includes(photo.id)
+                          ? "ring-2 ring-[var(--red)]"
+                          : ""
+                      }`}
                       onClick={() => openPreview(photo, "photo")}
                     >
                       <LazyImage
@@ -576,7 +584,11 @@ export default function Gallery() {
                 {videos.map((video) => (
                   <div
                     key={video.id}
-                    className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all"
+                    className={`aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
+                      selectedItems.includes(video.id)
+                        ? "ring-2 ring-[var(--red)]"
+                        : ""
+                    }`}
                     onClick={() => openPreview(video, "video")}
                   >
                     <video
