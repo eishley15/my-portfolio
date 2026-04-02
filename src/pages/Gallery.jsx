@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Download,
-  Lock,
   Play,
   X,
   Menu,
@@ -16,7 +15,7 @@ import { useToast, ToastContainer } from "../components/Toast";
 import DownloadButton from "../components/DownloadButton";
 import JSZip from "jszip";
 
-// Custom navbar for accessed gallery (light background styling like About page)
+// Custom navbar for accessed gallery
 function GalleryNavbar({ onLogout, previewOpen }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -54,7 +53,6 @@ function GalleryNavbar({ onLogout, previewOpen }) {
         pointerEvents: previewOpen ? "none" : "auto",
       }}
     >
-      {/* Logo */}
       <Link
         to="/"
         style={{
@@ -69,7 +67,6 @@ function GalleryNavbar({ onLogout, previewOpen }) {
         KYLE PAYAWAL
       </Link>
 
-      {/* Desktop nav */}
       <div
         style={{
           display: !isMobile ? "flex" : "none",
@@ -99,7 +96,6 @@ function GalleryNavbar({ onLogout, previewOpen }) {
         </Link>
       </div>
 
-      {/* Logout CTA */}
       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
         <button
           onClick={onLogout}
@@ -110,7 +106,6 @@ function GalleryNavbar({ onLogout, previewOpen }) {
             letterSpacing: "2px",
             textTransform: "uppercase",
             color: "var(--black)",
-            textDecoration: "none",
             border: "0.5px solid rgba(14,12,11,0.25)",
             padding: "9px 18px",
             background: "transparent",
@@ -119,17 +114,18 @@ function GalleryNavbar({ onLogout, previewOpen }) {
           }}
           onMouseEnter={(e) => {
             e.target.style.background = "var(--red)";
+            e.target.style.color = "var(--off-white)";
             e.target.style.borderColor = "var(--red)";
           }}
           onMouseLeave={(e) => {
             e.target.style.background = "transparent";
+            e.target.style.color = "var(--black)";
             e.target.style.borderColor = "rgba(14,12,11,0.25)";
           }}
         >
           Logout
         </button>
 
-        {/* Mobile hamburger */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
           style={{
@@ -138,7 +134,6 @@ function GalleryNavbar({ onLogout, previewOpen }) {
             color: "var(--black)",
             cursor: "pointer",
             display: isMobile ? "block" : "none",
-            transition: "color 0.4s ease",
           }}
           aria-label="Toggle menu"
         >
@@ -165,7 +160,6 @@ function LazyImage({ src, alt, className }) {
       },
       { rootMargin: "50px" },
     );
-
     if (imgRef.current) observer.observe(imgRef.current);
     return () => observer.disconnect();
   }, [src]);
@@ -184,24 +178,12 @@ function LazyImage({ src, alt, className }) {
 
 // Preview modal component
 function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
-  // Detect if the item is a video by checking file extension
-  const isVideoItem = () => {
-    if (isVideo) return true; // If explicitly passed, use it
-    if (!item.url) return false;
-    const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "mkv"];
-    const url = item.url.toLowerCase();
-    return videoExtensions.some((ext) => url.includes(`.${ext}`));
-  };
-
-  const videoCheck = isVideoItem();
-
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") onNext();
       if (e.key === "ArrowLeft") onPrev();
     };
-
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, onNext, onPrev]);
@@ -221,7 +203,6 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
       className="fixed inset-0 bg-[var(--black)] z-50 flex items-center justify-center"
       style={{ backdropFilter: "blur(4px)" }}
     >
-      {/* Close button */}
       <button
         onClick={onClose}
         className="absolute top-8 right-8 z-50 text-white hover:text-[var(--red)] transition-colors"
@@ -230,14 +211,12 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
         <X size={32} />
       </button>
 
-      {/* Content container */}
       <div
         onClick={(e) => e.stopPropagation()}
         className="relative w-full h-full flex items-center justify-center p-8"
       >
-        {/* Media */}
         <div className="w-full h-full max-w-5xl max-h-screen flex items-center justify-center relative">
-          {videoCheck ? (
+          {isVideo ? (
             <video
               src={item.url}
               controls
@@ -253,7 +232,6 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
           )}
         </div>
 
-        {/* Navigation buttons - positioned outside media */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 z-40 pl-4">
           <button
             onClick={onPrev}
@@ -276,7 +254,6 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
           </button>
         </div>
 
-        {/* Item counter */}
         <div className="absolute bottom-8 left-8 text-white text-sm">
           {currentIndex + 1} / {allItems.length}
         </div>
@@ -291,24 +268,17 @@ export default function Gallery() {
   const [client, setClient] = useState(null);
   const [error, setError] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
-  const [videoModal, setVideoModal] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
-  const [previewType, setPreviewType] = useState(null); // 'photo' or 'video'
+  const [previewType, setPreviewType] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const { toasts, addToast, removeToast } = useToast();
 
-  // Call hook unconditionally at top level
   const { photos, videos, loading } = useClientGallery(
     client?.access_code || null,
   );
 
-  // Disable scroll when preview is open
   useEffect(() => {
-    if (previewItem) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
+    document.body.style.overflow = previewItem ? "hidden" : "unset";
     return () => {
       document.body.style.overflow = "unset";
     };
@@ -329,204 +299,99 @@ export default function Gallery() {
         return;
       }
       setClient(data);
-    } catch (err) {
+    } catch {
       setError("Access code not found. Please check and try again.");
     }
   };
 
-  const handleDownload = async (url, filename) => {
-    if (!client) return;
+  // Fetches a signed download URL for a single file from the API
+  const getSignedDownloadUrl = async (file) => {
+    const response = await fetch(
+      `/api/download?accessCode=${encodeURIComponent(client.access_code)}&galleryId=${encodeURIComponent(client.access_code)}&fileName=${encodeURIComponent(file.filename)}`,
+      { method: "GET" },
+    );
+    if (!response.ok)
+      throw new Error(`Failed to get signed URL for ${file.filename}`);
+    const { url } = await response.json();
+    return url;
+  };
+
+  // Bulk download: fetches originals via signed URLs and zips them
+  const handleBulkDownload = async (files, zipSuffix) => {
+    if (!client || files.length === 0) return;
+    setDownloading(true);
+
     try {
-      const response = await fetch(url, {
-        method: "GET",
-        mode: "cors",
-        cache: "no-store",
-      });
-      if (!response.ok) {
-        alert("Failed to download file. Please try again.");
+      const zip = new JSZip();
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const signedUrl = await getSignedDownloadUrl(file);
+          const response = await fetch(signedUrl, { method: "GET" });
+
+          if (!response.ok) {
+            console.error(
+              `Failed to fetch ${file.filename}: ${response.status}`,
+            );
+            continue;
+          }
+
+          const blob = await response.blob();
+          if (blob.size === 0) {
+            console.error(`Empty blob for ${file.filename}`);
+            continue;
+          }
+
+          zip.file(file.filename, blob);
+          console.log(`Added ${file.filename} (${blob.size} bytes)`);
+        } catch (err) {
+          console.error(`Failed to download ${file.filename}:`, err);
+        }
+      }
+
+      const fileCount = Object.keys(zip.files).length;
+      if (fileCount === 0) {
+        addToast("No files could be downloaded. Please try again.", "error");
         return;
       }
-      const blob = await response.blob();
+
+      const content = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+      });
+
       const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      // Use filename or extract from URL
-      a.download = filename || url.split("/").pop() || "download";
+      a.href = URL.createObjectURL(content);
+      a.download = `${client.client_name.replace(/\s+/g, "-").toLowerCase()}-${zipSuffix}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(a.href);
     } catch (err) {
-      console.error("Download failed:", err);
-      alert("Download failed. Please check the console for details.");
+      console.error("ZIP creation failed:", err);
+      addToast("Failed to create ZIP file. Please try again.", "error");
+    } finally {
+      setDownloading(false);
     }
+  };
+
+  const handleDownloadAll = () => {
+    handleBulkDownload([...photos, ...videos], "gallery");
+  };
+
+  const handleDownloadSelected = () => {
+    const selectedFiles = [...photos, ...videos].filter((f) =>
+      selectedItems.includes(f.id),
+    );
+    handleBulkDownload(selectedFiles, "selected");
   };
 
   const toggleSelect = (id) => {
     setSelectedItems((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
-  };
-
-  const handleDownloadAll = async () => {
-    if (!client) return;
-    setDownloading(true);
-
-    try {
-      const zip = new JSZip();
-      const allFiles = [...photos, ...videos];
-
-      // Fetch all files and add to zip
-      for (let i = 0; i < allFiles.length; i++) {
-        const file = allFiles[i];
-        try {
-          const response = await fetch(file.url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-store",
-          });
-
-          if (!response.ok) {
-            console.error(`Failed to fetch ${file.url}: ${response.status}`);
-            continue;
-          }
-
-          const blob = await response.blob();
-
-          // Ensure we have a valid blob with content
-          if (blob.size === 0) {
-            console.error(`Empty blob for ${file.url}`);
-            continue;
-          }
-
-          // Get file extension from URL or use default
-          const urlParts = file.url.split(".");
-          const extension = urlParts[urlParts.length - 1].split("?")[0];
-          const filename =
-            file.filename || file.name || `file-${i + 1}.${extension}`;
-
-          zip.file(filename, blob);
-          console.log(`Added ${filename} (${blob.size} bytes)`);
-        } catch (err) {
-          console.error(`Failed to download ${file.url}:`, err);
-        }
-      }
-
-      // Check if zip has any files
-      const fileCount = Object.keys(zip.files).length;
-      if (fileCount === 0) {
-        alert(
-          "No files could be added to the ZIP. Please check console for errors.",
-        );
-        setDownloading(false);
-        return;
-      }
-
-      console.log(`Generating ZIP with ${fileCount} files...`);
-
-      // Generate and download zip
-      const content = await zip.generateAsync({
-        type: "blob",
-        compression: "DEFLATE",
-        compressionOptions: { level: 6 },
-      });
-
-      console.log(`ZIP generated: ${content.size} bytes`);
-
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(content);
-      a.download = `${client.client_name.replace(/\s+/g, "-").toLowerCase()}-gallery.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-    } catch (err) {
-      console.error("ZIP creation failed:", err);
-      alert("Failed to create ZIP file. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleDownloadSelected = async () => {
-    if (!client || selectedItems.length === 0) return;
-    setDownloading(true);
-
-    try {
-      const zip = new JSZip();
-      const selectedFiles = [...photos, ...videos].filter((file) =>
-        selectedItems.includes(file.id),
-      );
-
-      // Fetch selected files and add to zip
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const file = selectedFiles[i];
-        try {
-          const response = await fetch(file.url, {
-            method: "GET",
-            mode: "cors",
-            cache: "no-store",
-          });
-
-          if (!response.ok) {
-            console.error(`Failed to fetch ${file.url}: ${response.status}`);
-            continue;
-          }
-
-          const blob = await response.blob();
-
-          // Ensure we have a valid blob with content
-          if (blob.size === 0) {
-            console.error(`Empty blob for ${file.url}`);
-            continue;
-          }
-
-          // Get file extension from URL or use default
-          const urlParts = file.url.split(".");
-          const extension = urlParts[urlParts.length - 1].split("?")[0];
-          const filename =
-            file.filename || file.name || `file-${i + 1}.${extension}`;
-
-          zip.file(filename, blob);
-          console.log(`Added ${filename} (${blob.size} bytes)`);
-        } catch (err) {
-          console.error(`Failed to download ${file.url}:`, err);
-        }
-      }
-
-      // Check if zip has any files
-      const fileCount = Object.keys(zip.files).length;
-      if (fileCount === 0) {
-        alert(
-          "No files could be added to the ZIP. Please check console for errors.",
-        );
-        setDownloading(false);
-        return;
-      }
-
-      console.log(`Generating ZIP with ${fileCount} files...`);
-
-      // Generate and download zip
-      const content = await zip.generateAsync({
-        type: "blob",
-        compression: "DEFLATE",
-        compressionOptions: { level: 6 },
-      });
-
-      console.log(`ZIP generated: ${content.size} bytes`);
-
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(content);
-      a.download = `${client.client_name.replace(/\s+/g, "-").toLowerCase()}-selected.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(a.href);
-    } catch (err) {
-      console.error("ZIP creation failed:", err);
-      alert("Failed to create ZIP file. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
   };
 
   const openPreview = (item, type) => {
@@ -541,25 +406,20 @@ export default function Gallery() {
 
   const goToNextPreview = () => {
     if (!previewItem) return;
-
     const allItems = previewType === "photo" ? photos : videos;
     const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
-
-    if (currentIndex < allItems.length - 1) {
+    if (currentIndex < allItems.length - 1)
       setPreviewItem(allItems[currentIndex + 1]);
-    }
   };
 
   const goToPrevPreview = () => {
     if (!previewItem) return;
-
     const allItems = previewType === "photo" ? photos : videos;
     const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
-
-    if (currentIndex > 0) {
-      setPreviewItem(allItems[currentIndex - 1]);
-    }
+    if (currentIndex > 0) setPreviewItem(allItems[currentIndex - 1]);
   };
+
+  // ─── Authenticated Gallery View ───────────────────────────────────────────────
 
   if (client) {
     return (
@@ -568,6 +428,7 @@ export default function Gallery() {
           onLogout={() => setClient(null)}
           previewOpen={!!previewItem}
         />
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -575,6 +436,7 @@ export default function Gallery() {
           className="min-h-screen bg-[var(--off-white)] text-[var(--black)] pt-24 pb-20 px-6"
         >
           <div className="max-w-[1800px] mx-auto">
+            {/* Header */}
             <div className="mb-12">
               <h1 className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-4">
                 {client.client_name}
@@ -589,6 +451,7 @@ export default function Gallery() {
               </div>
             </div>
 
+            {/* Bulk download toolbar */}
             <div className="sticky top-20 z-20 bg-[var(--off-white)] py-4 mb-8 flex gap-4 border-b border-[var(--gray-light)]/20">
               <button
                 onClick={handleDownloadAll}
@@ -598,6 +461,7 @@ export default function Gallery() {
                 <Download size={16} />
                 {downloading ? "Creating ZIP..." : "Download All (ZIP)"}
               </button>
+
               {selectedItems.length > 0 && (
                 <button
                   onClick={handleDownloadSelected}
@@ -613,6 +477,7 @@ export default function Gallery() {
               )}
             </div>
 
+            {/* Photos */}
             <div className="mb-16">
               <div className="eyebrow mb-6">PHOTOS</div>
               {loading ? (
@@ -630,23 +495,30 @@ export default function Gallery() {
                         alt={photo.filename}
                         className="w-full h-full object-cover"
                       />
+
+                      {/* Hover overlay */}
                       <div
                         className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <DownloadButton
-                          galleryId={client.id}
-                          fileName={
-                            photo.filename || photo.name || `photo-${photo.id}`
-                          }
+                          accessCode={client.access_code}
+                          galleryId={client.access_code}
+                          fileName={photo.filename}
                           onError={(message) => addToast(message, "error")}
                         />
                       </div>
+
+                      {/* Select checkbox */}
                       <input
                         type="checkbox"
                         checked={selectedItems.includes(photo.id)}
-                        onChange={() => toggleSelect(photo.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          toggleSelect(photo.id);
+                        }}
                         className="absolute top-2 right-2 w-5 h-5 z-10"
+                        onClick={(e) => e.stopPropagation()}
                       />
                     </div>
                   ))}
@@ -654,6 +526,7 @@ export default function Gallery() {
               )}
             </div>
 
+            {/* Videos */}
             <div>
               <div className="eyebrow mb-6">VIDEOS</div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
@@ -668,6 +541,8 @@ export default function Gallery() {
                       className="w-full h-full object-cover"
                       muted
                     />
+
+                    {/* Hover overlay */}
                     <div
                       className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4"
                       onClick={(e) => e.stopPropagation()}
@@ -682,41 +557,31 @@ export default function Gallery() {
                         <Play size={14} />
                         Play
                       </button>
+
                       <DownloadButton
-                        galleryId={client.id}
-                        fileName={
-                          video.filename || video.name || `video-${video.id}`
-                        }
+                        accessCode={client.access_code}
+                        galleryId={client.access_code}
+                        fileName={video.filename}
                         onError={(message) => addToast(message, "error")}
                       />
                     </div>
+
+                    {/* Select checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(video.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleSelect(video.id);
+                      }}
+                      className="absolute top-2 right-2 w-5 h-5 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    />
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
-          {videoModal && (
-            <div
-              className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-6"
-              onClick={() => setVideoModal(null)}
-            >
-              <button
-                onClick={() => setVideoModal(null)}
-                className="absolute top-6 right-6 text-[var(--off-white)] hover:text-[var(--red)]"
-              >
-                <X size={32} />
-              </button>
-              <video
-                controls
-                src={videoModal.url}
-                className="max-w-full max-h-full"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Video player */}
-              </video>
-            </div>
-          )}
 
           {/* Preview Modal */}
           {previewItem && (
@@ -735,6 +600,8 @@ export default function Gallery() {
       </>
     );
   }
+
+  // ─── Login View ───────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -791,6 +658,7 @@ export default function Gallery() {
                   type="text"
                   value={accessCode}
                   onChange={(e) => setAccessCode(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   placeholder="santos-wedding-2024"
                   className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] font-mono text-sm"
                   style={{ border: "0.5px solid var(--off-white)" }}
@@ -805,6 +673,7 @@ export default function Gallery() {
                   type="text"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
                   placeholder="Juan Santos"
                   className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] text-sm"
                   style={{ border: "0.5px solid var(--off-white)" }}

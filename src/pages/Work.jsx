@@ -38,7 +38,7 @@ function LazyImage({ src, alt, className }) {
   );
 }
 
-function VideoWithAutoplay({ src, className }) {
+function VideoWithAutoplay({ src, className, poster }) {
   const videoRef = useRef(null);
   const [isIntersecting, setIsIntersecting] = useState(false);
 
@@ -73,6 +73,7 @@ function VideoWithAutoplay({ src, className }) {
     <video
       ref={videoRef}
       src={src}
+      poster={poster}
       className={className}
       muted
       loop
@@ -210,20 +211,38 @@ export default function Work() {
               className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center"
               onClick={(e) => e.stopPropagation()}
             >
-              {selectedItem.type === "video" ? (
-                <video
-                  src={selectedItem.url}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-[90vh] object-contain"
-                />
-              ) : (
-                <img
-                  src={selectedItem.url}
-                  alt={selectedItem.title}
-                  className="max-w-full max-h-[90vh] object-contain"
-                />
-              )}
+              {(() => {
+                // Detect if item is video by checking file extension
+                const isVideo = () => {
+                  if (selectedItem.type === "video") return true; // If explicitly set
+                  if (!selectedItem.url) return false;
+                  const videoExtensions = [
+                    "mp4",
+                    "webm",
+                    "ogg",
+                    "mov",
+                    "avi",
+                    "mkv",
+                  ];
+                  const url = selectedItem.url.toLowerCase();
+                  return videoExtensions.some((ext) => url.includes(`.${ext}`));
+                };
+
+                return isVideo() ? (
+                  <video
+                    src={selectedItem.url}
+                    controls
+                    autoPlay
+                    className="max-w-full max-h-[90vh] object-contain"
+                  />
+                ) : (
+                  <img
+                    src={selectedItem.url}
+                    alt={selectedItem.title}
+                    className="max-w-full max-h-[90vh] object-contain"
+                  />
+                );
+              })()}
             </div>
 
             {/* Counter - bottom center */}
@@ -276,25 +295,66 @@ export default function Work() {
                     onClick={() => setSelectedItem(item)}
                     className="aspect-square relative overflow-hidden bg-[var(--gray-dark)] cursor-pointer group"
                   >
-                    {item.type === "video" ? (
-                      <VideoWithAutoplay
-                        src={item.url}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <LazyImage
-                        src={item.url}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                    )}
+                    {(() => {
+                      // Detect if item is video by checking file extension
+                      const isVideo = () => {
+                        if (item.type === "video") return true; // If explicitly set
+                        if (!item.url) return false;
+                        const videoExtensions = [
+                          "mp4",
+                          "webm",
+                          "ogg",
+                          "mov",
+                          "avi",
+                          "mkv",
+                        ];
+                        const url = item.url.toLowerCase();
+                        return videoExtensions.some((ext) =>
+                          url.includes(`.${ext}`),
+                        );
+                      };
 
-                    {item.type === "video" && (
-                      <div className="absolute top-4 left-4 flex items-center gap-2 text-[var(--red)] text-[10px] tracking-[2px] z-10">
-                        <span className="w-2 h-2 bg-[var(--red)] rounded-full animate-pulse" />
-                        VIDEO
-                      </div>
-                    )}
+                      return isVideo() ? (
+                        <VideoWithAutoplay
+                          src={item.url}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <LazyImage
+                          src={item.url}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      );
+                    })()}
+
+                    {(() => {
+                      const isVideo = () => {
+                        if (item.type === "video") return true;
+                        if (!item.url) return false;
+                        const videoExtensions = [
+                          "mp4",
+                          "webm",
+                          "ogg",
+                          "mov",
+                          "avi",
+                          "mkv",
+                        ];
+                        const url = item.url.toLowerCase();
+                        return videoExtensions.some((ext) =>
+                          url.includes(`.${ext}`),
+                        );
+                      };
+
+                      return (
+                        isVideo() && (
+                          <div className="absolute top-4 left-4 flex items-center gap-2 text-[var(--red)] text-[10px] tracking-[2px] z-10">
+                            <span className="w-2 h-2 bg-[var(--red)] rounded-full animate-pulse" />
+                            VIDEO
+                          </div>
+                        )
+                      );
+                    })()}
 
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition-colors duration-300 flex items-center justify-center">
                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white text-center">
@@ -362,18 +422,39 @@ export default function Work() {
               >
                 {/* Thumbnail background */}
                 {categoryMedia[category.name] ? (
-                  categoryMedia[category.name].type === "video" ? (
-                    <VideoWithAutoplay
-                      src={categoryMedia[category.name].url}
-                      className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
-                    />
-                  ) : (
-                    <img
-                      src={categoryMedia[category.name].url}
-                      alt={category.name}
-                      className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
-                    />
-                  )
+                  (() => {
+                    const item = categoryMedia[category.name];
+                    // Detect if item is video by checking file extension
+                    const isVideo = () => {
+                      if (item.type === "video") return true;
+                      if (!item.url) return false;
+                      const videoExtensions = [
+                        "mp4",
+                        "webm",
+                        "ogg",
+                        "mov",
+                        "avi",
+                        "mkv",
+                      ];
+                      const url = item.url.toLowerCase();
+                      return videoExtensions.some((ext) =>
+                        url.includes(`.${ext}`),
+                      );
+                    };
+
+                    return isVideo() ? (
+                      <VideoWithAutoplay
+                        src={item.url}
+                        className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={category.name}
+                        className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
+                      />
+                    );
+                  })()
                 ) : category.thumbnail ? (
                   <img
                     src={category.thumbnail}

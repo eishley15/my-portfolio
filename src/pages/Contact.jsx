@@ -83,7 +83,7 @@ export default function Contact() {
           className="absolute inset-0 z-0"
           style={{
             backgroundImage:
-              "url(https://cdn.kylepayawal.studio/kylepayawal-portfolio/portfolio/commercial/DSC06393.jpg)",
+              "url(https://cdn.kylepayawal.studio/portfolio/commercial/DSC06393.webp)",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",

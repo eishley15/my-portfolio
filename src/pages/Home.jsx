@@ -175,7 +175,7 @@ export default function Home() {
             playsInline
             preload="metadata"
             poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%230e0c0b' width='1920' height='1080'/%3E%3C/svg%3E"
-            src="https://cdn.kylepayawal.studio/kylepayawal-portfolio/reel.mp4"
+            src="https://cdn.kylepayawal.studio/portfolio/commercial/CG%20AVP%2016%209.mp4"
             style={{
               position: "absolute",
               inset: 0,
@@ -461,22 +461,40 @@ export default function Home() {
                         position: "relative",
                       }}
                     >
-                      {item.type === "video" ? (
-                        <VideoWithAutoplay
-                          src={item.url}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <LazyImage
-                          src={item.url}
-                          alt={item.title}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      )}
+                      {(() => {
+                        const isVideo = () => {
+                          if (item.type === "video") return true;
+                          if (!item.url) return false;
+                          const videoExtensions = [
+                            "mp4",
+                            "webm",
+                            "ogg",
+                            "mov",
+                            "avi",
+                            "mkv",
+                          ];
+                          const url = item.url.toLowerCase();
+                          return videoExtensions.some((ext) =>
+                            url.includes(`.${ext}`),
+                          );
+                        };
+                        return isVideo() ? (
+                          <VideoWithAutoplay
+                            src={item.url}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <LazyImage
+                            src={item.url}
+                            alt={item.title}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
+                          />
+                        );
+                      })()}
                       <span
                         style={{
                           position: "absolute",
@@ -682,34 +700,51 @@ export default function Home() {
                 }}
               >
                 {item.url &&
-                  (item.type === "video" ? (
-                    <video
-                      src={item.url}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        position: "absolute",
-                        inset: 0,
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={item.url}
-                      alt={item.category}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        position: "absolute",
-                        inset: 0,
-                      }}
-                    />
-                  ))}
+                  (() => {
+                    const isVideo = () => {
+                      if (item.type === "video") return true;
+                      const videoExtensions = [
+                        "mp4",
+                        "webm",
+                        "ogg",
+                        "mov",
+                        "avi",
+                        "mkv",
+                      ];
+                      const url = item.url.toLowerCase();
+                      return videoExtensions.some((ext) =>
+                        url.includes(`.${ext}`),
+                      );
+                    };
+                    return isVideo() ? (
+                      <video
+                        src={item.url}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          position: "absolute",
+                          inset: 0,
+                        }}
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={item.category}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          position: "absolute",
+                          inset: 0,
+                        }}
+                      />
+                    );
+                  })()}
                 <div
                   style={{
                     position: "absolute",
