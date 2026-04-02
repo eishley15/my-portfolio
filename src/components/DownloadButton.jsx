@@ -5,7 +5,8 @@ import toast from "react-hot-toast";
 export default function DownloadButton({ accessCode, galleryId, fileName }) {
   const [loading, setLoading] = useState(false);
 
-  const handleDownload = async () => {
+  const handleDownload = async (e) => {
+    e.stopPropagation();
     try {
       setLoading(true);
 

@@ -25,13 +25,21 @@ function AnimatedRoutes() {
   );
 }
 
+function AppContent() {
+  return (
+    <>
+      <ScrollToTop />
+      <Navbar />
+      <AnimatedRoutes />
+      <Footer />
+    </>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      {" "}
-      <ScrollToTop /> <Navbar />
-      <AnimatedRoutes />
-      <Footer />
+      <AppContent />
     </BrowserRouter>
   );
 }

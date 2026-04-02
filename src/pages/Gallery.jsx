@@ -40,16 +40,18 @@ function GalleryNavbar({ onLogout, previewOpen }) {
         top: 0,
         left: 0,
         right: 0,
-        zIndex: previewOpen ? 40 : 100,
+        zIndex: 101,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         padding: "22px 40px",
-        background: scrolled ? "rgba(240,235,224,0.88)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
+        background: scrolled
+          ? "rgba(240,235,224,0.95)"
+          : "rgba(240,235,224,0.05)",
+        backdropFilter: "blur(16px)",
         transition:
           "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
-        borderBottom: scrolled ? "0.5px solid rgba(14,12,11,0.06)" : "none",
+        borderBottom: scrolled ? "0.5px solid rgba(14,12,11,0.08)" : "none",
         pointerEvents: previewOpen ? "none" : "auto",
       }}
     >
@@ -106,7 +108,7 @@ function GalleryNavbar({ onLogout, previewOpen }) {
             letterSpacing: "2px",
             textTransform: "uppercase",
             color: "var(--black)",
-            border: "0.5px solid rgba(14,12,11,0.25)",
+            border: "0.5px solid rgba(14,12,11,0.3)",
             padding: "9px 18px",
             background: "transparent",
             cursor: "pointer",
@@ -120,7 +122,7 @@ function GalleryNavbar({ onLogout, previewOpen }) {
           onMouseLeave={(e) => {
             e.target.style.background = "transparent";
             e.target.style.color = "var(--black)";
-            e.target.style.borderColor = "rgba(14,12,11,0.25)";
+            e.target.style.borderColor = "rgba(14,12,11,0.3)";
           }}
         >
           Logout
@@ -200,12 +202,15 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={onClose}
-      className="fixed inset-0 bg-[var(--black)] z-50 flex items-center justify-center"
-      style={{ backdropFilter: "blur(4px)" }}
+      className="fixed inset-0 bg-black/80 z-[110] flex items-center justify-center"
+      style={{ backdropFilter: "blur(8px)" }}
     >
       <button
-        onClick={onClose}
-        className="absolute top-8 right-8 z-50 text-white hover:text-[var(--red)] transition-colors"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute top-6 right-6 z-[111] text-white hover:text-[var(--red)] transition-colors p-2"
         aria-label="Close preview"
       >
         <X size={32} />
@@ -232,29 +237,35 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
           )}
         </div>
 
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-40 pl-4">
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 z-[111] pl-6">
           <button
-            onClick={onPrev}
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
             disabled={!hasPrev}
-            className="text-white hover:text-[var(--red)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="text-white hover:text-[var(--red)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed p-2"
             aria-label="Previous item"
           >
-            <ChevronLeft size={48} />
+            <ChevronLeft size={48} strokeWidth={1.5} />
           </button>
         </div>
 
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-40 pr-4">
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 z-[111] pr-6">
           <button
-            onClick={onNext}
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
             disabled={!hasNext}
-            className="text-white hover:text-[var(--red)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="text-white hover:text-[var(--red)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed p-2"
             aria-label="Next item"
           >
-            <ChevronRight size={48} />
+            <ChevronRight size={48} strokeWidth={1.5} />
           </button>
         </div>
 
-        <div className="absolute bottom-8 left-8 text-white text-sm">
+        <div className="absolute bottom-8 left-8 text-white/70 text-sm font-body tracking-wide">
           {currentIndex + 1} / {allItems.length}
         </div>
       </div>
@@ -276,6 +287,19 @@ export default function Gallery() {
   const { photos, videos, loading } = useClientGallery(
     client?.access_code || null,
   );
+
+  // Restore client session from localStorage on mount
+  useEffect(() => {
+    const storedClient = localStorage.getItem("galleryClient");
+    if (storedClient) {
+      try {
+        setClient(JSON.parse(storedClient));
+      } catch (err) {
+        console.error("Failed to restore client session:", err);
+        localStorage.removeItem("galleryClient");
+      }
+    }
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = previewItem ? "hidden" : "unset";
@@ -299,6 +323,7 @@ export default function Gallery() {
         return;
       }
       setClient(data);
+      localStorage.setItem("galleryClient", JSON.stringify(data));
     } catch {
       setError("Access code not found. Please check and try again.");
     }
@@ -406,17 +431,30 @@ export default function Gallery() {
 
   const goToNextPreview = () => {
     if (!previewItem) return;
-    const allItems = previewType === "photo" ? photos : videos;
+    const allItems = [...photos, ...videos];
     const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
-    if (currentIndex < allItems.length - 1)
-      setPreviewItem(allItems[currentIndex + 1]);
+    if (currentIndex < allItems.length - 1) {
+      const nextItem = allItems[currentIndex + 1];
+      const nextType = photos.some((p) => p.id === nextItem.id)
+        ? "photo"
+        : "video";
+      setPreviewItem(nextItem);
+      setPreviewType(nextType);
+    }
   };
 
   const goToPrevPreview = () => {
     if (!previewItem) return;
-    const allItems = previewType === "photo" ? photos : videos;
+    const allItems = [...photos, ...videos];
     const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
-    if (currentIndex > 0) setPreviewItem(allItems[currentIndex - 1]);
+    if (currentIndex > 0) {
+      const prevItem = allItems[currentIndex - 1];
+      const prevType = photos.some((p) => p.id === prevItem.id)
+        ? "photo"
+        : "video";
+      setPreviewItem(prevItem);
+      setPreviewType(prevType);
+    }
   };
 
   // ─── Authenticated Gallery View ───────────────────────────────────────────────
@@ -425,7 +463,10 @@ export default function Gallery() {
     return (
       <>
         <GalleryNavbar
-          onLogout={() => setClient(null)}
+          onLogout={() => {
+            setClient(null);
+            localStorage.removeItem("galleryClient");
+          }}
           previewOpen={!!previewItem}
         />
 
@@ -487,7 +528,7 @@ export default function Gallery() {
                   {photos.map((photo) => (
                     <div
                       key={photo.id}
-                      className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer"
+                      className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all"
                       onClick={() => openPreview(photo, "photo")}
                     >
                       <LazyImage
@@ -498,15 +539,17 @@ export default function Gallery() {
 
                       {/* Hover overlay */}
                       <div
-                        className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center"
-                        onClick={(e) => e.stopPropagation()}
+                        className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center cursor-pointer"
+                        onClick={() => openPreview(photo, "photo")}
                       >
-                        <DownloadButton
-                          accessCode={client.access_code}
-                          galleryId={client.access_code}
-                          fileName={photo.filename}
-                          onError={(message) => addToast(message, "error")}
-                        />
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <DownloadButton
+                            accessCode={client.access_code}
+                            galleryId={client.access_code}
+                            fileName={photo.filename}
+                            onError={(message) => addToast(message, "error")}
+                          />
+                        </div>
                       </div>
 
                       {/* Select checkbox */}
@@ -533,7 +576,7 @@ export default function Gallery() {
                 {videos.map((video) => (
                   <div
                     key={video.id}
-                    className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer"
+                    className="aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all"
                     onClick={() => openPreview(video, "video")}
                   >
                     <video
@@ -545,7 +588,7 @@ export default function Gallery() {
                     {/* Hover overlay */}
                     <div
                       className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={() => openPreview(video, "video")}
                     >
                       <button
                         onClick={(e) => {
@@ -558,12 +601,14 @@ export default function Gallery() {
                         Play
                       </button>
 
-                      <DownloadButton
-                        accessCode={client.access_code}
-                        galleryId={client.access_code}
-                        fileName={video.filename}
-                        onError={(message) => addToast(message, "error")}
-                      />
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <DownloadButton
+                          accessCode={client.access_code}
+                          galleryId={client.access_code}
+                          fileName={video.filename}
+                          onError={(message) => addToast(message, "error")}
+                        />
+                      </div>
                     </div>
 
                     {/* Select checkbox */}
@@ -587,7 +632,7 @@ export default function Gallery() {
           {previewItem && (
             <PreviewModal
               item={previewItem}
-              allItems={previewType === "photo" ? photos : videos}
+              allItems={[...photos, ...videos]}
               onClose={closePreview}
               onNext={goToNextPreview}
               onPrev={goToPrevPreview}
