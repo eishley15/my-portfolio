@@ -34,115 +34,199 @@ function GalleryNavbar({ onLogout, previewOpen }) {
   }, []);
 
   return (
-    <nav
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 101,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "22px 40px",
-        background: scrolled
-          ? "rgba(240,235,224,0.95)"
-          : "rgba(240,235,224,0.05)",
-        backdropFilter: "blur(16px)",
-        transition:
-          "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
-        borderBottom: scrolled ? "0.5px solid rgba(14,12,11,0.08)" : "none",
-        pointerEvents: previewOpen ? "none" : "auto",
-      }}
-    >
-      <Link
-        to="/"
+    <>
+      <nav
         style={{
-          fontFamily: "var(--font-display)",
-          fontSize: "15px",
-          letterSpacing: "3.5px",
-          color: "var(--black)",
-          textDecoration: "none",
-          transition: "color 0.4s ease",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 101,
+          display: "flex",
+          flexDirection: "column",
+          background: menuOpen && isMobile
+            ? "rgba(240,235,224,0.7)"
+            : scrolled
+            ? "rgba(240,235,224,0.95)"
+            : "rgba(240,235,224,0.05)",
+          backdropFilter: "blur(16px)",
+          transition:
+            "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
+          borderBottom: scrolled || (menuOpen && isMobile) ? "0.5px solid rgba(14,12,11,0.08)" : "none",
+          pointerEvents: previewOpen ? "none" : "auto",
         }}
       >
-        KYLE PAYAWAL
-      </Link>
-
-      <div
-        style={{
-          display: !isMobile ? "flex" : "none",
-          gap: "36px",
-          alignItems: "center",
-        }}
-      >
-        <Link to="/" className="nav-link" style={{ color: "var(--black)" }}>
-          Home
-        </Link>
-        <Link to="/work" className="nav-link" style={{ color: "var(--black)" }}>
-          Work
-        </Link>
-        <Link
-          to="/about"
-          className="nav-link"
-          style={{ color: "var(--black)" }}
-        >
-          About
-        </Link>
-        <Link
-          to="/contact"
-          className="nav-link"
-          style={{ color: "var(--black)" }}
-        >
-          Contact
-        </Link>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-        <button
-          onClick={onLogout}
+        <div
           style={{
-            display: !isMobile ? "block" : "none",
-            fontFamily: "var(--font-body)",
-            fontSize: "10px",
-            letterSpacing: "2px",
-            textTransform: "uppercase",
-            color: "var(--black)",
-            border: "0.5px solid rgba(14,12,11,0.3)",
-            padding: "9px 18px",
-            background: "transparent",
-            cursor: "pointer",
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.background = "var(--red)";
-            e.target.style.color = "var(--off-white)";
-            e.target.style.borderColor = "var(--red)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.background = "transparent";
-            e.target.style.color = "var(--black)";
-            e.target.style.borderColor = "rgba(14,12,11,0.3)";
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "22px 40px",
           }}
         >
-          Logout
-        </button>
-
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
+        <Link
+          to="/"
           style={{
-            background: "none",
-            border: "none",
+            fontFamily: "var(--font-display)",
+            fontSize: "15px",
+            letterSpacing: "3.5px",
             color: "var(--black)",
-            cursor: "pointer",
-            display: isMobile ? "block" : "none",
+            textDecoration: "none",
+            transition: "color 0.4s ease",
           }}
-          aria-label="Toggle menu"
         >
-          {menuOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-    </nav>
+          KYLE PAYAWAL
+        </Link>
+
+        <div
+          style={{
+            display: !isMobile ? "flex" : "none",
+            gap: "36px",
+            alignItems: "center",
+          }}
+        >
+          <Link to="/" className="nav-link" style={{ color: "var(--black)" }}>
+            Home
+          </Link>
+          <Link
+            to="/work"
+            className="nav-link"
+            style={{ color: "var(--black)" }}
+          >
+            Work
+          </Link>
+          <Link
+            to="/about"
+            className="nav-link"
+            style={{ color: "var(--black)" }}
+          >
+            About
+          </Link>
+          <Link
+            to="/contact"
+            className="nav-link"
+            style={{ color: "var(--black)" }}
+          >
+            Contact
+          </Link>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <button
+            onClick={onLogout}
+            style={{
+              display: !isMobile ? "block" : "none",
+              fontFamily: "var(--font-body)",
+              fontSize: "10px",
+              letterSpacing: "2px",
+              textTransform: "uppercase",
+              color: "var(--black)",
+              border: "0.5px solid rgba(14,12,11,0.3)",
+              padding: "9px 18px",
+              background: "transparent",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "var(--red)";
+              e.target.style.color = "var(--off-white)";
+              e.target.style.borderColor = "var(--red)";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "transparent";
+              e.target.style.color = "var(--black)";
+              e.target.style.borderColor = "rgba(14,12,11,0.3)";
+            }}
+          >
+            Logout
+          </button>
+
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--black)",
+              cursor: "pointer",
+              display: isMobile ? "block" : "none",
+              zIndex: 102,
+            }}
+            aria-label="Toggle menu"
+          >
+            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobile && (
+          <div
+            style={{
+              maxHeight: menuOpen ? "400px" : "0",
+              overflow: "hidden",
+              transition: "max-height 0.4s ease",
+              padding: menuOpen ? "0 40px 20px 40px" : "0 40px",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <Link
+                to="/"
+                className="nav-link"
+                style={{ color: "var(--black)", fontSize: "14px" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                to="/work"
+                className="nav-link"
+                style={{ color: "var(--black)", fontSize: "14px" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Work
+              </Link>
+              <Link
+                to="/about"
+                className="nav-link"
+                style={{ color: "var(--black)", fontSize: "14px" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                About
+              </Link>
+              <Link
+                to="/contact"
+                className="nav-link"
+                style={{ color: "var(--black)", fontSize: "14px" }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Contact
+              </Link>
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  onLogout();
+                }}
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "10px",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color: "var(--black)",
+                  border: "0.5px solid rgba(14,12,11,0.3)",
+                  padding: "12px 18px",
+                  background: "transparent",
+                  cursor: "pointer",
+                  marginTop: "10px",
+                  width: "fit-content",
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
+    </>
   );
 }
 
@@ -150,6 +234,7 @@ function GalleryNavbar({ onLogout, previewOpen }) {
 function LazyImage({ src, alt, className }) {
   const [loaded, setLoaded] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
+  const [error, setError] = useState(false);
   const imgRef = useRef(null);
 
   useEffect(() => {
@@ -167,14 +252,27 @@ function LazyImage({ src, alt, className }) {
   }, [src]);
 
   return (
-    <img
-      ref={imgRef}
-      src={imageSrc}
-      alt={alt}
-      className={className}
-      onLoad={() => setLoaded(true)}
-      style={{ opacity: loaded ? 1 : 0.5, transition: "opacity 0.3s" }}
-    />
+    <>
+      <img
+        ref={imgRef}
+        src={imageSrc}
+        alt={alt}
+        className={className}
+        onLoad={() => setLoaded(true)}
+        onError={() => {
+          setError(true);
+          setLoaded(true);
+        }}
+        style={{ opacity: loaded ? 1 : 0.3, transition: "opacity 0.3s" }}
+      />
+      {error && (
+        <div
+          className={`absolute inset-0 bg-[var(--gray-dark)] flex items-center justify-center text-xs text-[var(--gray-light)] ${className}`}
+        >
+          Image unavailable
+        </div>
+      )}
+    </>
   );
 }
 

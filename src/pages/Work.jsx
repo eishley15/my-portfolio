@@ -95,8 +95,9 @@ export default function Work() {
   // Map featured items by category for thumbnails
   const categoryMedia = {};
   featuredItems.forEach((item) => {
-    if (!categoryMedia[item.category]) {
-      categoryMedia[item.category] = item;
+    const key = item.category.toLowerCase();
+    if (!categoryMedia[key]) {
+      categoryMedia[key] = item;
     }
   });
 
@@ -421,9 +422,9 @@ export default function Work() {
                 className="aspect-[4/3] bg-[var(--gray-dark)] relative cursor-pointer overflow-hidden group"
               >
                 {/* Thumbnail background */}
-                {categoryMedia[category.name] ? (
+                {categoryMedia[category.name.toLowerCase()] ? (
                   (() => {
-                    const item = categoryMedia[category.name];
+                    const item = categoryMedia[category.name.toLowerCase()];
                     // Detect if item is video by checking file extension
                     const isVideo = () => {
                       if (item.type === "video") return true;

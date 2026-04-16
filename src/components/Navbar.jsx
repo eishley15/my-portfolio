@@ -38,18 +38,33 @@ export default function Navbar() {
           right: 0,
           zIndex: 100,
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "22px 40px",
-          background: scrolled ? "rgba(14,12,11,0.88)" : "transparent",
-          backdropFilter: scrolled ? "blur(16px)" : "none",
+          flexDirection: "column",
+          background: menuOpen && isMobile
+            ? (scrolled || isDarkBackground
+                ? "rgba(14,12,11,0.7)"
+                : "rgba(240,235,224,0.7)")
+            : scrolled
+            ? "rgba(14,12,11,0.88)"
+            : "transparent",
+          backdropFilter: scrolled || (menuOpen && isMobile) ? "blur(16px)" : "none",
           transition:
             "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
-          borderBottom: scrolled
-            ? "0.5px solid rgba(240,235,224,0.06)"
-            : "none",
+          borderBottom:
+            scrolled || (menuOpen && isMobile)
+              ? (scrolled || isDarkBackground
+                  ? "0.5px solid rgba(240,235,224,0.06)"
+                  : "0.5px solid rgba(14,12,11,0.08)")
+              : "none",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "22px 40px",
+          }}
+        >
         {/* Logo */}
         <Link
           to="/"
@@ -140,56 +155,112 @@ export default function Navbar() {
               cursor: "pointer",
               display: isMobile ? "block" : "none",
               transition: "color 0.4s ease",
+              zIndex: 100,
             }}
             aria-label="Toggle menu"
           >
             {menuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
-      </nav>
-
-      {/* Mobile overlay menu */}
-      {menuOpen && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 99,
-            background: "var(--black-pure)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "40px",
-          }}
-        >
-          {[
-            { to: "/", label: "Home" },
-            { to: "/work", label: "Work" },
-            { to: "/about", label: "About" },
-            { to: "/contact", label: "Contact" },
-            { to: "/gallery", label: "Client Gallery" },
-          ].map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(42px, 8vw, 72px)",
-                letterSpacing: "2px",
-                color: "var(--off-white)",
-                textDecoration: "none",
-                opacity: 0.9,
-                transition: "opacity 0.2s",
-              }}
-              onMouseEnter={(e) => (e.target.style.opacity = "1")}
-              onMouseLeave={(e) => (e.target.style.opacity = "0.9")}
-            >
-              {label}
-            </Link>
-          ))}
         </div>
-      )}
+
+        {/* Mobile menu */}
+        {isMobile && (
+          <div
+            style={{
+              maxHeight: menuOpen ? "400px" : "0",
+              overflow: "hidden",
+              transition: "max-height 0.4s ease",
+              padding: menuOpen ? "0 40px 20px 40px" : "0 40px",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <Link
+                to="/"
+                className="nav-link"
+                style={{
+                  color:
+                    scrolled || isDarkBackground
+                      ? "var(--off-white)"
+                      : "var(--black)",
+                  fontSize: "14px",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                to="/work"
+                className="nav-link"
+                style={{
+                  color:
+                    scrolled || isDarkBackground
+                      ? "var(--off-white)"
+                      : "var(--black)",
+                  fontSize: "14px",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Work
+              </Link>
+              <Link
+                to="/about"
+                className="nav-link"
+                style={{
+                  color:
+                    scrolled || isDarkBackground
+                      ? "var(--off-white)"
+                      : "var(--black)",
+                  fontSize: "14px",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                About
+              </Link>
+              <Link
+                to="/contact"
+                className="nav-link"
+                style={{
+                  color:
+                    scrolled || isDarkBackground
+                      ? "var(--off-white)"
+                      : "var(--black)",
+                  fontSize: "14px",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Contact
+              </Link>
+              <Link
+                to="/gallery"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "10px",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  color:
+                    scrolled || isDarkBackground
+                      ? "var(--off-white)"
+                      : "var(--black)",
+                  textDecoration: "none",
+                  border:
+                    scrolled || isDarkBackground
+                      ? "0.5px solid rgba(240,235,224,0.3)"
+                      : "0.5px solid rgba(14,12,11,0.3)",
+                  padding: "12px 18px",
+                  background: "transparent",
+                  marginTop: "10px",
+                  width: "fit-content",
+                  display: "block",
+                }}
+                onClick={() => setMenuOpen(false)}
+              >
+                Client Gallery
+              </Link>
+            </div>
+          </div>
+        )}
+      </nav>
     </>
   );
 }
