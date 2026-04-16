@@ -35,8 +35,16 @@ export default function Contact() {
     setError("");
 
     try {
-      const form = new FormData(e.target);
+      const form = new FormData();
       form.append("access_key", import.meta.env.VITE_WEB3FORMS_ACCESS_KEY);
+      form.append("name", formData.name);
+      form.append("email", formData.email);
+      form.append("eventType", formData.eventType);
+      form.append("eventDate", formData.eventDate);
+      form.append("location", formData.location);
+      form.append("message", formData.message);
+      form.append("subject", "New Inquiry from kylepayawal.studio");
+      form.append("from_name", "Kyle Payawal Portfolio");
 
       const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
@@ -141,18 +149,6 @@ export default function Contact() {
             onSubmit={handleSubmit}
             className="space-y-6"
           >
-            {/* Hidden fields for web3forms */}
-            <input
-              type="hidden"
-              name="subject"
-              value="New Inquiry from kylepayawal.studio"
-            />
-            <input
-              type="hidden"
-              name="from_name"
-              value="Kyle Payawal Portfolio"
-            />
-
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] tracking-[2px] uppercase mb-2">
@@ -258,7 +254,7 @@ export default function Contact() {
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center text-[var(--red)] text-sm"
+                className="text-center text-green-600 text-sm"
               >
                 Got it. I'll be in touch soon.
               </motion.div>
