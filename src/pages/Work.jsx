@@ -1,7 +1,61 @@
 import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  useTransform,
+} from "framer-motion";
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { usePortfolio, useFeaturedPortfolio } from "../hooks/usePortfolio";
+import { SkeletonGrid } from "../components/Skeleton";
+
+// 3D Tilt Card for categories
+function TiltCard({ children, onClick }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const rotateX = useTransform(y, [-100, 100], [5, -5]);
+  const rotateY = useTransform(x, [-100, 100], [-5, 5]);
+
+  const springConfig = { damping: 20, stiffness: 300 };
+  const springRotateX = useSpring(rotateX, springConfig);
+  const springRotateY = useSpring(rotateY, springConfig);
+
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set((e.clientX - centerX) * 0.15);
+    y.set((e.clientY - centerY) * 0.15);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{
+        rotateX: springRotateX,
+        rotateY: springRotateY,
+        transformStyle: "preserve-3d",
+      }}
+      whileHover={{ scale: 1.05, z: 50 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 // Lazy load image component
 function LazyImage({ src, alt, className }) {
@@ -290,9 +344,15 @@ export default function Work() {
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 32 }}
-                    whileInView={{ opacity: 1, y: 0 }}
+                    animate={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{
+                      delay: i * 0.03,
+                      type: "spring",
+                      stiffness: 100,
+                      damping: 15,
+                    }}
+                    whileHover={{ y: -8, transition: { duration: 0.2 } }}
                     onClick={() => setSelectedItem(item)}
                     className="aspect-square relative overflow-hidden bg-[var(--gray-dark)] cursor-pointer group"
                   >
@@ -404,90 +464,92 @@ export default function Work() {
         </div>
 
         {loading ? (
-          <div className="text-center py-20 text-[var(--gray-light)]">
-            Loading categories...
+          <div className="text-center py-20">
+            <SkeletonGrid count={12} columns={4} />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[2px]">
             {categories.map((category, i) => (
-              <motion.div
+              <TiltCard
                 key={category.name}
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.97 }}
                 onClick={() => setSelectedCategory(category)}
-                className="aspect-[4/3] bg-[var(--gray-dark)] relative cursor-pointer overflow-hidden group"
               >
-                {/* Thumbnail background */}
-                {categoryMedia[category.name.toLowerCase()] ? (
-                  (() => {
-                    const item = categoryMedia[category.name.toLowerCase()];
-                    // Detect if item is video by checking file extension
-                    const isVideo = () => {
-                      if (item.type === "video") return true;
-                      if (!item.url) return false;
-                      const videoExtensions = [
-                        "mp4",
-                        "webm",
-                        "ogg",
-                        "mov",
-                        "avi",
-                        "mkv",
-                      ];
-                      const url = item.url.toLowerCase();
-                      return videoExtensions.some((ext) =>
-                        url.includes(`.${ext}`),
-                      );
-                    };
+                <motion.div
+                  initial={{ opacity: 0, y: 32 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.05 }}
+                  className="aspect-[4/3] bg-[var(--gray-dark)] relative cursor-pointer overflow-hidden group"
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  {/* Thumbnail background */}
+                  {categoryMedia[category.name.toLowerCase()] ? (
+                    (() => {
+                      const item = categoryMedia[category.name.toLowerCase()];
+                      // Detect if item is video by checking file extension
+                      const isVideo = () => {
+                        if (item.type === "video") return true;
+                        if (!item.url) return false;
+                        const videoExtensions = [
+                          "mp4",
+                          "webm",
+                          "ogg",
+                          "mov",
+                          "avi",
+                          "mkv",
+                        ];
+                        const url = item.url.toLowerCase();
+                        return videoExtensions.some((ext) =>
+                          url.includes(`.${ext}`),
+                        );
+                      };
 
-                    return isVideo() ? (
-                      <VideoWithAutoplay
-                        src={item.url}
-                        className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
-                      />
-                    ) : (
-                      <img
-                        src={item.url}
-                        alt={category.name}
-                        className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
-                      />
-                    );
-                  })()
-                ) : category.thumbnail ? (
-                  <img
-                    src={category.thumbnail}
-                    alt={category.name}
-                    className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="font-display text-[var(--off-white)] text-4xl tracking-wider">
-                      {category.name.toUpperCase()}
+                      return isVideo() ? (
+                        <VideoWithAutoplay
+                          src={item.url}
+                          className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
+                        />
+                      ) : (
+                        <img
+                          src={item.url}
+                          alt={category.name}
+                          className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
+                        />
+                      );
+                    })()
+                  ) : category.thumbnail ? (
+                    <img
+                      src={category.thumbnail}
+                      alt={category.name}
+                      className="w-full h-full object-cover absolute inset-0 group-hover:scale-110 transition-transform duration-300"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="font-display text-[var(--off-white)] text-4xl tracking-wider">
+                        {category.name.toUpperCase()}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dark overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 group-hover:from-black/20 group-hover:via-black/40 transition-colors duration-300" />
+
+                  <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-between items-center z-10">
+                    <div className="text-[10px] tracking-[2px] text-[var(--off-white)] uppercase">
+                      {category.name}
+                    </div>
+                    <div className="text-[10px] text-[var(--gray-light)]">
+                      {category.count} projects
                     </div>
                   </div>
-                )}
 
-                {/* Dark overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/80 group-hover:from-black/20 group-hover:via-black/40 transition-colors duration-300" />
-
-                <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-between items-center z-10">
-                  <div className="text-[10px] tracking-[2px] text-[var(--off-white)] uppercase">
-                    {category.name}
-                  </div>
-                  <div className="text-[10px] text-[var(--gray-light)]">
-                    {category.count} projects
-                  </div>
-                </div>
-
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--red)] transform translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              </motion.div>
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--red)] transform translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                </motion.div>
+              </TiltCard>
             ))}
           </div>
         )}

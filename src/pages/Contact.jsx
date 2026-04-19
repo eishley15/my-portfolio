@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Instagram, Facebook } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Instagram, Facebook, ArrowRight, Mail } from "lucide-react";
+import Confetti from "../components/Confetti";
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ export default function Contact() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const eventTypes = [
     "Wedding",
@@ -31,6 +34,12 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      setError("Please fill in all required fields.");
+      return;
+    }
+    
     setLoading(true);
     setError("");
 
@@ -55,6 +64,7 @@ export default function Contact() {
 
       if (data.success) {
         setSubmitted(true);
+        setShowConfetti(true);
         setFormData({
           name: "",
           email: "",
@@ -63,7 +73,10 @@ export default function Contact() {
           location: "",
           message: "",
         });
-        setTimeout(() => setSubmitted(false), 5000);
+        setTimeout(() => {
+          setSubmitted(false);
+          setShowConfetti(false);
+        }, 5000);
       } else {
         setError("Failed to send. Please try again.");
       }
@@ -76,6 +89,22 @@ export default function Contact() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    // Clear field error when user starts typing
+    if (fieldErrors[e.target.name]) {
+      setFieldErrors({ ...fieldErrors, [e.target.name]: false });
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.name.trim()) errors.name = true;
+    if (!formData.email.trim()) errors.email = true;
+    if (!formData.eventType) errors.eventType = true;
+    if (!formData.eventDate) errors.eventDate = true;
+    if (!formData.location.trim()) errors.location = true;
+    
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   return (
@@ -85,6 +114,7 @@ export default function Contact() {
       exit={{ opacity: 0 }}
       className="min-h-screen"
     >
+      <Confetti active={showConfetti} />
       <div className="relative bg-[var(--black)] text-[var(--off-white)] pt-32 pb-20 px-6 overflow-hidden">
         {/* Background Image */}
         <div
@@ -141,134 +171,249 @@ export default function Contact() {
       </div>
 
       <div className="bg-[var(--off-white)] text-[var(--black)] py-20 px-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <div className="eyebrow mb-4">GET IN TOUCH</div>
+            <h2 className="font-display text-[clamp(36px,6vw,56px)] leading-[0.9] mb-4">
+              LET'S CREATE
+            </h2>
+            <p className="text-[var(--gray-light)] text-sm max-w-xl mx-auto">
+              Fill out the form below and I'll get back to you within 24 hours.
+            </p>
+          </motion.div>
+
           <motion.form
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             onSubmit={handleSubmit}
-            className="space-y-6"
+            className="bg-white shadow-lg p-8 md:p-12"
+            style={{
+              border: "0.5px solid rgba(0,0,0,0.08)",
+            }}
           >
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-[var(--cream)] text-[var(--black)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--red)]"
-                />
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[11px] tracking-[1.5px] uppercase mb-3 font-medium text-[var(--black)]">
+                    Full Name *
+                  </label>
+                  <motion.div
+                    animate={{
+                      scale: fieldErrors.name ? [1, 1.02, 1] : 1,
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      required
+                      placeholder="John Doe"
+                      className="w-full px-5 py-4 bg-[var(--off-white)] text-[var(--black)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
+                      style={{
+                        border: fieldErrors.name
+                          ? "2px solid var(--red)"
+                          : "1px solid rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </motion.div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] tracking-[1.5px] uppercase mb-3 font-medium text-[var(--black)]">
+                    Email Address *
+                  </label>
+                  <motion.div
+                    animate={{
+                      scale: fieldErrors.email ? [1, 1.02, 1] : 1,
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      placeholder="john@example.com"
+                      className="w-full px-5 py-4 bg-[var(--off-white)] text-[var(--black)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
+                      style={{
+                        border: fieldErrors.email
+                          ? "2px solid var(--red)"
+                          : "1px solid rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </motion.div>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-[11px] tracking-[1.5px] uppercase mb-3 font-medium text-[var(--black)]">
+                    Event Type *
+                  </label>
+                  <motion.div
+                    animate={{
+                      scale: fieldErrors.eventType ? [1, 1.02, 1] : 1,
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <select
+                      name="eventType"
+                      value={formData.eventType}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-5 py-4 bg-[var(--off-white)] text-[var(--black)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
+                      style={{
+                        border: fieldErrors.eventType
+                          ? "2px solid var(--red)"
+                          : "1px solid rgba(0,0,0,0.1)",
+                      }}
+                    >
+                      <option value="">Select event type</option>
+                      {eventTypes.map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                  </motion.div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] tracking-[1.5px] uppercase mb-3 font-medium text-[var(--black)]">
+                    Event Date *
+                  </label>
+                  <motion.div
+                    animate={{
+                      scale: fieldErrors.eventDate ? [1, 1.02, 1] : 1,
+                    }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <input
+                      type="date"
+                      name="eventDate"
+                      value={formData.eventDate}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-5 py-4 bg-[var(--off-white)] text-[var(--black)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
+                      style={{
+                        border: fieldErrors.eventDate
+                          ? "2px solid var(--red)"
+                          : "1px solid rgba(0,0,0,0.1)",
+                      }}
+                    />
+                  </motion.div>
+                </div>
               </div>
 
               <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                  Email
+                <label className="block text-[11px] tracking-[1.5px] uppercase mb-3 font-medium text-[var(--black)]">
+                  Location *
                 </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-[var(--cream)] text-[var(--black)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--red)]"
-                />
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                  Event Type
-                </label>
-                <select
-                  name="eventType"
-                  value={formData.eventType}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-[var(--cream)] text-[var(--black)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--red)]"
+                <motion.div
+                  animate={{
+                    scale: fieldErrors.location ? [1, 1.02, 1] : 1,
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <option value="">Select event type</option>
-                  {eventTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
+                    required
+                    placeholder="Tarlac City, Tarlac"
+                    className="w-full px-5 py-4 bg-[var(--off-white)] text-[var(--black)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
+                    style={{
+                      border: fieldErrors.location
+                        ? "2px solid var(--red)"
+                        : "1px solid rgba(0,0,0,0.1)",
+                    }}
+                  />
+                </motion.div>
               </div>
 
               <div>
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                  Event Date
+                <label className="block text-[11px] tracking-[1.5px] uppercase mb-3 font-medium text-[var(--black)]">
+                  Additional Details
                 </label>
-                <input
-                  type="date"
-                  name="eventDate"
-                  value={formData.eventDate}
+                <textarea
+                  name="message"
+                  value={formData.message}
                   onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 bg-[var(--cream)] text-[var(--black)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--red)]"
+                  rows="5"
+                  placeholder="Tell me more about your event, vision, and any specific requirements..."
+                  className="w-full px-5 py-4 bg-[var(--off-white)] text-[var(--black)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] resize-none transition-all"
+                  style={{
+                    border: "1px solid rgba(0,0,0,0.1)",
+                  }}
                 />
               </div>
+
+              <div className="pt-4">
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ scale: loading ? 1 : 1.02 }}
+                  whileTap={{ scale: loading ? 1 : 0.98 }}
+                  className="w-full px-8 py-5 bg-[var(--black)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] font-medium hover:bg-[var(--red)] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                >
+                  {loading ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-4 h-4 border-2 border-[var(--off-white)] border-t-transparent rounded-full"
+                      />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={16} />
+                      Send Inquiry
+                    </>
+                  )}
+                </motion.button>
+              </div>
+
+              {submitted && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-green-50 border border-green-200 text-green-700 px-6 py-4 rounded flex items-center justify-center gap-3"
+                >
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    className="text-xl"
+                  >
+                    ✓
+                  </motion.span>
+                  <span className="text-sm font-medium">
+                    Message sent successfully! I'll be in touch soon.
+                  </span>
+                </motion.div>
+              )}
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded text-center"
+                >
+                  <span className="text-sm font-medium">{error}</span>
+                </motion.div>
+              )}
             </div>
-
-            <div>
-              <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-3 bg-[var(--cream)] text-[var(--black)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--red)]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                Message
-              </label>
-              <textarea
-                name="message"
-                value={formData.message}
-                onChange={handleChange}
-                rows="4"
-                className="w-full px-4 py-3 bg-[var(--cream)] text-[var(--black)] text-sm focus:outline-none focus:ring-1 focus:ring-[var(--red)] resize-none"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full px-6 py-4 bg-[var(--black)] text-[var(--off-white)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Sending..." : "Send Inquiry"}
-            </button>
-
-            {submitted && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center text-green-600 text-sm"
-              >
-                Got it. I'll be in touch soon.
-              </motion.div>
-            )}
-
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center text-red-600 text-sm"
-              >
-                {error}
-              </motion.div>
-            )}
           </motion.form>
 
           <motion.div
@@ -276,12 +421,12 @@ export default function Contact() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="mt-12 text-center"
+            className="mt-16 text-center"
           >
-            <p className="text-sm text-[var(--gray-light)] mb-4">
+            <p className="text-sm text-[var(--gray-light)] mb-6">
               Or reach me directly
             </p>
-            <div className="flex justify-center gap-6">
+            <div className="flex justify-center gap-8">
               <a
                 href="https://www.instagram.com/payawalkyle/"
                 target="_blank"

@@ -3,6 +3,8 @@ import { AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import CustomCursor from "./components/CustomCursor";
+import BackToTop from "./components/BackToTop";
 import Home from "./pages/Home";
 import Work from "./pages/Work";
 import Gallery from "./pages/Gallery";
@@ -28,6 +30,8 @@ function AnimatedRoutes() {
 function AppContent() {
   return (
     <>
+      <CustomCursor />
+      <BackToTop />
       <ScrollToTop />
       <Navbar />
       <AnimatedRoutes />

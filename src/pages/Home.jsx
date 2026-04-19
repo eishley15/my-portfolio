@@ -1,8 +1,122 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import { useFeaturedPortfolio, usePortfolio } from "../hooks/usePortfolio";
 import LoadingScreen from "../components/LoadingScreen";
+
+// Magnetic button component
+function MagneticButton({ children, to, variant = "solid" }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springConfig = { damping: 15, stiffness: 150 };
+  const springX = useSpring(x, springConfig);
+  const springY = useSpring(y, springConfig);
+
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set((e.clientX - centerX) * 0.3);
+    y.set((e.clientY - centerY) * 0.3);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const baseStyles = {
+    display: "inline-block",
+    fontFamily: "var(--font-body)",
+    fontSize: "11px",
+    letterSpacing: "2.5px",
+    textTransform: "uppercase",
+    textDecoration: "none",
+    padding: "16px 36px",
+    transition: "background 0.2s",
+  };
+
+  const variantStyles =
+    variant === "solid"
+      ? {
+          color: "var(--off-white)",
+          background: "var(--black)",
+        }
+      : {
+          color: "var(--black)",
+          background: "transparent",
+          border: "1px solid var(--black)",
+        };
+
+  return (
+    <motion.div
+      ref={ref}
+      style={{ x: springX, y: springY, display: "inline-block" }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <Link
+        to={to}
+        style={{ ...baseStyles, ...variantStyles }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "var(--red)";
+          if (variant === "outline") {
+            e.currentTarget.style.color = "var(--off-white)";
+            e.currentTarget.style.borderColor = "var(--red)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background =
+            variant === "solid" ? "var(--black)" : "transparent";
+          if (variant === "outline") {
+            e.currentTarget.style.color = "var(--black)";
+            e.currentTarget.style.borderColor = "var(--black)";
+          }
+        }}
+      >
+        {children}
+      </Link>
+    </motion.div>
+  );
+}
+
+// Animated counter component
+function AnimatedCounter({ end, duration = 2, suffix = "" }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let startTime;
+    let animationFrame;
+
+    const animate = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = (timestamp - startTime) / (duration * 1000);
+
+      if (progress < 1) {
+        setCount(Math.floor(end * progress));
+        animationFrame = requestAnimationFrame(animate);
+      } else {
+        setCount(end);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isInView, end, duration]);
+
+  return (
+    <span ref={ref}>
+      {count}
+      {suffix}
+    </span>
+  );
+}
 
 // Video component that autoplays when in view
 function VideoWithAutoplay({ src, className }) {
@@ -109,11 +223,20 @@ const fadeUp = {
 export default function Home() {
   const revealRef = useRef([]);
   const heroVideoRef = useRef(null);
+  const heroRef = useRef(null);
   const { items: selectedWork, loading } = useFeaturedPortfolio(4);
   const { items: marqueeItems, loading: marqueeLoading } =
     useFeaturedPortfolio(6);
   const [enableAutoplay, setEnableAutoplay] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Parallax effect for hero
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.8, 0.3]);
 
   // Wait for data to load before hiding loading screen
   useEffect(() => {
@@ -155,6 +278,7 @@ export default function Home() {
       <main>
         {/* ============ HERO ============ */}
         <section
+          ref={heroRef}
           style={{
             position: "relative",
             height: "100svh",
@@ -167,7 +291,7 @@ export default function Home() {
             textAlign: "center",
           }}
         >
-          <video
+          <motion.video
             ref={heroVideoRef}
             autoPlay
             muted
@@ -184,6 +308,8 @@ export default function Home() {
               objectFit: "cover",
               zIndex: 0,
             }}
+            initial={{ scale: 1 }}
+            animate={{ y: heroY, opacity: heroOpacity }}
           />
 
           {/* Overlay — warmer than pure black */}
@@ -338,38 +464,9 @@ export default function Home() {
               animate="show"
               custom={6}
             >
-              <Link
-                to="/work"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "11px",
-                  letterSpacing: "3px",
-                  textTransform: "uppercase",
-                  color: "var(--off-white)",
-                  textDecoration: "none",
-                  borderBottom: "0.5px solid rgba(240,235,224,0.4)",
-                  paddingBottom: "4px",
-                  transition: "border-color 0.2s, color 0.2s",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "var(--red)";
-                  e.currentTarget.style.color = "var(--cream-dim)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "rgba(240,235,224,0.4)";
-                  e.currentTarget.style.color = "var(--off-white)";
-                }}
-              >
+              <MagneticButton to="/work">
                 View Work
-                <span
-                  style={{ fontSize: "14px", transition: "transform 0.2s" }}
-                >
-                  →
-                </span>
-              </Link>
+              </MagneticButton>
             </motion.div>
           </div>
 
@@ -387,11 +484,16 @@ export default function Home() {
             }}
           >
             {[
-              ["200+", "Projects"],
-              ["10", "Categories"],
-              ["5+", "Years"],
-            ].map(([num, label]) => (
-              <div key={label}>
+              [200, "+", "Projects"],
+              [10, "", "Categories"],
+              [5, "+", "Years"],
+            ].map(([num, suffix, label]) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.8, duration: 0.6 }}
+              >
                 <div
                   style={{
                     fontFamily: "var(--font-display)",
@@ -400,7 +502,7 @@ export default function Home() {
                     color: "var(--off-white)",
                   }}
                 >
-                  {num}
+                  <AnimatedCounter end={num} suffix={suffix} />
                 </div>
                 <div
                   style={{
@@ -414,7 +516,7 @@ export default function Home() {
                 >
                   {label}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
 
@@ -687,18 +789,39 @@ export default function Home() {
                   { id: 4, category: "Portrait", type: "photo", url: "" },
                 ]
             ).map((item, i) => (
-              <Link
+              <motion.div
                 key={item.id}
-                to={`/work?category=${encodeURIComponent(item.category?.toLowerCase())}`}
-                style={{
-                  display: "block",
-                  aspectRatio: "4/3",
-                  position: "relative",
-                  overflow: "hidden",
-                  textDecoration: "none",
-                  background: `hsl(${20 + i * 12}, 7%, ${9 + i * 2}%)`,
-                }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                style={{ position: "relative", overflow: "hidden" }}
               >
+                <Link
+                  key={item.id}
+                  to={`/work?category=${encodeURIComponent(item.category?.toLowerCase())}`}
+                  style={{
+                    display: "block",
+                    aspectRatio: "4/3",
+                    position: "relative",
+                    overflow: "hidden",
+                    textDecoration: "none",
+                    background: `hsl(${20 + i * 12}, 7%, ${9 + i * 2}%)`,
+                  }}
+                >
+                  {/* Curtain reveal effect */}
+                  <motion.div
+                    initial={{ x: "0%" }}
+                    whileInView={{ x: "100%" }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: i * 0.1, ease: "easeInOut" }}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      background: "var(--black)",
+                      zIndex: 2,
+                    }}
+                  />
                 {item.url &&
                   (() => {
                     const isVideo = () => {
@@ -771,7 +894,8 @@ export default function Home() {
                     {item.category?.toUpperCase()}
                   </span>
                 </div>
-              </Link>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -815,29 +939,9 @@ export default function Home() {
               unforgettable.
             </span>
           </h2>
-          <Link
-            to="/contact"
-            style={{
-              display: "inline-block",
-              fontFamily: "var(--font-body)",
-              fontSize: "11px",
-              letterSpacing: "2.5px",
-              textTransform: "uppercase",
-              color: "var(--off-white)",
-              background: "var(--black)",
-              padding: "16px 36px",
-              textDecoration: "none",
-              transition: "background 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "var(--red)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "var(--black)")
-            }
-          >
+          <MagneticButton to="/contact">
             Start a Project
-          </Link>
+          </MagneticButton>
         </section>
       </main>
     </>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import {
   Download,
   Play,
@@ -8,6 +8,8 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
@@ -44,15 +46,19 @@ function GalleryNavbar({ onLogout, previewOpen }) {
           zIndex: 101,
           display: "flex",
           flexDirection: "column",
-          background: menuOpen && isMobile
-            ? "rgba(240,235,224,0.7)"
-            : scrolled
-            ? "rgba(240,235,224,0.95)"
-            : "rgba(240,235,224,0.05)",
+          background:
+            menuOpen && isMobile
+              ? "rgba(240,235,224,0.7)"
+              : scrolled
+                ? "rgba(240,235,224,0.95)"
+                : "rgba(240,235,224,0.05)",
           backdropFilter: "blur(16px)",
           transition:
             "background 0.4s ease, backdrop-filter 0.4s ease, color 0.4s ease",
-          borderBottom: scrolled || (menuOpen && isMobile) ? "0.5px solid rgba(14,12,11,0.08)" : "none",
+          borderBottom:
+            scrolled || (menuOpen && isMobile)
+              ? "0.5px solid rgba(14,12,11,0.08)"
+              : "none",
           pointerEvents: previewOpen ? "none" : "auto",
         }}
       >
@@ -64,98 +70,98 @@ function GalleryNavbar({ onLogout, previewOpen }) {
             padding: "22px 40px",
           }}
         >
-        <Link
-          to="/"
-          style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "15px",
-            letterSpacing: "3.5px",
-            color: "var(--black)",
-            textDecoration: "none",
-            transition: "color 0.4s ease",
-          }}
-        >
-          KYLE PAYAWAL
-        </Link>
-
-        <div
-          style={{
-            display: !isMobile ? "flex" : "none",
-            gap: "36px",
-            alignItems: "center",
-          }}
-        >
-          <Link to="/" className="nav-link" style={{ color: "var(--black)" }}>
-            Home
-          </Link>
           <Link
-            to="/work"
-            className="nav-link"
-            style={{ color: "var(--black)" }}
-          >
-            Work
-          </Link>
-          <Link
-            to="/about"
-            className="nav-link"
-            style={{ color: "var(--black)" }}
-          >
-            About
-          </Link>
-          <Link
-            to="/contact"
-            className="nav-link"
-            style={{ color: "var(--black)" }}
-          >
-            Contact
-          </Link>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-          <button
-            onClick={onLogout}
+            to="/"
             style={{
-              display: !isMobile ? "block" : "none",
-              fontFamily: "var(--font-body)",
-              fontSize: "10px",
-              letterSpacing: "2px",
-              textTransform: "uppercase",
+              fontFamily: "var(--font-display)",
+              fontSize: "15px",
+              letterSpacing: "3.5px",
               color: "var(--black)",
-              border: "0.5px solid rgba(14,12,11,0.3)",
-              padding: "9px 18px",
-              background: "transparent",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.background = "var(--red)";
-              e.target.style.color = "var(--off-white)";
-              e.target.style.borderColor = "var(--red)";
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.background = "transparent";
-              e.target.style.color = "var(--black)";
-              e.target.style.borderColor = "rgba(14,12,11,0.3)";
+              textDecoration: "none",
+              transition: "color 0.4s ease",
             }}
           >
-            Logout
-          </button>
+            KYLE PAYAWAL
+          </Link>
 
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
+          <div
             style={{
-              background: "none",
-              border: "none",
-              color: "var(--black)",
-              cursor: "pointer",
-              display: isMobile ? "block" : "none",
-              zIndex: 102,
+              display: !isMobile ? "flex" : "none",
+              gap: "36px",
+              alignItems: "center",
             }}
-            aria-label="Toggle menu"
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
+            <Link to="/" className="nav-link" style={{ color: "var(--black)" }}>
+              Home
+            </Link>
+            <Link
+              to="/work"
+              className="nav-link"
+              style={{ color: "var(--black)" }}
+            >
+              Work
+            </Link>
+            <Link
+              to="/about"
+              className="nav-link"
+              style={{ color: "var(--black)" }}
+            >
+              About
+            </Link>
+            <Link
+              to="/contact"
+              className="nav-link"
+              style={{ color: "var(--black)" }}
+            >
+              Contact
+            </Link>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <button
+              onClick={onLogout}
+              style={{
+                display: !isMobile ? "block" : "none",
+                fontFamily: "var(--font-body)",
+                fontSize: "10px",
+                letterSpacing: "2px",
+                textTransform: "uppercase",
+                color: "var(--black)",
+                border: "0.5px solid rgba(14,12,11,0.3)",
+                padding: "9px 18px",
+                background: "transparent",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "var(--red)";
+                e.target.style.color = "var(--off-white)";
+                e.target.style.borderColor = "var(--red)";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "transparent";
+                e.target.style.color = "var(--black)";
+                e.target.style.borderColor = "rgba(14,12,11,0.3)";
+              }}
+            >
+              Logout
+            </button>
+
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--black)",
+                cursor: "pointer",
+                display: isMobile ? "block" : "none",
+                zIndex: 102,
+              }}
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -168,7 +174,9 @@ function GalleryNavbar({ onLogout, previewOpen }) {
               padding: menuOpen ? "0 40px 20px 40px" : "0 40px",
             }}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+            >
               <Link
                 to="/"
                 className="nav-link"
@@ -230,8 +238,124 @@ function GalleryNavbar({ onLogout, previewOpen }) {
   );
 }
 
+// Animated particles background
+function ParticleField() {
+  const particles = Array.from({ length: 30 });
+  
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {particles.map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-[var(--red)] rounded-full"
+          initial={{
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            opacity: Math.random() * 0.5 + 0.2,
+          }}
+          animate={{
+            y: [null, Math.random() * window.innerHeight],
+            x: [null, Math.random() * window.innerWidth],
+            opacity: [null, Math.random() * 0.5 + 0.2],
+          }}
+          transition={{
+            duration: Math.random() * 20 + 10,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// 3D Tilt Card Effect
+function TiltCard({ children }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  
+  const rotateX = useTransform(y, [-100, 100], [10, -10]);
+  const rotateY = useTransform(x, [-100, 100], [-10, 10]);
+  
+  const springConfig = { damping: 20, stiffness: 200 };
+  const springRotateX = useSpring(rotateX, springConfig);
+  const springRotateY = useSpring(rotateY, springConfig);
+
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set(e.clientX - centerX);
+    y.set(e.clientY - centerY);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        rotateX: springRotateX,
+        rotateY: springRotateY,
+        transformStyle: "preserve-3d",
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Animated lock icon
+function AnimatedLock() {
+  return (
+    <motion.div
+      className="relative w-24 h-24 mx-auto mb-8"
+      initial={{ scale: 0, rotate: -180 }}
+      animate={{ scale: 1, rotate: 0 }}
+      transition={{ type: "spring", duration: 1, delay: 0.2 }}
+    >
+      <motion.div
+        className="absolute inset-0 bg-[var(--red)] rounded-full opacity-20"
+        animate={{
+          scale: [1, 1.2, 1],
+          opacity: [0.2, 0.4, 0.2],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <div className="absolute inset-0 flex items-center justify-center">
+        <Lock size={40} className="text-[var(--red)]" />
+      </div>
+      <motion.div
+        className="absolute -top-2 -right-2"
+        animate={{
+          rotate: [0, 10, -10, 0],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      >
+        <Sparkles size={20} className="text-[var(--red)]" />
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // Lazy load image component
-function LazyImage({ src, alt, className }) {
+function LazyImage({ src, alt, className, onLoad }) {
   const [loaded, setLoaded] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
   const [error, setError] = useState(false);
@@ -251,6 +375,16 @@ function LazyImage({ src, alt, className }) {
     return () => observer.disconnect();
   }, [src]);
 
+  const handleLoad = (e) => {
+    setLoaded(true);
+    if (onLoad) {
+      const img = e.target;
+      const isLandscape = img.naturalWidth > img.naturalHeight;
+      const isPortrait = img.naturalHeight > img.naturalWidth;
+      onLoad({ isLandscape, isPortrait, isSquare: !isLandscape && !isPortrait });
+    }
+  };
+
   return (
     <>
       <img
@@ -258,7 +392,7 @@ function LazyImage({ src, alt, className }) {
         src={imageSrc}
         alt={alt}
         className={className}
-        onLoad={() => setLoaded(true)}
+        onLoad={handleLoad}
         onError={() => {
           setError(true);
           setLoaded(true);
@@ -277,7 +411,7 @@ function LazyImage({ src, alt, className }) {
 }
 
 // Preview modal component
-function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
+function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo, selectedItems, toggleSelect }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
@@ -303,16 +437,28 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo }) {
       className="fixed inset-0 bg-black/80 z-[110] flex items-center justify-center"
       style={{ backdropFilter: "blur(8px)" }}
     >
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        className="absolute top-6 right-6 z-[111] text-white hover:text-[var(--red)] transition-colors p-2"
-        aria-label="Close preview"
-      >
-        <X size={32} />
-      </button>
+      <div className="absolute top-6 right-6 z-[111] flex items-center gap-4">
+        <input
+          type="checkbox"
+          checked={selectedItems.includes(item.id)}
+          onChange={(e) => {
+            e.stopPropagation();
+            toggleSelect(item.id);
+          }}
+          className="w-6 h-6 cursor-pointer"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="text-white hover:text-[var(--red)] transition-colors p-2"
+          aria-label="Close preview"
+        >
+          <X size={32} />
+        </button>
+      </div>
 
       <div
         onClick={(e) => e.stopPropagation()}
@@ -379,6 +525,7 @@ export default function Gallery() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [previewItem, setPreviewItem] = useState(null);
   const [previewType, setPreviewType] = useState(null);
+  const [imageOrientations, setImageOrientations] = useState({});
   const { toasts, addToast, removeToast } = useToast();
   const {
     downloadZip,
@@ -390,6 +537,22 @@ export default function Gallery() {
   const { photos, videos, loading } = useClientGallery(
     client?.access_code || null,
   );
+
+  const handleImageLoad = (photoId, orientation) => {
+    setImageOrientations(prev => ({ ...prev, [photoId]: orientation }));
+  };
+
+  const getGridSpan = (itemId, index) => {
+    const orientation = imageOrientations[itemId];
+    if (!orientation) return "span 1";
+    
+    if (orientation.isLandscape) {
+      return "span 2";
+    } else if (orientation.isPortrait) {
+      return index % 3 === 0 ? "span 2" : "span 1";
+    }
+    return "span 1";
+  };
 
   // Restore client session from localStorage on mount
   useEffect(() => {
@@ -626,21 +789,29 @@ export default function Gallery() {
               {loading ? (
                 <div className="text-center py-20">Loading...</div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-                  {photos.map((photo) => (
-                    <div
+                <div className="masonry-grid">
+                  {photos.map((photo, i) => (
+                    <motion.div
                       key={photo.id}
-                      className={`aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.02 }}
+                      className={`bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
                         selectedItems.includes(photo.id)
                           ? "ring-2 ring-[var(--red)]"
                           : ""
                       }`}
+                      style={{
+                        gridColumn: imageOrientations[photo.id]?.isLandscape ? "span 2" : "span 1",
+                        gridRow: getGridSpan(photo.id, i),
+                      }}
                       onClick={() => openPreview(photo, "photo")}
                     >
                       <LazyImage
                         src={photo.url}
                         alt={photo.filename}
                         className="w-full h-full object-cover"
+                        onLoad={(orientation) => handleImageLoad(photo.id, orientation)}
                       />
 
                       {/* Hover overlay */}
@@ -669,7 +840,7 @@ export default function Gallery() {
                         className="absolute top-2 right-2 w-5 h-5 z-10"
                         onClick={(e) => e.stopPropagation()}
                       />
-                    </div>
+                      </motion.div>
                   ))}
                 </div>
               )}
@@ -678,15 +849,21 @@ export default function Gallery() {
             {/* Videos */}
             <div>
               <div className="eyebrow mb-6">VIDEOS</div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
-                {videos.map((video) => (
-                  <div
+              <div className="masonry-grid">
+                {videos.map((video, i) => (
+                  <motion.div
                     key={video.id}
-                    className={`aspect-square bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.02 }}
+                    className={`bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
                       selectedItems.includes(video.id)
                         ? "ring-2 ring-[var(--red)]"
                         : ""
                     }`}
+                    style={{
+                      gridRow: i % 4 === 0 ? "span 2" : "span 1",
+                    }}
                     onClick={() => openPreview(video, "video")}
                   >
                     <video
@@ -732,7 +909,7 @@ export default function Gallery() {
                       className="absolute top-2 right-2 w-5 h-5 z-10"
                       onClick={(e) => e.stopPropagation()}
                     />
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -747,6 +924,8 @@ export default function Gallery() {
               onNext={goToNextPreview}
               onPrev={goToPrevPreview}
               isVideo={previewType === "video"}
+              selectedItems={selectedItems}
+              toggleSelect={toggleSelect}
             />
           )}
 
@@ -764,93 +943,225 @@ export default function Gallery() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="min-h-screen"
+        className="min-h-screen relative overflow-hidden"
       >
-        <div className="bg-[var(--black)] text-[var(--off-white)] pt-32 pb-20 px-6">
+        {/* Animated gradient background */}
+        <div className="absolute inset-0 bg-[var(--black)]">
+          <motion.div
+            className="absolute inset-0"
+            animate={{
+              background: [
+                "radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%)",
+                "radial-gradient(circle at 80% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%)",
+                "radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%)",
+              ],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        </div>
+
+        {/* Particle field */}
+        <ParticleField />
+
+        {/* Grid overlay */}
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `linear-gradient(var(--red) 1px, transparent 1px),
+                             linear-gradient(90deg, var(--red) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+          }}
+        />
+
+        <div className="relative text-[var(--off-white)] min-h-screen flex items-center justify-center px-6">
           <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+            {/* Left side - Info */}
             <div>
               <motion.div
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                className="eyebrow text-[var(--red)] mb-6"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="eyebrow text-[var(--red)] mb-6 flex items-center gap-2"
               >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Lock size={12} />
+                </motion.div>
                 PRIVATE ACCESS
               </motion.div>
+              
               <motion.h1
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 }}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
                 className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-6"
               >
-                CLIENT GALLERY
+                <motion.span
+                  className="inline-block"
+                  whileHover={{ scale: 1.05, color: "var(--red)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  CLIENT
+                </motion.span>
+                <br />
+                <motion.span
+                  className="inline-block italic-accent"
+                  whileHover={{ scale: 1.05, color: "var(--red)" }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  Gallery
+                </motion.span>
               </motion.h1>
+              
               <motion.p
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                className="text-[var(--text-muted)]"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-[var(--text-muted)] leading-relaxed mb-8"
               >
                 Your photos and videos, delivered privately. Enter your unique
                 access code to view and download your files.
               </motion.p>
+
+              {/* Animated stats */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="flex gap-8"
+              >
+                {["Secure", "Private", "HD Quality"].map((text, i) => (
+                  <motion.div
+                    key={text}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 + i * 0.1 }}
+                    className="text-xs tracking-[2px] uppercase text-[var(--gray-light)]"
+                  >
+                    <motion.div
+                      className="w-8 h-0.5 bg-[var(--red)] mb-2"
+                      initial={{ width: 0 }}
+                      animate={{ width: 32 }}
+                      transition={{ delay: 0.8 + i * 0.1, duration: 0.5 }}
+                    />
+                    {text}
+                  </motion.div>
+                ))}
+              </motion.div>
             </div>
 
+            {/* Right side - Login form with 3D tilt */}
             <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-              className="bg-[var(--gray-dark)] p-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
             >
-              <div className="mb-6">
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                  Access Code
-                </label>
-                <input
-                  type="text"
-                  value={accessCode}
-                  onChange={(e) => setAccessCode(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  placeholder="santos-wedding-2024"
-                  className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] font-mono text-sm"
-                  style={{ border: "0.5px solid var(--off-white)" }}
-                />
-              </div>
+              <TiltCard>
+                <div className="bg-[var(--gray-dark)] p-10 relative overflow-hidden">
+                  {/* Animated corner accents */}
+                  <motion.div
+                    className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-[var(--red)]"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.6 }}
+                  />
+                  <motion.div
+                    className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-[var(--red)]"
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.7 }}
+                  />
 
-              <div className="mb-6">
-                <label className="block text-[10px] tracking-[2px] uppercase mb-2">
-                  Your Name (optional)
-                </label>
-                <input
-                  type="text"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                  placeholder="Juan Santos"
-                  className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] text-sm"
-                  style={{ border: "0.5px solid var(--off-white)" }}
-                />
-              </div>
+                  <AnimatedLock />
 
-              {error && (
-                <div className="mb-4 text-[var(--red)] text-sm">{error}</div>
-              )}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 }}
+                    className="mb-6"
+                  >
+                    <label className="block text-[10px] tracking-[2px] uppercase mb-3 text-[var(--gray-light)]">
+                      Access Code
+                    </label>
+                    <motion.input
+                      type="text"
+                      value={accessCode}
+                      onChange={(e) => setAccessCode(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                      placeholder="santos-wedding-2024"
+                      className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
+                      style={{ border: "0.5px solid rgba(240,235,224,0.3)" }}
+                      whileFocus={{ scale: 1.02 }}
+                    />
+                  </motion.div>
 
-              <button
-                onClick={handleLogin}
-                className="w-full px-6 py-4 bg-[var(--off-white)] text-[var(--black)] text-[11px] uppercase tracking-[2px] hover:bg-[var(--red)] hover:text-[var(--off-white)] transition-all"
-              >
-                Access My Gallery
-              </button>
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="mb-4 text-[var(--red)] text-sm flex items-center gap-2"
+                    >
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        ⚠
+                      </motion.div>
+                      {error}
+                    </motion.div>
+                  )}
 
-              <p className="text-xs text-[var(--gray-light)] mt-4 text-center">
-                Your access code was sent via email after your session.
-              </p>
+                  <motion.button
+                    onClick={handleLogin}
+                    className="w-full px-6 py-4 bg-[var(--off-white)] text-[var(--black)] text-[11px] uppercase tracking-[2px] relative overflow-hidden group"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <motion.div
+                      className="absolute inset-0 bg-[var(--red)]"
+                      initial={{ x: "-100%" }}
+                      whileHover={{ x: 0 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                    <span className="relative z-10 group-hover:text-[var(--off-white)] transition-colors">
+                      Access My Gallery
+                    </span>
+                  </motion.button>
+
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="text-xs text-[var(--gray-light)] mt-6 text-center"
+                  >
+                    Your access code was sent via email after your session.
+                  </motion.p>
+                </div>
+              </TiltCard>
             </motion.div>
           </div>
+
+          {/* Floating elements */}
+          <motion.div
+            className="absolute bottom-10 left-10 text-[200px] font-display opacity-5 select-none pointer-events-none hidden lg:block"
+            animate={{
+              y: [0, -30, 0],
+              rotate: [0, 5, 0],
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            KP
+          </motion.div>
         </div>
       </motion.div>
       <ToastContainer toasts={toasts} removeToast={removeToast} />

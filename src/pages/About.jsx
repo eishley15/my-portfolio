@@ -1,6 +1,7 @@
-import { motion } from "framer-motion";
-import { Instagram, Facebook } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Instagram, Facebook, ArrowRight, Mail } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 // Lazy load image component
 function LazyImage({ src, alt, className }) {
@@ -35,6 +36,49 @@ function LazyImage({ src, alt, className }) {
   );
 }
 
+// Magnetic button component
+function MagneticButton({ children, variant = "solid" }) {
+  const ref = useRef(null);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const springConfig = { damping: 15, stiffness: 150 };
+  const springX = useSpring(x, springConfig);
+  const springY = useSpring(y, springConfig);
+
+  const handleMouseMove = (e) => {
+    if (!ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    x.set((e.clientX - centerX) * 0.3);
+    y.set((e.clientY - centerY) * 0.3);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  const baseStyles =
+    "px-8 py-4 text-sm tracking-[1px] uppercase flex items-center gap-3 transition-colors";
+  const variantStyles =
+    variant === "solid"
+      ? "bg-[var(--black)] text-[var(--off-white)] hover:bg-[var(--red)]"
+      : "border border-[var(--black)] text-[var(--black)] hover:border-[var(--red)] hover:text-[var(--red)]";
+
+  return (
+    <motion.button
+      ref={ref}
+      style={{ x: springX, y: springY }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className={`${baseStyles} ${variantStyles}`}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
 export default function About() {
   const services = [
     "Wedding",
@@ -64,7 +108,7 @@ export default function About() {
             viewport={{ once: true }}
             className="relative"
           >
-            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative overflow-hidden w-full max-h-[580px]">
+            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative overflow-hidden w-full max-h-[880px]">
               <LazyImage
                 src="/kylepayawalprofile.webp"
                 alt="Kyle Payawal"
@@ -86,6 +130,7 @@ export default function About() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
+            style={{ gap: "1.5rem" }}
           >
             <div className="eyebrow mb-6">
               THE PHOTOGRAPHER | VIDEOGRAPHER | EDITOR
@@ -124,7 +169,7 @@ export default function About() {
               </div>
             </div>
 
-            <div>
+            <div className="mb-12">
               <div className="text-[10px] tracking-[2px] uppercase mb-4 text-[var(--gray-light)]">
                 Connect
               </div>
@@ -145,6 +190,46 @@ export default function About() {
                 </a>
               </div>
             </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+              <Link to="/contact">
+                <MagneticButton>
+                  <Mail size={18} />
+                  <span>Get in Touch</span>
+                  <ArrowRight size={18} />
+                </MagneticButton>
+              </Link>
+              <Link to="/work">
+                <MagneticButton variant="outline">
+                  <span>View Works</span>
+                  <ArrowRight size={18} />
+                </MagneticButton>
+              </Link>
+            </div>
+
+            <motion.div
+              className="relative h-32 overflow-hidden"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+            >
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center"
+                animate={{
+                  y: [0, -20, 0],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 6,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <div className="text-[120px] font-display opacity-5 select-none">
+                  KP
+                </div>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </div>

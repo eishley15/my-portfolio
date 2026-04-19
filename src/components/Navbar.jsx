@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -91,17 +92,109 @@ export default function Navbar() {
             alignItems: "center",
           }}
         >
-          <Link to="/" className="nav-link">
+          <Link 
+            to="/" 
+            className="nav-link"
+            style={{
+              color: location.pathname === "/" 
+                ? (scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)")
+                : undefined,
+              fontWeight: location.pathname === "/" ? "400" : "300",
+            }}
+          >
             Home
+            {location.pathname === "/" && (
+              <motion.div
+                layoutId="activeIndicator"
+                style={{
+                  position: "absolute",
+                  bottom: "-2px",
+                  left: 0,
+                  right: 0,
+                  height: "2px",
+                  background: scrolled || isDarkBackground ? "var(--red)" : "var(--red)",
+                }}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
           </Link>
-          <Link to="/work" className="nav-link">
+          <Link 
+            to="/work" 
+            className="nav-link"
+            style={{
+              color: location.pathname === "/work" 
+                ? (scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)")
+                : undefined,
+              fontWeight: location.pathname === "/work" ? "400" : "300",
+            }}
+          >
             Work
+            {location.pathname === "/work" && (
+              <motion.div
+                layoutId="activeIndicator"
+                style={{
+                  position: "absolute",
+                  bottom: "-2px",
+                  left: 0,
+                  right: 0,
+                  height: "2px",
+                  background: scrolled || isDarkBackground ? "var(--red)" : "var(--red)",
+                }}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
           </Link>
-          <Link to="/about" className="nav-link">
+          <Link 
+            to="/about" 
+            className="nav-link"
+            style={{
+              color: location.pathname === "/about" 
+                ? (scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)")
+                : undefined,
+              fontWeight: location.pathname === "/about" ? "400" : "300",
+            }}
+          >
             About
+            {location.pathname === "/about" && (
+              <motion.div
+                layoutId="activeIndicator"
+                style={{
+                  position: "absolute",
+                  bottom: "-2px",
+                  left: 0,
+                  right: 0,
+                  height: "2px",
+                  background: scrolled || isDarkBackground ? "var(--red)" : "var(--red)",
+                }}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
           </Link>
-          <Link to="/contact" className="nav-link">
+          <Link 
+            to="/contact" 
+            className="nav-link"
+            style={{
+              color: location.pathname === "/contact" 
+                ? (scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)")
+                : undefined,
+              fontWeight: location.pathname === "/contact" ? "400" : "300",
+            }}
+          >
             Contact
+            {location.pathname === "/contact" && (
+              <motion.div
+                layoutId="activeIndicator"
+                style={{
+                  position: "absolute",
+                  bottom: "-2px",
+                  left: 0,
+                  right: 0,
+                  height: "2px",
+                  background: scrolled || isDarkBackground ? "var(--red)" : "var(--red)",
+                }}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              />
+            )}
           </Link>
         </div>
 
@@ -166,99 +259,95 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {isMobile && (
-          <div
+          <motion.div
+            initial={false}
+            animate={{
+              height: menuOpen ? "100vh" : "0",
+              opacity: menuOpen ? 1 : 0,
+            }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
             style={{
-              maxHeight: menuOpen ? "400px" : "0",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              background: scrolled || isDarkBackground ? "var(--black)" : "var(--off-white)",
               overflow: "hidden",
-              transition: "max-height 0.4s ease",
-              padding: menuOpen ? "0 40px 20px 40px" : "0 40px",
+              zIndex: 99,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <Link
-                to="/"
-                className="nav-link"
-                style={{
-                  color:
-                    scrolled || isDarkBackground
-                      ? "var(--off-white)"
-                      : "var(--black)",
-                  fontSize: "14px",
+            <div style={{ display: "flex", flexDirection: "column", gap: "32px", alignItems: "center" }}>
+              {[
+                { to: "/", label: "Home" },
+                { to: "/work", label: "Work" },
+                { to: "/about", label: "About" },
+                { to: "/contact", label: "Contact" },
+              ].map((link, i) => (
+                <motion.div
+                  key={link.to}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{
+                    opacity: menuOpen ? 1 : 0,
+                    y: menuOpen ? 0 : 20,
+                  }}
+                  transition={{ delay: menuOpen ? i * 0.1 : 0, duration: 0.3 }}
+                >
+                  <Link
+                    to={link.to}
+                    style={{
+                      fontFamily: "var(--font-display)",
+                      fontSize: "48px",
+                      letterSpacing: "2px",
+                      color: scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)",
+                      textDecoration: "none",
+                      transition: "color 0.2s",
+                    }}
+                    onClick={() => setMenuOpen(false)}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "var(--red)")}
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color =
+                        scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)")
+                    }
+                  >
+                    {link.label}
+                  </Link>
+                </motion.div>
+              ))}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{
+                  opacity: menuOpen ? 1 : 0,
+                  y: menuOpen ? 0 : 20,
                 }}
-                onClick={() => setMenuOpen(false)}
+                transition={{ delay: menuOpen ? 0.4 : 0, duration: 0.3 }}
               >
-                Home
-              </Link>
-              <Link
-                to="/work"
-                className="nav-link"
-                style={{
-                  color:
-                    scrolled || isDarkBackground
-                      ? "var(--off-white)"
-                      : "var(--black)",
-                  fontSize: "14px",
-                }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Work
-              </Link>
-              <Link
-                to="/about"
-                className="nav-link"
-                style={{
-                  color:
-                    scrolled || isDarkBackground
-                      ? "var(--off-white)"
-                      : "var(--black)",
-                  fontSize: "14px",
-                }}
-                onClick={() => setMenuOpen(false)}
-              >
-                About
-              </Link>
-              <Link
-                to="/contact"
-                className="nav-link"
-                style={{
-                  color:
-                    scrolled || isDarkBackground
-                      ? "var(--off-white)"
-                      : "var(--black)",
-                  fontSize: "14px",
-                }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Contact
-              </Link>
-              <Link
-                to="/gallery"
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "10px",
-                  letterSpacing: "2px",
-                  textTransform: "uppercase",
-                  color:
-                    scrolled || isDarkBackground
-                      ? "var(--off-white)"
-                      : "var(--black)",
-                  textDecoration: "none",
-                  border:
-                    scrolled || isDarkBackground
-                      ? "0.5px solid rgba(240,235,224,0.3)"
-                      : "0.5px solid rgba(14,12,11,0.3)",
-                  padding: "12px 18px",
-                  background: "transparent",
-                  marginTop: "10px",
-                  width: "fit-content",
-                  display: "block",
-                }}
-                onClick={() => setMenuOpen(false)}
-              >
-                Client Gallery
-              </Link>
+                <Link
+                  to="/gallery"
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontSize: "10px",
+                    letterSpacing: "2px",
+                    textTransform: "uppercase",
+                    color: scrolled || isDarkBackground ? "var(--off-white)" : "var(--black)",
+                    textDecoration: "none",
+                    border:
+                      scrolled || isDarkBackground
+                        ? "0.5px solid rgba(240,235,224,0.3)"
+                        : "0.5px solid rgba(14,12,11,0.3)",
+                    padding: "12px 24px",
+                    display: "inline-block",
+                    marginTop: "20px",
+                  }}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Client Gallery
+                </Link>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
       </nav>
     </>
