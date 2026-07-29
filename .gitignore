@@ -27,3 +27,32 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# Claude Code - Session files (do not commit)
+memory/sessions/*.jsonl
+memory/.temp/
+*.claude-session
+.claude/
+memory/
+
+# Claude Code - Documentation files (reference material)
+AUTO-SETUP.md
+AUTONOMOUS-EXECUTION-SUMMARY.md
+COMPLETION-SUMMARY.md
+COMPREHENSIVE-AUDIT.md
+ENHANCEMENT-OPPORTUNITIES.md
+FINAL-COMPLETE-SUMMARY.md
+FINAL-SUMMARY.md
+INSTALLATION.md
+QUICK-START.md
+README.md
+REQUIREMENTS-DRIVEN-DEVELOPMENT.md
+REQUIREMENTS-PROCESSOR-COMPLETE.md
+SEQUELIZE-JOI-SETUP.md
+SESSION-LOCATOR-SUMMARY.md
+SETUP-COMPLETE.md
+SKELETON-LOADING-SUMMARY.md
+WCAG-MODERN-STYLING-SUMMARY.md
+CLAUDE.md
+SOUL.md
+YAML-MEMORY-MIGRATION-COMPLETE.md

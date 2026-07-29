@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function DownloadButton({ accessCode, galleryId, fileName }) {
+export default function DownloadButton({ accessCode, galleryId, fileName, onError, iconOnly = false }) {
   const [loading, setLoading] = useState(false);
 
   const handleDownload = async (e) => {
@@ -24,13 +24,14 @@ export default function DownloadButton({ accessCode, galleryId, fileName }) {
               ? "Invalid access code."
               : "Failed to get download link.";
 
-        toast.error(errorData.error || statusMessage);
+        const msg = errorData.error || statusMessage;
+        if (onError) onError(msg);
+        else toast.error(msg);
         return;
       }
 
       const { url } = await response.json();
 
-      // Use a hidden anchor to trigger download without navigating away
       const anchor = document.createElement("a");
       anchor.href = url;
       anchor.download = fileName;
@@ -41,11 +42,31 @@ export default function DownloadButton({ accessCode, galleryId, fileName }) {
       toast.success("Download started");
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("An error occurred during download");
+      const msg = "An error occurred during download";
+      if (onError) onError(msg);
+      else toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
+
+  if (iconOnly) {
+    return (
+      <button
+        onClick={handleDownload}
+        disabled={loading}
+        className="text-white hover:text-[var(--red)] transition-colors p-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        title={loading ? "Preparing download..." : `Download ${fileName}`}
+        aria-label={`Download ${fileName}`}
+      >
+        {loading ? (
+          <Loader2 size={24} className="animate-spin" />
+        ) : (
+          <Download size={24} />
+        )}
+      </button>
+    );
+  }
 
   return (
     <button

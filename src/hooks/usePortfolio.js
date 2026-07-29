@@ -98,7 +98,7 @@ export function useClientGallery(accessCode) {
         .from('files')
         .select('*')
         .eq('client_code', accessCode)
-        .order('created_at', { ascending: true })
+        .order('filename', { ascending: true })
 
       if (!error) setFiles(data || [])
       setLoading(false)

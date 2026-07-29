@@ -10,6 +10,9 @@ import {
   ChevronRight,
   Lock,
   Sparkles,
+  LayoutGrid,
+  List,
+  Columns2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useClientGallery } from "../hooks/usePortfolio";
@@ -411,7 +414,7 @@ function LazyImage({ src, alt, className, onLoad }) {
 }
 
 // Preview modal component
-function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo, selectedItems, toggleSelect }) {
+function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo, selectedItems, toggleSelect, accessCode, onError }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") onClose();
@@ -448,6 +451,15 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo, select
           className="w-6 h-6 cursor-pointer"
           onClick={(e) => e.stopPropagation()}
         />
+        <div onClick={(e) => e.stopPropagation()}>
+          <DownloadButton
+            accessCode={accessCode}
+            galleryId={accessCode}
+            fileName={item.filename}
+            onError={onError}
+            iconOnly
+          />
+        </div>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -517,6 +529,188 @@ function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo, select
   );
 }
 
+// ─── GalleryGrid: renders photos + videos in masonry / grid / list layout ────
+function GalleryGrid({
+  photos,
+  videos,
+  layoutMode,
+  selectedItems,
+  toggleSelect,
+  openPreview,
+  imageOrientations,
+  handleImageLoad,
+  getGridSpan,
+  accessCode,
+  addToast,
+}) {
+  const gridClass =
+    layoutMode === "masonry"
+      ? "masonry-grid"
+      : layoutMode === "grid"
+        ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2"
+        : "flex flex-col";
+
+  return (
+    <div>
+      {photos.length > 0 && (
+        <div className="mb-12">
+          <div className={layoutMode === "list" ? "eyebrow mb-2 px-4" : "eyebrow mb-6"}>PHOTOS</div>
+          <div className={gridClass}>
+            {photos.map((photo, i) =>
+              layoutMode === "list" ? (
+                <motion.div
+                  key={photo.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.015 }}
+                  className={`flex items-center gap-4 py-3 px-4 border-b border-[var(--gray-light)]/20 cursor-pointer group hover:bg-[var(--gray-light)]/10 transition-all ${
+                    selectedItems.includes(photo.id) ? "bg-[var(--red)]/5" : ""
+                  }`}
+                  onClick={() => openPreview(photo, "photo")}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(photo.id)}
+                    onChange={(e) => { e.stopPropagation(); toggleSelect(photo.id); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 shrink-0"
+                  />
+                  <div className="w-16 h-10 shrink-0 bg-[var(--gray-dark)] overflow-hidden">
+                    <LazyImage src={photo.url} alt="" className="w-full h-full object-cover" onLoad={() => {}} />
+                  </div>
+                  <span className="text-[12px] text-[var(--gray-light)] tracking-[1px] font-body flex-1">
+                    {String(i + 1).padStart(3, "0")}
+                  </span>
+                  <div onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DownloadButton accessCode={accessCode} galleryId={accessCode} fileName={photo.filename} onError={(msg) => addToast(msg, "error")} iconOnly />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={photo.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.02 }}
+                  className={`bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
+                    layoutMode === "grid" ? "aspect-square" : ""
+                  } ${selectedItems.includes(photo.id) ? "ring-2 ring-[var(--red)]" : ""}`}
+                  style={layoutMode === "masonry" ? {
+                    gridColumn: imageOrientations[photo.id]?.isLandscape ? "span 2" : "span 1",
+                    gridRow: getGridSpan(photo.id, i),
+                  } : {}}
+                  onClick={() => openPreview(photo, "photo")}
+                >
+                  <LazyImage
+                    src={photo.url}
+                    alt={photo.filename}
+                    className="w-full h-full object-cover"
+                    onLoad={(orientation) => handleImageLoad(photo.id, orientation)}
+                  />
+                  <div
+                    className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center cursor-pointer"
+                    onClick={() => openPreview(photo, "photo")}
+                  >
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <DownloadButton accessCode={accessCode} galleryId={accessCode} fileName={photo.filename} onError={(msg) => addToast(msg, "error")} />
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(photo.id)}
+                    onChange={(e) => { e.stopPropagation(); toggleSelect(photo.id); }}
+                    className="absolute top-2 right-2 w-5 h-5 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </motion.div>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
+      {videos.length > 0 && (
+        <div>
+          <div className={layoutMode === "list" ? "eyebrow mb-2 px-4" : "eyebrow mb-6"}>VIDEOS</div>
+          <div className={gridClass}>
+            {videos.map((video, i) =>
+              layoutMode === "list" ? (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.015 }}
+                  className={`flex items-center gap-4 py-3 px-4 border-b border-[var(--gray-light)]/20 cursor-pointer group hover:bg-[var(--gray-light)]/10 transition-all ${
+                    selectedItems.includes(video.id) ? "bg-[var(--red)]/5" : ""
+                  }`}
+                  onClick={() => openPreview(video, "video")}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(video.id)}
+                    onChange={(e) => { e.stopPropagation(); toggleSelect(video.id); }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-4 h-4 shrink-0"
+                  />
+                  <div className="w-16 h-10 shrink-0 bg-[var(--gray-dark)] overflow-hidden relative flex items-center justify-center">
+                    <video src={video.url} className="w-full h-full object-cover" muted />
+                    <Play size={12} className="absolute text-white" />
+                  </div>
+                  <span className="text-[12px] text-[var(--gray-light)] tracking-[1px] font-body flex-1">
+                    {String(i + 1).padStart(3, "0")}
+                  </span>
+                  <div onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <DownloadButton accessCode={accessCode} galleryId={accessCode} fileName={video.filename} onError={(msg) => addToast(msg, "error")} iconOnly />
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key={video.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.02 }}
+                  className={`bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
+                    layoutMode === "grid" ? "aspect-square" : ""
+                  } ${selectedItems.includes(video.id) ? "ring-2 ring-[var(--red)]" : ""}`}
+                  style={layoutMode === "masonry" ? { gridRow: i % 4 === 0 ? "span 2" : "span 1" } : {}}
+                  onClick={() => openPreview(video, "video")}
+                >
+                  <video src={video.url} className="w-full h-full object-cover" muted />
+                  <div
+                    className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4"
+                    onClick={() => openPreview(video, "video")}
+                  >
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openPreview(video, "video"); }}
+                      className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
+                    >
+                      <Play size={14} />
+                      Play
+                    </button>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <DownloadButton accessCode={accessCode} galleryId={accessCode} fileName={video.filename} onError={(msg) => addToast(msg, "error")} />
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.includes(video.id)}
+                    onChange={(e) => { e.stopPropagation(); toggleSelect(video.id); }}
+                    className="absolute top-2 right-2 w-5 h-5 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </motion.div>
+              )
+            )}
+          </div>
+        </div>
+      )}
+
+      {photos.length === 0 && videos.length === 0 && (
+        <div className="text-center py-20 text-[var(--gray-light)] text-sm">No media available.</div>
+      )}
+    </div>
+  );
+}
+
 export default function Gallery() {
   const [accessCode, setAccessCode] = useState("");
   const [clientName, setClientName] = useState("");
@@ -526,6 +720,8 @@ export default function Gallery() {
   const [previewItem, setPreviewItem] = useState(null);
   const [previewType, setPreviewType] = useState(null);
   const [imageOrientations, setImageOrientations] = useState({});
+  const [activeTab, setActiveTab] = useState("all");
+  const [layoutMode, setLayoutMode] = useState(() => localStorage.getItem("galleryLayout") || "masonry");
   const { toasts, addToast, removeToast } = useToast();
   const {
     downloadZip,
@@ -537,6 +733,11 @@ export default function Gallery() {
   const { photos, videos, loading } = useClientGallery(
     client?.access_code || null,
   );
+
+  const setLayout = (mode) => {
+    setLayoutMode(mode);
+    localStorage.setItem("galleryLayout", mode);
+  };
 
   const handleImageLoad = (photoId, orientation) => {
     setImageOrientations(prev => ({ ...prev, [photoId]: orientation }));
@@ -663,12 +864,18 @@ export default function Gallery() {
     setPreviewType(null);
   };
 
+  const getTabItems = () => {
+    if (activeTab === "photos") return photos;
+    if (activeTab === "videos") return videos;
+    return [...photos, ...videos];
+  };
+
   const goToNextPreview = () => {
     if (!previewItem) return;
-    const allItems = [...photos, ...videos];
-    const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
-    if (currentIndex < allItems.length - 1) {
-      const nextItem = allItems[currentIndex + 1];
+    const tabItems = getTabItems();
+    const currentIndex = tabItems.findIndex((i) => i.id === previewItem.id);
+    if (currentIndex < tabItems.length - 1) {
+      const nextItem = tabItems[currentIndex + 1];
       const nextType = photos.some((p) => p.id === nextItem.id)
         ? "photo"
         : "video";
@@ -679,10 +886,10 @@ export default function Gallery() {
 
   const goToPrevPreview = () => {
     if (!previewItem) return;
-    const allItems = [...photos, ...videos];
-    const currentIndex = allItems.findIndex((i) => i.id === previewItem.id);
+    const tabItems = getTabItems();
+    const currentIndex = tabItems.findIndex((i) => i.id === previewItem.id);
     if (currentIndex > 0) {
-      const prevItem = allItems[currentIndex - 1];
+      const prevItem = tabItems[currentIndex - 1];
       const prevType = photos.some((p) => p.id === prevItem.id)
         ? "photo"
         : "video";
@@ -783,149 +990,88 @@ export default function Gallery() {
               </div>
             </div>
 
-            {/* Photos */}
-            <div className="mb-16">
-              <div className="eyebrow mb-6">PHOTOS</div>
-              {loading ? (
-                <div className="text-center py-20">Loading...</div>
-              ) : (
-                <div className="masonry-grid">
-                  {photos.map((photo, i) => (
-                    <motion.div
-                      key={photo.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.02 }}
-                      className={`bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
-                        selectedItems.includes(photo.id)
-                          ? "ring-2 ring-[var(--red)]"
-                          : ""
-                      }`}
-                      style={{
-                        gridColumn: imageOrientations[photo.id]?.isLandscape ? "span 2" : "span 1",
-                        gridRow: getGridSpan(photo.id, i),
-                      }}
-                      onClick={() => openPreview(photo, "photo")}
-                    >
-                      <LazyImage
-                        src={photo.url}
-                        alt={photo.filename}
-                        className="w-full h-full object-cover"
-                        onLoad={(orientation) => handleImageLoad(photo.id, orientation)}
-                      />
-
-                      {/* Hover overlay */}
-                      <div
-                        className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center cursor-pointer"
-                        onClick={() => openPreview(photo, "photo")}
-                      >
-                        <div onClick={(e) => e.stopPropagation()}>
-                          <DownloadButton
-                            accessCode={client.access_code}
-                            galleryId={client.access_code}
-                            fileName={photo.filename}
-                            onError={(message) => addToast(message, "error")}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Select checkbox */}
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(photo.id)}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          toggleSelect(photo.id);
-                        }}
-                        className="absolute top-2 right-2 w-5 h-5 z-10"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Videos */}
-            <div>
-              <div className="eyebrow mb-6">VIDEOS</div>
-              <div className="masonry-grid">
-                {videos.map((video, i) => (
-                  <motion.div
-                    key={video.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.02 }}
-                    className={`bg-[var(--gray-dark)] relative group overflow-hidden cursor-pointer hover:brightness-110 transition-all ${
-                      selectedItems.includes(video.id)
-                        ? "ring-2 ring-[var(--red)]"
-                        : ""
+            {/* Tab bar + Layout switcher */}
+            <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+              {/* Tabs */}
+              <div className="flex gap-1">
+                {[
+                  { key: "all", label: "All", count: photos.length + videos.length },
+                  { key: "photos", label: "Photos", count: photos.length },
+                  { key: "videos", label: "Videos", count: videos.length },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`px-4 py-2 text-[11px] uppercase tracking-[2px] transition-all ${
+                      activeTab === tab.key
+                        ? "bg-[var(--black)] text-[var(--off-white)]"
+                        : "bg-transparent text-[var(--black)] hover:bg-[var(--gray-light)]/20"
                     }`}
-                    style={{
-                      gridRow: i % 4 === 0 ? "span 2" : "span 1",
-                    }}
-                    onClick={() => openPreview(video, "video")}
+                    style={{ border: "0.5px solid rgba(14,12,11,0.2)" }}
                   >
-                    <video
-                      src={video.url}
-                      className="w-full h-full object-cover"
-                      muted
-                    />
+                    {tab.label} ({tab.count})
+                  </button>
+                ))}
+              </div>
 
-                    {/* Hover overlay */}
-                    <div
-                      className="absolute inset-0 bg-[var(--black)] opacity-0 group-hover:opacity-90 transition-opacity flex items-center justify-center gap-4"
-                      onClick={() => openPreview(video, "video")}
-                    >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openPreview(video, "video");
-                        }}
-                        className="px-4 py-2 bg-[var(--off-white)] text-[var(--black)] text-[10px] uppercase tracking-[2px] flex items-center gap-2"
-                      >
-                        <Play size={14} />
-                        Play
-                      </button>
-
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <DownloadButton
-                          accessCode={client.access_code}
-                          galleryId={client.access_code}
-                          fileName={video.filename}
-                          onError={(message) => addToast(message, "error")}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Select checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.includes(video.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(video.id);
-                      }}
-                      className="absolute top-2 right-2 w-5 h-5 z-10"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </motion.div>
+              {/* Layout switcher */}
+              <div className="flex gap-1">
+                {[
+                  { mode: "masonry", icon: <Columns2 size={16} />, label: "Masonry" },
+                  { mode: "grid", icon: <LayoutGrid size={16} />, label: "Grid" },
+                  { mode: "list", icon: <List size={16} />, label: "List" },
+                ].map(({ mode, icon, label }) => (
+                  <button
+                    key={mode}
+                    onClick={() => setLayout(mode)}
+                    title={label}
+                    className={`p-2 transition-all ${
+                      layoutMode === mode
+                        ? "bg-[var(--black)] text-[var(--off-white)]"
+                        : "bg-transparent text-[var(--black)] hover:bg-[var(--gray-light)]/20"
+                    }`}
+                    style={{ border: "0.5px solid rgba(14,12,11,0.2)" }}
+                    aria-label={label}
+                  >
+                    {icon}
+                  </button>
                 ))}
               </div>
             </div>
+
+            {/* Gallery content */}
+            {loading ? (
+              <div className="text-center py-20">Loading...</div>
+            ) : (
+              <GalleryGrid
+                photos={activeTab === "videos" ? [] : photos}
+                videos={activeTab === "photos" ? [] : videos}
+                layoutMode={layoutMode}
+                selectedItems={selectedItems}
+                toggleSelect={toggleSelect}
+                openPreview={openPreview}
+                imageOrientations={imageOrientations}
+                handleImageLoad={handleImageLoad}
+                getGridSpan={getGridSpan}
+                accessCode={client.access_code}
+                addToast={addToast}
+              />
+            )}
           </div>
 
           {/* Preview Modal */}
           {previewItem && (
             <PreviewModal
               item={previewItem}
-              allItems={[...photos, ...videos]}
+              allItems={getTabItems()}
               onClose={closePreview}
               onNext={goToNextPreview}
               onPrev={goToPrevPreview}
               isVideo={previewType === "video"}
               selectedItems={selectedItems}
               toggleSelect={toggleSelect}
+              accessCode={client.access_code}
+              onError={(msg) => addToast(msg, "error")}
             />
           )}
 

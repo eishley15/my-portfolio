@@ -50,14 +50,8 @@ body {
   font-weight: 300;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  cursor: none;
 }
 
-@media (max-width: 1024px) {
-  body {
-    cursor: auto;
-  }
-}
 
 /* Film grain overlay */
 body::before {
