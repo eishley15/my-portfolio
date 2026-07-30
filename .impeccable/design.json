@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-30T12:00:00.000Z",
+  "title": "Design System: Kyle Payawal Studio",
+  "extensions": {
+    "colorMeta": {
+      "bg":         { "role": "neutral",  "displayName": "Aged Cream",    "canonical": "#EDE8DC", "tonalRamp": ["#1a1816","#3a3530","#6b6158","#a09080","#c8bfae","#d9d0c1","#e3d9c8","#ede8dc","#f4efe5","#f9f6f0"] },
+      "bg-dim":     { "role": "neutral",  "displayName": "Linen Dim",     "canonical": "#E3D9C8", "tonalRamp": ["#1a1816","#3a3530","#6b6158","#9a9080","#c0b8a8","#cec5b2","#d9d0c1","#e3d9c8","#eee8de","#f4efe5"] },
+      "surface":    { "role": "neutral",  "displayName": "Pale Surface",  "canonical": "#F4EFE5", "tonalRamp": ["#1c1a18","#3c3830","#70685a","#a89e8e","#cfc7b8","#ddd6c9","#e8e2d6","#f0ebe0","#f4efe5","#faf8f4"] },
+      "ink":        { "role": "primary",  "displayName": "Near-Black Ink","canonical": "#0E0C0B", "tonalRamp": ["#0e0c0b","#1c1a18","#2e2b28","#3a3530","#554f48","#706860","#918980","#b0a89e","#d0c8be","#ede8dc"] },
+      "black":      { "role": "primary",  "displayName": "Near-Black Ink","canonical": "#0E0C0B", "tonalRamp": ["#080706","#0e0c0b","#1c1a18","#2e2b28","#3a3530","#504840","#706860","#918980","#b0a89e","#ede8dc"] },
+      "black-pure": { "role": "primary",  "displayName": "Absolute Black","canonical": "#080706", "tonalRamp": ["#080706","#0e0c0b","#1c1a18","#2e2b28","#3a3530","#504840","#706860","#918980","#b0a89e","#ede8dc"] },
+      "off-white":  { "role": "neutral",  "displayName": "Antique White", "canonical": "#F0EBE0", "tonalRamp": ["#1a1816","#3a3530","#706858","#a09080","#c8bfae","#d9d0c1","#e3d9c8","#ede8dc","#f0ebe0","#f8f5f0"] },
+      "gray-dark":  { "role": "neutral",  "displayName": "Charcoal Dark", "canonical": "#1C1A18", "tonalRamp": ["#0e0c0b","#1c1a18","#2e2b28","#3a3530","#504840","#706860","#918980","#b0a89e","#d0c8be","#ede8dc"] }
+    },
+    "typographyMeta": {
+      "display":        { "displayName": "Display Upright", "purpose": "Hero headlines, section titles, CTA headings. Use 'opsz' 144 above 60px." },
+      "display-italic": { "displayName": "Display Italic",  "purpose": "Editorial contrast line within a Display headline. Never standalone." },
+      "body":           { "displayName": "Body",            "purpose": "All paragraph text, FAQ answers, about copy. Max ~65ch line length." },
+      "label":          { "displayName": "Label",           "purpose": "Universal interactive chrome — nav, buttons, eyebrows, form labels." }
+    },
+    "shadows": [
+      { "name": "dark-overlay",  "value": "rgba(14,12,11,0.85)",                                                                            "purpose": "CardNav and CTA section dark background scrim." },
+      { "name": "card-gradient", "value": "linear-gradient(to top, rgba(14,12,11,0.85) 0%, rgba(14,12,11,0.12) 55%, transparent 100%)",     "purpose": "Always-on directional depth on category cards for text legibility." },
+      { "name": "navbar-blur",   "value": "backdrop-filter: blur(18px); background: rgba(237,232,220,0.88)",                                "purpose": "Navbar on scroll — functional elevation signal." }
+    ],
+    "motion": [
+      { "name": "ease-spring",       "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Primary spring ease — card hovers, panel entrances, hero motion." },
+      { "name": "ease-out-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)",  "purpose": "Standard state transitions — navbar color, FAQ accordion." },
+      { "name": "duration-fast",     "value": "250ms", "purpose": "Micro-interactions: button hover, dot scale, icon rotate." },
+      { "name": "duration-base",     "value": "380ms", "purpose": "RotatingText slide, FAQ accordion height." },
+      { "name": "duration-slow",     "value": "600ms", "purpose": "Card photo scale, hero image fade, page entrance." }
+    ],
+    "breakpoints": [
+      { "name": "mobile",  "value": "< 768px",  "description": "Single column; photo stacks above text in hero (40svh)." },
+      { "name": "tablet",  "value": "768px+",   "description": "Two-column hero grid, 2–3 category card columns." },
+      { "name": "desktop", "value": "1024px+",  "description": "Full two-column hero, 4–6 category card columns." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Specular)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Dark ink button with mouse-tracked radial-gradient sheen on hover.",
+      "html": "<button class=\"ds-btn-primary\">Book a Session</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; padding: 14px 36px; background: #0E0C0B; color: #F0EBE0; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; border: none; border-radius: 0; cursor: pointer; position: relative; overflow: hidden; --sx: 50%; --sy: 50%; transition: background 0.2s; } .ds-btn-primary::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at var(--sx) var(--sy), rgba(255,255,255,0.13) 0%, transparent 55%); opacity: 0; transition: opacity 0.25s; pointer-events: none; } .ds-btn-primary:hover::after { opacity: 1; } .ds-btn-primary:hover { background: #1C1A18; } .ds-btn-primary:focus-visible { outline: 1.5px solid #0E0C0B; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button (Dark Context)",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Transparent outline button for secondary CTAs on dark sections.",
+      "html": "<a class=\"ds-btn-ghost\">View Work</a>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; padding: 14px 32px; background: transparent; color: rgba(240,235,224,0.55); font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; text-decoration: none; border: 0.5px solid rgba(240,235,224,0.18); border-radius: 0; cursor: pointer; transition: border-color 0.25s, color 0.25s; } .ds-btn-ghost:hover { border-color: rgba(240,235,224,0.45); color: rgba(240,235,224,0.9); }"
+    },
+    {
+      "name": "Category Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "3:4 portrait card. Full-bleed photo with bottom gradient; label lifts on hover.",
+      "html": "<div class=\"ds-category-card\"><img src=\"https://placehold.co/400x533/e3d9c8/0e0c0b?text=Photo\" alt=\"Weddings\" class=\"ds-category-card__img\" /><div class=\"ds-category-card__overlay\"></div><div class=\"ds-category-card__text\"><p class=\"ds-category-card__name\">Weddings</p><span class=\"ds-category-card__cta\">View Work →</span></div></div>",
+      "css": ".ds-category-card { position: relative; overflow: hidden; aspect-ratio: 3 / 4; background: #E3D9C8; cursor: pointer; } .ds-category-card__img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s cubic-bezier(0.16,1,0.3,1); } .ds-category-card:hover .ds-category-card__img { transform: scale(1.06); } .ds-category-card__overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,12,11,0.85) 0%, rgba(14,12,11,0.12) 55%, transparent 100%); pointer-events: none; } .ds-category-card__text { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; } .ds-category-card__name { font-family: 'Fraunces', serif; font-weight: 700; font-size: 24px; color: #F0EBE0; letter-spacing: -0.02em; line-height: 1; margin-bottom: 6px; transition: transform 0.35s ease-out; } .ds-category-card:hover .ds-category-card__name { transform: translateY(-6px); } .ds-category-card__cta { font-family: 'Outfit', sans-serif; font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(240,235,224,0.6); opacity: 0; transform: translateY(8px); display: inline-block; transition: opacity 0.28s ease-out, transform 0.28s ease-out; } .ds-category-card:hover .ds-category-card__cta { opacity: 1; transform: translateY(0); }"
+    },
+    {
+      "name": "Testimonial Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Fraunces italic quote card on pale surface with hairline border.",
+      "html": "<div class=\"ds-testimonial\"><p class=\"ds-testimonial__quote\">&ldquo;Kyle captured every emotion from our wedding day.&rdquo;</p><div class=\"ds-testimonial__footer\"><p class=\"ds-testimonial__name\">Maria &amp; Jared Santos</p><p class=\"ds-testimonial__meta\">Wedding · 2024</p></div></div>",
+      "css": ".ds-testimonial { padding: 30px; border: 0.5px solid rgba(14,12,11,0.09); background: #F4EFE5; } .ds-testimonial__quote { font-family: 'Fraunces', serif; font-style: italic; font-weight: 300; font-size: 18px; line-height: 1.5; color: #0E0C0B; letter-spacing: -0.01em; margin-bottom: 24px; } .ds-testimonial__footer { border-top: 0.5px solid rgba(14,12,11,0.09); padding-top: 16px; } .ds-testimonial__name { font-family: 'Outfit', sans-serif; font-weight: 400; font-size: 13px; color: #0E0C0B; margin-bottom: 3px; } .ds-testimonial__meta { font-family: 'Outfit', sans-serif; font-weight: 400; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(14,12,11,0.45); }"
+    },
+    {
+      "name": "Nav Link",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Desktop nav link. Muted at rest, full ink on hover, underline slides on active.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav__link\" href=\"#\">Work</a><a class=\"ds-nav__link ds-nav__link--active\" href=\"#\">About</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 32px; align-items: center; } .ds-nav__link { position: relative; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(14,12,11,0.45); text-decoration: none; transition: color 0.2s; padding-bottom: 2px; } .ds-nav__link:hover, .ds-nav__link--active { color: #0E0C0B; } .ds-nav__link::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 0.5px; background: #0E0C0B; transform: scaleX(0); transform-origin: left; transition: transform 0.25s ease-out; } .ds-nav__link:hover::after, .ds-nav__link--active::after { transform: scaleX(1); }"
+    },
+    {
+      "name": "FAQ Item",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Accordion row. Question in Outfit body-large; answer in Outfit 300 muted; + rotates on open.",
+      "html": "<div class=\"ds-faq-item ds-faq-item--open\"><button class=\"ds-faq-item__trigger\"><span class=\"ds-faq-item__question\">How far in advance should I book?</span><span class=\"ds-faq-item__icon\">+</span></button><div class=\"ds-faq-item__answer\"><p>Weddings: 3–6 months. Portraits: 2–4 weeks.</p></div></div>",
+      "css": ".ds-faq-item { border-top: 0.5px solid rgba(14,12,11,0.09); } .ds-faq-item:last-child { border-bottom: 0.5px solid rgba(14,12,11,0.09); } .ds-faq-item__trigger { width: 100%; background: none; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px; padding: 22px 0; text-align: left; } .ds-faq-item__question { font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 400; color: #0E0C0B; } .ds-faq-item__icon { font-family: 'Outfit', sans-serif; font-size: 18px; font-weight: 300; color: rgba(14,12,11,0.45); flex-shrink: 0; transition: transform 0.25s ease-out; } .ds-faq-item--open .ds-faq-item__icon { transform: rotate(45deg); } .ds-faq-item__answer p { font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 300; line-height: 1.75; color: rgba(14,12,11,0.45); padding-bottom: 24px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Analog Print",
+    "overview": "This is a photographer's portfolio that trusts the work. The design does not compete with the images — it recedes into an aged-paper silence and lets the photographs announce themselves. The cream ground, the Fraunces serif, and the film grain skin are not decorative; they are a thesis: the work is primary, the interface is the frame.\n\nThe palette is a single warm monochrome stepped from raw linen to near-black ink. There is no accent color. No red, no blue, no brand hue. Color discipline is what keeps the photography on screen primary. Every interaction uses opacity, scale, and tonal shift — never hue.\n\nMotion is present but imperceptible at first glance — TrueFocus cycling through headline lines, RotatingText swapping service words mid-sentence, category cards that breathe on hover. The effect should feel editorial, not technological. If you notice the interface before you notice the work, something is wrong.",
+    "keyCharacteristics": [
+      "Light-first: aged cream is the canvas, not a light-mode toggle",
+      "Sharp everywhere: zero border radius throughout the system",
+      "Two-font system: Fraunces (variable serif, optical size axis) + Outfit (geometric sans)",
+      "Fraunces italic as the sole editorial accent — never used for standalone body copy",
+      "Film grain skin (SVG noise, mix-blend-mode: multiply, ~3% opacity) applied globally",
+      "Depth through tonal steps only — no shadows at rest"
+    ],
+    "rules": [
+      { "name": "The No-Accent Rule",          "body": "There is no accent color. Ink on cream is the entirety of the palette on light surfaces. Depart from this and the work stops being primary.",            "section": "colors"     },
+      { "name": "The Warm Ink Rule",           "body": "Never substitute Near-Black Ink with a neutral or cool black. #0E0C0B is warm-toned by design.",                                                       "section": "colors"     },
+      { "name": "The Italic Counterpoint Rule","body": "Fraunces italic appears only in the direct company of Fraunces upright — one italic line within a Display headline, never a standalone heading.",      "section": "typography" },
+      { "name": "The 11px Floor",              "body": "No UI text set below 11px. Use ink-muted opacity for de-emphasis, never a smaller size.",                                                               "section": "typography" },
+      { "name": "The Flat-By-Default Rule",    "body": "If you reach for a box-shadow at rest, step the background color instead. Shadows appear only as interaction response.",                               "section": "elevation"  },
+      { "name": "The Zero-Radius Rule",        "body": "No border radius anywhere. Not 2px, not rounded-sm. The sharp corner is the brand.",                                                                   "section": "shapes"     }
+    ],
+    "dos": [
+      "Do use Label typography (Outfit 400, 11px / 2.5px / uppercase) for all interactive chrome.",
+      "Do pair Fraunces upright 900 with Fraunces italic 300 in headlines.",
+      "Do use font-variation-settings: 'opsz' 144 on any Fraunces text above 60px.",
+      "Do apply the film grain skin to every page.",
+      "Do step through the cream ramp for section alternation.",
+      "Do use clamp() for all font sizes and padding."
+    ],
+    "donts": [
+      "Don't add border radius anywhere.",
+      "Don't introduce an accent color.",
+      "Don't use spinners for loading states.",
+      "Don't let Fraunces italic stand alone as the primary typographic voice.",
+      "Don't use box-shadow at rest on any element.",
+      "Don't hardcode colors as Tailwind utilities — always use CSS custom properties."
+    ]
+  }
+}

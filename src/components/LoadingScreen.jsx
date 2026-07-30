@@ -45,7 +45,8 @@ export default function LoadingScreen({ isVisible }) {
               delay: i * 0.2,
               repeat: Infinity,
             }}
-            className="w-2 h-2 bg-[var(--red)] rounded-full"
+            className="w-2 h-2 rounded-full"
+          style={{ background: "var(--ink-faint)" }}
           />
         ))}
       </div>
@@ -57,7 +58,7 @@ export default function LoadingScreen({ isVisible }) {
         transition={{ duration: 0.8, delay: 0.4 }}
         style={{
           fontFamily: "var(--font-body)",
-          fontSize: "12px",
+          fontSize: "11px",
           letterSpacing: "2px",
           color: "var(--text-muted)",
           textTransform: "uppercase",
@@ -78,7 +79,7 @@ export default function LoadingScreen({ isVisible }) {
           transform: "translateX(-50%)",
           width: "60px",
           height: "1px",
-          background: "var(--red)",
+          background: "var(--ink-faint)",
           transformOrigin: "center",
         }}
       />

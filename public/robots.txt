@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /gallery
+Allow: /
+
+Sitemap: https://kylepayawal.studio/sitemap.xml

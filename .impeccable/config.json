@@ -1,0 +1,158 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [
+      "design-concepts.html",
+      "design-concepts-2.html"
+    ],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "createdAt": "2026-07-29T13:49:15.074Z",
+        "reason": "Intentional sub-label micro-type for footer/hero metadata"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "10px",
+        "createdAt": "2026-07-29T13:49:15.163Z",
+        "reason": "Intentional micro-label scale used in nav, footer, marquee"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "createdAt": "2026-07-29T13:49:15.251Z",
+        "reason": "Intentional serif tagline and sub-body size"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "18px",
+        "createdAt": "2026-07-29T13:49:15.336Z",
+        "reason": "Intentional footer logo display size"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "15px",
+        "createdAt": "2026-07-29T13:51:52.635Z",
+        "reason": "Gallery logo uses Bebas Neue at 15px — client-facing gallery header logotype, intentional display size"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "14px",
+        "createdAt": "2026-07-29T13:51:56.552Z",
+        "reason": "14px used in gallery internal mobile nav links and form input fields — client-facing tool context, intentional body-adjacent size"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "52px",
+        "createdAt": "2026-07-29T13:53:18.668Z",
+        "reason": "Editorial display size for animated counter — intentional large-type treatment"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "44px",
+        "createdAt": "2026-07-29T13:53:18.757Z",
+        "reason": "Section display heading size — variable editorial scale per DESIGN.md Display typography"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "28px",
+        "createdAt": "2026-07-29T13:53:18.839Z",
+        "reason": "Hero stat counter Bebas Neue size — intentional display scale"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "40px",
+        "createdAt": "2026-07-29T13:53:18.925Z",
+        "reason": "Section headline display size — editorial scale, intentional"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "36px",
+        "createdAt": "2026-07-29T13:53:19.017Z",
+        "reason": "Section subheading display size — editorial scale, intentional"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "22px",
+        "createdAt": "2026-07-29T13:53:19.105Z",
+        "reason": "Mid-scale editorial label size — intentional between body and display"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "48px",
+        "createdAt": "2026-07-29T13:53:19.198Z",
+        "reason": "Mobile fullscreen nav link size (Bebas Neue) — intentional large-type overlay treatment"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "32px",
+        "createdAt": "2026-07-29T13:53:51.413Z",
+        "reason": "Empty state and section display heading minimum — clamp floor for responsive Bebas Neue, intentional"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "120px",
+        "createdAt": "2026-07-29T13:54:59.947Z",
+        "reason": "Was used in floating KP animation (now removed). Size is off the ramp; suppress to clear stale session finding."
+      },
+      {
+        "rule": "overused-font",
+        "value": "*",
+        "files": [
+          "src/index.css"
+        ],
+        "createdAt": "2026-07-29T13:56:35.980Z",
+        "reason": "False positive — project uses Bebas Neue, Instrument Serif, DM Sans; none are on the overused list. Font stack is intentional per DESIGN.md."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "24px",
+        "createdAt": "2026-07-29T14:16:04.397Z",
+        "reason": "Intentional clamp() minimum for responsive step headings in Inquire.jsx"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "200px",
+        "createdAt": "2026-07-30T00:03:40.858Z",
+        "reason": "Decorative background element at 5% opacity — not typography"
+      },
+      {
+        "rule": "overused-font",
+        "value": "fraunces",
+        "createdAt": "2026-07-30T13:07:30.235Z",
+        "reason": "User confirmed Fraunces intentional during design interview — clean modern editorial studio aesthetic"
+      },
+      {
+        "rule": "overused-font",
+        "value": "outfit",
+        "createdAt": "2026-07-30T13:07:35.067Z",
+        "reason": "User confirmed Outfit intentional during design interview — clean modern editorial studio aesthetic"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "56px",
+        "createdAt": "2026-07-30T13:11:04.376Z",
+        "reason": "display-md step in documented font-sizes type ramp — clamp() min for stats CountUp"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "21px",
+        "createdAt": "2026-07-30T13:11:04.507Z",
+        "reason": "quote step in documented font-sizes type ramp — clamp() max for testimonial text"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "42px",
+        "createdAt": "2026-07-30T13:11:04.620Z",
+        "reason": "display-xs step in documented font-sizes type ramp — clamp() min for CTA italic headline"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "64px",
+        "createdAt": "2026-07-30T13:29:55.944Z",
+        "reason": "display-lg step in documented font-sizes type ramp — clamp() min for Work page h1"
+      }
+    ]
+  }
+}

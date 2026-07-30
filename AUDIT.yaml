@@ -1,0 +1,641 @@
+audit:
+  project: "kylepayawal.studio"
+  reviewed_by: "Claude Code"
+  date: "2026-07-30"
+  scope: "Full codebase review — UX, UI, Performance, SEO, Brand Identity, Bugs"
+
+# ─────────────────────────────────────────────
+#  USER EXPERIENCE
+# ─────────────────────────────────────────────
+ux:
+  - id: UX-01
+    severity: high
+    page: all
+    title: "No 404 / Not Found route"
+    detail: >
+      App.jsx defines routes for /, /work, /gallery, /about, /contact, /inquire
+      but has no catch-all route. Visiting any unknown URL renders a blank screen
+      with no navigation or recovery path.
+
+  - id: UX-02
+    severity: high
+    page: home, about, contact, footer
+    title: "Duplicate booking entry points create split user journey"
+    detail: >
+      /contact and /inquire both serve as booking pages but with very different
+      depth (simple 6-field form vs. detailed 4-step wizard). Users who land on
+      /contact get a weaker experience. There is no contextual distinction
+      communicated: a user cannot tell why two paths exist or which one to choose.
+
+  - id: UX-03
+    severity: high
+    page: home
+    title: "Intro section two-column grid has no mobile breakpoint"
+    detail: >
+      The 'FLASH. grain. TRUTH.' section in Home.jsx uses a hardcoded
+      gridTemplateColumns of '1fr 1fr' with gap of 80px and no inline media
+      query. On screens smaller than 768px this renders two very narrow, cramped
+      columns of text rather than stacking vertically.
+
+  - id: UX-04
+    severity: high
+    page: home
+    title: "Selected Work hover overlay is invisible on mobile"
+    detail: >
+      The category label overlay in the 2×2 selected work grid only appears via
+      onMouseEnter / onMouseLeave events. Touch devices never trigger these
+      events, so mobile users click into a category with no label or hint of
+      what they are selecting.
+
+  - id: UX-05
+    severity: medium
+    page: all
+    title: "Page title never updates on navigation"
+    detail: >
+      The HTML <title> is set once in index.html as 'Kyle Payawal — Photographer
+      & Videographer' and never changes. Every page — Work, About, Contact,
+      Gallery — shows the same browser tab title. This hurts bookmarking,
+      browser history, and SEO.
+
+  - id: UX-06
+    severity: medium
+    page: home
+    title: "Key social proof stats hidden on mobile"
+    detail: >
+      The hero stats block (200+ Projects, 10 Categories, 5+ Years) and the
+      scroll indicator are hidden on mobile via CSS 'display: none !important'.
+      Mobile users — likely the majority of visitors — never see this credibility
+      content.
+
+  - id: UX-07
+    severity: medium
+    page: work
+    title: "Empty state CTA triggers full page reload"
+    detail: >
+      Work.jsx line 343 uses <a href="/contact"> inside the empty category state.
+      In a React SPA this causes a full page refresh instead of client-side
+      navigation, resetting all state and showing the loading screen again.
+
+  - id: UX-08
+    severity: medium
+    page: contact
+    title: "Double validation UX — shake animation fires alongside browser-native tooltip"
+    detail: >
+      Contact.jsx fields have both React-driven validation (fieldErrors → scale
+      shake animation) and the HTML 'required' attribute. On submit, the browser
+      shows its native tooltip on the first invalid field AND the shake animation
+      runs, creating a jarring, doubled error experience.
+
+  - id: UX-09
+    severity: medium
+    page: work
+    title: "Back button in Work category view has no keyboard / focus affordance"
+    detail: >
+      The ArrowLeft 'back' button inside the category view is a motion.button
+      styled with opacity 0.45 and no visible focus ring. It is difficult to
+      locate visually, and keyboard users get no clear focus indicator.
+
+  - id: UX-10
+    severity: low
+    page: gallery
+    title: "Client Gallery link is visually de-emphasized vs. all other nav items"
+    detail: >
+      The 'Client Gallery' link in the Navbar is styled with 9px font, 1.5px
+      letter spacing, and color rgba(240,235,224,0.35) — far lighter than
+      nav-link items at 11px and 2.5px spacing. It reads as a fine-print label
+      rather than a navigation item. Clients looking for their gallery will miss it.
+
+  - id: UX-11
+    severity: low
+    page: inquire
+    title: "Step 3 and 4 have zero required fields — misleadingly easy to skip"
+    detail: >
+      The multi-step Inquire form treats Location (Step 3) and Vision (Step 4)
+      as fully optional. The user can advance from Step 1 and 2 with valid data
+      then click straight through Steps 3–4 with zero input. No context
+      communicates that these steps are optional, which may confuse users who
+      expect all steps to require input.
+
+  - id: UX-12
+    severity: low
+    page: home
+    title: "LoadingScreen could show indefinitely if data fetch fails silently"
+    detail: >
+      In Home.jsx, setIsLoading(false) only fires when both 'loading' and
+      'marqueeLoading' are false. If either Supabase call errors out without
+      setting the loading flag to false, the LoadingScreen stays visible forever
+      and the page content is never shown.
+
+# ─────────────────────────────────────────────
+#  USER INTERFACE
+# ─────────────────────────────────────────────
+ui:
+  - id: UI-01
+    severity: high
+    page: about
+    title: "Nested <a><button> is invalid HTML and breaks accessibility"
+    detail: >
+      About.jsx wraps MagneticButton (which renders a <motion.button>) inside a
+      <Link> (which renders an <a>). The output is <a href="/contact"><button>.
+      Nesting an interactive element inside another is invalid HTML per the W3C
+      spec. Some browsers make the outer <a> non-clickable, and screen readers
+      announce it incorrectly.
+
+  - id: UI-02
+    severity: high
+    page: all
+    title: "Footer has no navigation links"
+    detail: >
+      The footer contains only the brand name, tagline, social media icons, and
+      copyright. There are no page links (Work, About, Gallery, Contact). Users
+      who scroll to the bottom have no navigation path and must scroll back to
+      the top, which is disorienting on long pages.
+
+  - id: UI-03
+    severity: medium
+    page: about
+    title: "Profile image decorative border uses negative z-index causing render issues"
+    detail: >
+      The offset border accent on the About profile image uses zIndex: -1 inside
+      a relative-positioned div. In certain stacking contexts (especially with
+      background colors on parent elements) this element becomes invisible or
+      appears behind the page background rather than the image.
+
+  - id: UI-04
+    severity: medium
+    page: all
+    title: "Navbar padding is fixed at 22px 40px with no mobile adjustment"
+    detail: >
+      The Navbar inner row uses padding '22px 40px' regardless of screen size.
+      On mobile (< 375px) this eats into content width and can cause the logo
+      text and hamburger to feel cramped or clip near the edge.
+
+  - id: UI-05
+    severity: medium
+    page: home, about
+    title: "Inconsistent MagneticButton implementation across pages"
+    detail: >
+      MagneticButton in Home.jsx wraps a <Link> and uses inline style objects
+      for all styling. MagneticButton in About.jsx is a <motion.button> using
+      Tailwind utility classes. They look and behave slightly differently and
+      share no code, making future updates require changes in two places.
+
+  - id: UI-06
+    severity: medium
+    page: contact, inquire
+    title: "Spinner used for form loading state (violates established pattern)"
+    detail: >
+      Both Contact.jsx and Inquire.jsx show a spinning div inside the submit
+      button during form submission. The site's own design pattern uses
+      Skeleton-only loading. While a spinner in a button is an accepted pattern
+      for form submission, the implementation here uses a raw div with CSS border
+      rather than a consistent, accessible loading component.
+
+  - id: UI-07
+    severity: low
+    page: all
+    title: "No visible focus rings on most interactive elements"
+    detail: >
+      Custom-styled links and buttons (nav-link, inline Link components,
+      MagneticButton) do not have visible focus-visible styles beyond a few
+      inputs. Keyboard navigation throughout the site provides no clear focus
+      indicator, which fails WCAG 2.2 AA (SC 2.4.11 Focus Appearance).
+
+  - id: UI-08
+    severity: low
+    page: footer
+    title: "Footer does not include an email link despite importing Mail icon"
+    detail: >
+      Mail is imported from lucide-react in Footer.jsx but never used. The
+      footer provides no direct email contact link — only Instagram and Facebook.
+      Users who prefer email have no quick path from the footer.
+
+  - id: UI-09
+    severity: low
+    page: work
+    title: "Red accent on category card hover bottom-bar uses same color as error states"
+    detail: >
+      The red underline that slides in on category card hover (var(--red)) is
+      identical in color to error states and field validation errors. The same
+      red is used for CTA hover, active nav indicator, error borders, and error
+      text. Overloading one color with too many semantic meanings dilutes each.
+
+# ─────────────────────────────────────────────
+#  PERFORMANCE
+# ─────────────────────────────────────────────
+performance:
+  - id: PERF-01
+    severity: high
+    page: all
+    title: "Google Fonts loaded via CSS @import instead of HTML <link>"
+    detail: >
+      index.css line 1 imports Google Fonts via @import url(). This is a render-
+      blocking call inside a stylesheet — the browser cannot discover the font
+      until the CSS is parsed. Moving to <link rel="preload"> and <link
+      rel="stylesheet"> in index.html would shave 300–600ms off First Contentful
+      Paint on slower connections.
+
+  - id: PERF-02
+    severity: high
+    page: home, work
+    title: "LazyImage and VideoWithAutoplay duplicated in three files"
+    detail: >
+      LazyImage is implemented separately in Home.jsx, About.jsx, and Work.jsx.
+      VideoWithAutoplay is duplicated in Home.jsx and Work.jsx. These are not
+      shared components, meaning each page ships its own copy. Any optimizations
+      or bug fixes must be applied in multiple places.
+
+  - id: PERF-03
+    severity: high
+    page: home, work, gallery
+    title: "isVideo() detection logic is an inline IIFE repeated 5+ times"
+    detail: >
+      The logic for detecting video by file extension is copy-pasted as an IIFE
+      inside render functions across Home.jsx (twice), Work.jsx (three times),
+      and Gallery.jsx. This creates maintenance debt and ships redundant code to
+      the client.
+
+  - id: PERF-04
+    severity: medium
+    page: all
+    title: "No sitemap.xml in public/"
+    detail: >
+      No sitemap.xml file exists in the public directory. Search engines crawling
+      the site must discover pages by following links. A sitemap ensures all key
+      pages (/work, /about, /contact, /inquire) are indexed.
+
+  - id: PERF-05
+    severity: medium
+    page: all
+    title: "No robots.txt in public/"
+    detail: >
+      There is no public/robots.txt. Without it, all crawlers access all routes
+      by default including /gallery (a private client area). A robots.txt should
+      explicitly disallow crawlers from /gallery.
+
+  - id: PERF-06
+    severity: medium
+    page: home
+    title: "Marquee animation missing GPU compositing hint"
+    detail: >
+      The marquee-track animation in index.css uses transform: translateX() but
+      does not declare will-change: transform. On lower-end devices the
+      continuous 28s animation can cause dropped frames (jank) as the browser
+      re-composites the layer on each tick.
+
+  - id: PERF-07
+    severity: medium
+    page: home
+    title: "Hero video hero autoplay delayed 1500ms unnecessarily"
+    detail: >
+      Home.jsx enables video autoplay after a 1500ms setTimeout (enableAutoplay
+      state), but the hero video element already has autoPlay={true} on the
+      element itself. The 1500ms delay appears to be dead code that adds latency
+      without providing a clear benefit.
+
+  - id: PERF-08
+    severity: low
+    page: gallery
+    title: "jsonwebtoken shipped to client bundle"
+    detail: >
+      package.json includes jsonwebtoken as a runtime dependency. JWT signing
+      should only occur server-side. If it is used in client code it exposes the
+      signing secret. If it is only used in the Vercel API route, it should be a
+      devDependency or the API route should be separated more clearly.
+
+# ─────────────────────────────────────────────
+#  SEO
+# ─────────────────────────────────────────────
+seo:
+  - id: SEO-01
+    severity: critical
+    page: all
+    title: "No meta description tag"
+    detail: >
+      index.html has a <title> but no <meta name="description"> tag. Search
+      engines will auto-generate a snippet from page content, which is usually
+      lower quality and less click-worthy than a crafted description.
+
+  - id: SEO-02
+    severity: critical
+    page: all
+    title: "No Open Graph or Twitter Card meta tags"
+    detail: >
+      There are no og:title, og:description, og:image, og:type, twitter:card,
+      or twitter:image tags. When the URL is shared on Facebook, Instagram
+      Stories, Messenger, or any social platform, it renders as a plain text
+      link with no image preview, dramatically reducing click-through.
+
+  - id: SEO-03
+    severity: high
+    page: all
+    title: "Page <title> never changes on route navigation"
+    detail: >
+      No react-helmet, react-helmet-async, or equivalent is installed. Every
+      page — /work, /about, /contact — shows 'Kyle Payawal — Photographer &
+      Videographer' as the tab title. Search engines index each URL's title
+      separately; generic titles on all pages wastes crawl value.
+
+  - id: SEO-04
+    severity: high
+    page: home
+    title: "Two <h1> tags on the same page"
+    detail: >
+      The Home.jsx hero section renders two <h1> elements: 'IT'S GONNA LOOK'
+      and 'THAT'S THE POINT.' with a styled <p> element between them. A page
+      should have exactly one <h1>. Multiple h1 tags dilute the page's primary
+      keyword signal.
+
+  - id: SEO-05
+    severity: high
+    page: contact
+    title: "Broken heading hierarchy on Contact page"
+    detail: >
+      Contact.jsx uses: h1 'LET'S MAKE', then h2 'something', then another h1
+      'UNFORGETTABLE'. The heading order is h1 → h2 → h1, which is semantically
+      invalid. Screen readers and crawlers expect h1 → h2 → h3 and never a
+      return to h1 mid-page.
+
+  - id: SEO-06
+    severity: high
+    page: all
+    title: "No sitemap.xml or robots.txt"
+    detail: >
+      Neither file exists in public/. Without robots.txt, private routes like
+      /gallery are indexed. Without sitemap.xml, crawlers may miss pages or
+      prioritize them incorrectly.
+
+  - id: SEO-07
+    severity: medium
+    page: all
+    title: "No canonical URL meta tag"
+    detail: >
+      No <link rel="canonical"> is set. If the site is accessible at both
+      http:// and https://, or with/without www, search engines may split link
+      equity between duplicate URLs.
+
+  - id: SEO-08
+    severity: medium
+    page: all
+    title: "No JSON-LD structured data"
+    detail: >
+      There is no structured data (Person, LocalBusiness, CreativeWork, or
+      Portfolio schema). Adding JSON-LD would enable rich results in Google
+      Search — entity knowledge panels, image carousels, and business info
+      are all available to photographers/videographers.
+
+  - id: SEO-09
+    severity: low
+    page: home, work, gallery
+    title: "Portfolio images have minimal or missing alt text"
+    detail: >
+      Images in the selected work grid use item.category as alt text
+      (e.g., 'Wedding'). Gallery images use item.title. More descriptive alt
+      text (e.g., 'Kyle Payawal wedding photography in Tarlac, Philippines')
+      improves image search visibility and accessibility.
+
+# ─────────────────────────────────────────────
+#  BRAND IDENTITY
+# ─────────────────────────────────────────────
+brand_identity:
+  - id: BRAND-01
+    severity: high
+    page: contact, inquire
+    title: "Split booking experience dilutes brand clarity"
+    detail: >
+      Two separate booking paths (/contact and /inquire) exist side-by-side with
+      no clear role differentiation. Contact is linked from the main navbar;
+      Inquire is the primary CTA in the navbar button. A visitor who clicks
+      'Contact' in the nav lands on a simpler form; a visitor who clicks
+      'Inquire' gets the full wizard. The brand experience is inconsistent
+      depending on how the user finds the booking page.
+
+  - id: BRAND-02
+    severity: medium
+    page: all
+    title: "Red (#8b1f30) serves as CTA color AND error/danger color simultaneously"
+    detail: >
+      The same red is used for the Inquire CTA button, the active nav indicator,
+      card hover accents, field error borders, error text, and error backgrounds.
+      In Western UX convention, red = danger / error. Using it as the primary
+      action color creates subconscious friction — the primary call to action
+      looks like a warning.
+
+  - id: BRAND-03
+    severity: medium
+    page: all
+    title: "No email address publicly listed anywhere"
+    detail: >
+      There is no direct contact email (e.g., hello@kylepayawal.studio or
+      payawalkyle@gmail.com) visible on the site. Users who prefer email over
+      forms have no alternative. This also reduces trust signals — professional
+      photographers typically display a contact email.
+
+  - id: BRAND-04
+    severity: medium
+    page: all
+    title: "Tagline presentation is inconsistent between hero and footer"
+    detail: >
+      Hero hero: 'IT'S GONNA LOOK / a little different. / THAT'S THE POINT.'
+      Footer tagline: 'It's gonna look a little different. / That's the point.'
+      The mixed-case footer version reads as a quote, the all-caps hero reads as
+      a statement. Neither is wrong but they are not the same visual treatment of
+      the same brand phrase.
+
+  - id: BRAND-05
+    severity: low
+    page: all
+    title: "Only Instagram and Facebook — missing Behance, 500px, or LinkedIn"
+    detail: >
+      Social links across the site include only Instagram and Facebook. Photography
+      professionals typically also maintain Behance or 500px portfolios, and
+      commercial/brand clients often search LinkedIn. The social footprint limits
+      discoverability for different client types.
+
+  - id: BRAND-06
+    severity: low
+    page: home
+    title: "'Flash. grain. TRUTH.' brand philosophy not echoed elsewhere"
+    detail: >
+      The three-word philosophy in the Home intro section ('FLASH. grain. TRUTH.')
+      is the clearest articulation of Kyle's visual identity but appears only
+      once across the entire site. It could be woven into the About page bio,
+      used as a section header on the Work page, or referenced in the Inquire
+      form to create a more cohesive brand voice.
+
+# ─────────────────────────────────────────────
+#  BUGS FOUND
+# ─────────────────────────────────────────────
+bugs:
+  - id: BUG-01
+    severity: critical
+    file: "src/pages/About.jsx"
+    line: 195
+    title: "Nested <a><button> invalid HTML — booking CTA may be non-clickable in some browsers"
+    detail: >
+      <Link to="/contact"><MagneticButton>...</MagneticButton></Link> renders as
+      <a href="/contact"><button>. The HTML spec prohibits interactive elements
+      inside <a>. Some browsers (notably Safari on iOS) ignore click events on
+      the outer <a> and fire on the inner <button> instead, which has no href,
+      making the button appear to do nothing. Identical pattern applies to the
+      'View Works' link on the same page.
+    fix: >
+      Remove the wrapping <Link> and instead add a useNavigate() hook inside
+      MagneticButton, accepting a 'to' prop (same as the Home.jsx version).
+      Alternatively, convert the <Link> to contain only non-interactive children
+      and apply navigation logic inside the button's onClick handler.
+
+  - id: BUG-02
+    severity: high
+    file: "src/pages/Work.jsx"
+    line: 121
+    title: "VideoWithAutoplay .play() called without .catch() — unhandled promise rejection"
+    detail: >
+      Work.jsx VideoWithAutoplay calls videoRef.current.play() without a .catch()
+      handler. Modern browsers restrict autoplay for videos that aren't muted on
+      certain connections and will reject the promise, logging an uncaught
+      promise rejection to the console. The identical component in Home.jsx
+      correctly handles this with .catch(() => {}). The Work.jsx version will
+      throw visible console errors on Chrome and Firefox when autoplay is blocked.
+    fix: >
+      Change line 121 from:
+        videoRef.current.play();
+      to:
+        videoRef.current.play().catch(() => {});
+
+  - id: BUG-03
+    severity: high
+    file: "src/pages/Home.jsx"
+    line: 659
+    title: "Intro section 1fr 1fr grid breaks on mobile — no responsive override"
+    detail: >
+      Home.jsx intro section uses gridTemplateColumns: '1fr 1fr' and gap: '80px'
+      with no responsive media query. On screens <= 640px the content stacks
+      into two columns that are each under 130px wide, making the heading and
+      body text illegible.
+    fix: >
+      Add a breakpoint override. Either wrap in a CSS class with a @media rule,
+      or use Tailwind: replace the inline grid style with className="grid
+      md:grid-cols-2 gap-12 md:gap-20".
+
+  - id: BUG-04
+    severity: high
+    file: "src/components/Navbar.jsx, src/components/Footer.jsx, src/pages/Gallery.jsx"
+    line: "9, 8, 27"
+    title: "window.innerWidth accessed synchronously during useState initialization"
+    detail: >
+      All three files use window.innerWidth < 768 as the initial value for a
+      useState call. This runs synchronously during module evaluation. In any
+      environment without a window object (SSR, test runners, certain pre-render
+      tools) this throws a ReferenceError. Even in browser-only builds, this
+      pattern runs before the window is fully ready on some edge cases.
+    fix: >
+      Use a lazy initializer:
+        const [isMobile, setIsMobile] = useState(() =>
+          typeof window !== 'undefined' ? window.innerWidth < 768 : false
+        );
+
+  - id: BUG-05
+    severity: high
+    file: "src/pages/Work.jsx"
+    line: 343
+    title: "Empty state uses <a href> causing full-page reload in SPA"
+    detail: >
+      The empty category state in Work.jsx uses <a href="/contact"> instead of
+      <Link to="/contact">. Clicking this causes the browser to do a full HTTP
+      navigation, reloading the entire React application and losing SPA state.
+    fix: >
+      Replace:
+        <a href="/contact" ...>Get in touch to commission work</a>
+      With:
+        <Link to="/contact" ...>Get in touch to commission work</Link>
+      And add the import: import { Link } from 'react-router-dom'; (already
+      imported in the file's scope, just use it).
+
+  - id: BUG-06
+    severity: medium
+    file: "src/pages/Contact.jsx"
+    line: "36-42"
+    title: "Double form validation — React shake + browser native required tooltip fire together"
+    detail: >
+      Contact.jsx fields have both the HTML 'required' attribute and custom
+      React-driven validation (fieldErrors state). On submit with empty fields,
+      the browser shows its native validation tooltip on the first invalid field
+      AND the Framer Motion shake animation runs on all fields simultaneously.
+      This creates a chaotic visual experience — the browser tooltip moves the
+      layout while the shake animation is mid-play.
+    fix: >
+      Remove the 'required' attribute from all input fields in Contact.jsx.
+      The React-side validateForm() handles all validation. The 'required'
+      attribute is redundant and causes the double-validation conflict.
+
+  - id: BUG-07
+    severity: medium
+    file: "src/pages/About.jsx"
+    line: 119
+    title: "Decorative border accent with zIndex: -1 disappears in certain stacking contexts"
+    detail: >
+      The offset border decoration on the profile image uses zIndex: -1 on a
+      div inside a relative-positioned parent. When the parent has a background
+      color (which it does — bg-[var(--black)]), the z-index -1 places the
+      border behind the page background, making it invisible. Users on certain
+      browsers / GPU compositing paths may never see this design element.
+    fix: >
+      Change zIndex: -1 to zIndex: 0 (or remove the z-index entirely) and
+      instead use pointer-events: none to prevent the element from blocking
+      interactions. The parent div's overflow: hidden is already handling
+      containment.
+
+  - id: BUG-08
+    severity: medium
+    file: "src/pages/Home.jsx"
+    line: 241
+    title: "Loading screen can stay visible forever if Supabase fetch errors silently"
+    detail: >
+      setIsLoading(false) is inside a useEffect that waits for loading &&
+      marqueeLoading to both be false. If either usePortfolio / useFeaturedPortfolio
+      hook catches an error internally without setting loading to false, the
+      loading screen never dismisses and the user sees a permanently blocked page.
+    fix: >
+      Add a timeout fallback:
+        useEffect(() => {
+          const timeout = setTimeout(() => setIsLoading(false), 5000);
+          if (!loading && !marqueeLoading) {
+            clearTimeout(timeout);
+            setTimeout(() => setIsLoading(false), 400);
+          }
+          return () => clearTimeout(timeout);
+        }, [loading, marqueeLoading]);
+
+  - id: BUG-09
+    severity: low
+    file: "src/pages/Inquire.jsx"
+    line: "497, 502, 509, 519"
+    title: "Section components called as functions instead of JSX — React reconciliation issue"
+    detail: >
+      SectionAboutYou, SectionYourSession, SectionLocation, SectionVision are
+      defined as regular functions inside the Inquire component scope and called
+      as {SectionAboutYou()} rather than <SectionAboutYou />. Calling them as
+      functions means React cannot track them as separate component instances,
+      cannot apply keys, and will unmount/remount all their children on every
+      parent re-render. This is especially problematic inside AnimatePresence
+      — the exit animations may not fire correctly.
+    fix: >
+      Move the section components outside of the Inquire function scope and
+      render them as JSX: <SectionAboutYou /> etc., passing formData, setField,
+      and fieldErrors as props.
+
+  - id: BUG-10
+    severity: low
+    file: "src/index.css"
+    line: 74
+    title: "Marquee animation missing will-change hint — potential jank on mobile"
+    detail: >
+      The .marquee-track element runs a continuous 28-second translateX animation.
+      Without will-change: transform the browser cannot promote the layer to the
+      GPU compositor ahead of time, causing potential dropped frames (visual
+      jank) on lower-end Android devices during scroll or interaction.
+    fix: >
+      Add to .marquee-track:
+        will-change: transform;
+        transform: translateZ(0);

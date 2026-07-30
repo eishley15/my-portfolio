@@ -1,238 +1,653 @@
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Instagram, Facebook, ArrowRight, Mail } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Instagram, Facebook, Mail, ArrowUpRight } from "lucide-react";
 
-// Lazy load image component
-function LazyImage({ src, alt, className }) {
-  const [loaded, setLoaded] = useState(false);
-  const [imageSrc, setImageSrc] = useState(null);
-  const imgRef = useRef(null);
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setImageSrc(src);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "50px" },
-    );
+const SERVICES = [
+  "Wedding", "Debut", "Christening", "Birthday",
+  "Portraits", "Lifestyle", "Product", "Pageant",
+  "Commercial", "SaaS Films",
+];
 
-    if (imgRef.current) observer.observe(imgRef.current);
-    return () => observer.disconnect();
-  }, [src]);
+const GEAR = [
+  { label: "Shoots with",   value: "Sony A7 IV · Sony A6400" },
+  { label: "Favorite light", value: "Overcast diffused & golden hour" },
+  { label: "Never without",  value: "Three backup cards and a playlist" },
+  { label: "Always brings",  value: "A reflector and a sense of calm" },
+];
 
+const SOCIAL = [
+  { href: "mailto:payawalkyle@gmail.com",             Icon: Mail,      label: "Email" },
+  { href: "https://www.instagram.com/payawalkyle/",   Icon: Instagram,  label: "Instagram" },
+  { href: "https://www.facebook.com/kyle.payawal",    Icon: Facebook,   label: "Facebook" },
+];
+
+// ─── Service Marquee ──────────────────────────────────────────────────────────
+
+function ServiceMarquee() {
+  const doubled = [...SERVICES, ...SERVICES];
   return (
-    <img
-      ref={imgRef}
-      src={imageSrc}
-      alt={alt}
-      className={className}
-      onLoad={() => setLoaded(true)}
-      style={{ opacity: loaded ? 1 : 0.5, transition: "opacity 0.3s" }}
-    />
+    <div style={{ overflow: "hidden" }}>
+      <motion.div
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 30, ease: "linear", repeat: Infinity }}
+        style={{
+          display:    "flex",
+          gap:        "clamp(32px, 5vw, 64px)",
+          alignItems: "baseline",
+          willChange: "transform",
+        }}
+      >
+        {doubled.map((s, i) => {
+          const isItalic = i % 3 === 1;
+          return (
+            <span
+              key={i}
+              style={{
+                fontFamily:            "var(--font-display)",
+                fontStyle:             isItalic ? "italic" : "normal",
+                fontWeight:            isItalic ? 300 : 700,
+                fontSize:              "clamp(32px, 4vw, 52px)",
+                letterSpacing:         "-0.025em",
+                color:                 isItalic ? "var(--ink-muted)" : "var(--ink)",
+                flexShrink:            0,
+                fontVariationSettings: "'opsz' 72",
+                lineHeight:            1,
+              }}
+            >
+              {s}
+            </span>
+          );
+        })}
+      </motion.div>
+    </div>
   );
 }
 
-// Magnetic button component
-function MagneticButton({ children, variant = "solid" }) {
+// ─── Parallax Photo ───────────────────────────────────────────────────────────
+
+function ParallaxPhoto() {
   const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springConfig = { damping: 15, stiffness: 150 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
-
-  const handleMouseMove = (e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    x.set((e.clientX - centerX) * 0.3);
-    y.set((e.clientY - centerY) * 0.3);
-  };
-
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  const baseStyles =
-    "px-8 py-4 text-sm tracking-[1px] uppercase flex items-center gap-3 transition-colors";
-  const variantStyles =
-    variant === "solid"
-      ? "bg-[var(--black)] text-[var(--off-white)] hover:bg-[var(--red)]"
-      : "border border-[var(--black)] text-[var(--black)] hover:border-[var(--red)] hover:text-[var(--red)]";
+  const { scrollYProgress } = useScroll({
+    target:  ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
 
   return (
-    <motion.button
+    <div
       ref={ref}
-      style={{ x: springX, y: springY }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className={`${baseStyles} ${variantStyles}`}
+      style={{
+        position:   "relative",
+        overflow:   "hidden",
+        height:     "100%",
+        minHeight:  "clamp(420px, 70vh, 820px)",
+      }}
     >
-      {children}
-    </motion.button>
+      <motion.img
+        src="/kylepayawalprofile.webp"
+        alt="Kyle Payawal"
+        style={{
+          y,
+          width:      "100%",
+          height:     "112%",
+          objectFit:  "cover",
+          display:    "block",
+          marginTop:  "-6%",
+        }}
+      />
+    </div>
   );
 }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+const px = "clamp(24px, 6vw, 80px)";
 
 export default function About() {
-  const services = [
-    "Wedding",
-    "Debut",
-    "Christening",
-    "Birthday",
-    "Portraits",
-    "Lifestyle",
-    "Product",
-    "Pageant",
-    "Commercial",
-    "SaaS Films",
-  ];
-
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen bg-[var(--off-white)] text-[var(--black)] pt-24 pb-20 px-6"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      style={{ background: "var(--bg)", color: "var(--ink)", minHeight: "100svh" }}
     >
-      <div className="max-w-[1400px] mx-auto">
-        <div className="grid md:grid-cols-2 gap-16 items-start">
-          <motion.div
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="relative"
+      <Helmet>
+        <title>About — Kyle Payawal</title>
+        <meta name="description" content="Kyle Payawal is a photographer and videographer based in Tarlac and Angeles City. He shoots images and films that live between flash-lit editorial and sun-bleached handycam footage." />
+        <link rel="canonical" href="https://kylepayawal.studio/about" />
+      </Helmet>
+
+      {/* ── §1 HERO ─────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          display:             "grid",
+          gridTemplateColumns: "1fr 1fr",
+          height:              "100svh",
+          overflow:            "hidden",
+        }}
+      >
+        {/* Photo — left column */}
+        <ParallaxPhoto />
+
+        {/* Text — right column */}
+        <div
+          style={{
+            display:        "flex",
+            flexDirection:  "column",
+            justifyContent: "flex-end",
+            padding:        `clamp(72px, 8vh, 96px) ${px} clamp(32px, 4vh, 52px)`,
+            gap:             0,
+            overflow:       "hidden",
+          }}
+        >
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            style={{
+              fontFamily:    "var(--font-body)",
+              fontSize:       "11px",
+              letterSpacing:  "3px",
+              textTransform:  "uppercase",
+              color:          "var(--ink-muted)",
+              marginBottom:   "clamp(20px, 3vh, 32px)",
+            }}
           >
-            <div className="aspect-[3/4] bg-[var(--gray-dark)] relative overflow-hidden w-full max-h-[880px]">
-              <LazyImage
-                src="/kylepayawalprofile.webp"
-                alt="Kyle Payawal"
-                className="w-full h-full object-cover"
-              />
-            </div>
+            Photographer · Videographer · Editor
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.55 }}
+            style={{
+              fontFamily:            "var(--font-display)",
+              fontWeight:             900,
+              fontSize:               "clamp(56px, 7.5vw, 96px)",
+              letterSpacing:         "-0.035em",
+              lineHeight:             0.88,
+              color:                  "var(--ink)",
+              margin:                 0,
+              fontVariationSettings:  "'opsz' 144",
+              textTransform:          "uppercase",
+            }}
+          >
+            Kyle
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.55 }}
+            style={{
+              fontFamily:           "var(--font-display)",
+              fontWeight:            300,
+              fontStyle:             "italic",
+              fontSize:              "clamp(44px, 6.5vw, 84px)",
+              letterSpacing:        "-0.025em",
+              lineHeight:            1.0,
+              color:                 "var(--ink)",
+              margin:                0,
+              fontVariationSettings: "'opsz' 120",
+              marginBottom:          "clamp(20px, 2.5vh, 32px)",
+            }}
+          >
+            Payawal
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45, duration: 0.6 }}
+            style={{
+              fontFamily:  "var(--font-body)",
+              fontWeight:   300,
+              fontSize:     "clamp(14px, 1.5vw, 16px)",
+              lineHeight:   1.7,
+              color:        "var(--ink-muted)",
+              maxWidth:     "44ch",
+              margin:       0,
+            }}
+          >
+            Based in Tarlac and Angeles City, Pampanga. I shoot images and
+            films that live somewhere between flash-lit editorial and
+            sun-bleached handycam footage — because every event deserves both
+            polish and soul.
+          </motion.p>
+
+          {/* Scroll hint */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.9, duration: 0.5 }}
+            style={{
+              marginTop:     "clamp(36px, 5vh, 56px)",
+              display:       "flex",
+              alignItems:    "center",
+              gap:            8,
+            }}
+          >
             <div
-              className="absolute top-0 left-0 w-full h-full pointer-events-none"
               style={{
-                border: "0.5px solid rgba(0,0,0,0.15)",
-                transform: "translate(-8px, 8px)",
-                zIndex: -1,
+                width:       24,
+                height:      "0.5px",
+                background:  "var(--ink-faint)",
               }}
             />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 32 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            style={{ gap: "1.5rem" }}
-          >
-            <div className="eyebrow mb-6">
-              THE PHOTOGRAPHER | VIDEOGRAPHER | EDITOR
-            </div>
-
-            <h1 className="font-display text-[clamp(56px,8vw,96px)] leading-[0.88] mb-2">
-              KYLE
-            </h1>
-            <h2 className="italic-accent text-[clamp(48px,7vw,80px)] leading-[0.6] mb-8">
-              Payawal
-            </h2>
-
-            <p className="mb-8 leading-relaxed">
-              Based in Tarlac and Angeles City, I shoot images and films that
-              live somewhere between flash-lit editorial and sun-bleached
-              handycam footage — because every event deserves both polish and
-              soul. From debut celebrations to pageant advocacy films, product
-              shoots to wedding days, I bring a consistent obsession with light,
-              texture, and the in-between moments that make everything real.
-            </p>
-
-            <div className="mb-8">
-              <div className="text-[10px] tracking-[2px] uppercase mb-4 text-[var(--gray-light)]">
-                Services
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {services.map((service) => (
-                  <span
-                    key={service}
-                    className="px-4 py-2 text-[11px] tracking-[1px]"
-                    style={{ border: "0.5px solid rgba(0,0,0,0.2)" }}
-                  >
-                    {service}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-12">
-              <div className="text-[10px] tracking-[2px] uppercase mb-4 text-[var(--gray-light)]">
-                Connect
-              </div>
-              <div className="flex gap-4">
-                <a
-                  href="https://www.instagram.com/payawalkyle/"
-                  className="flex items-center gap-2 text-[var(--black)] hover:text-[var(--red)] transition-colors"
-                >
-                  <Instagram size={20} />
-                  <span className="text-sm">Instagram</span>
-                </a>
-                <a
-                  href="https://www.facebook.com/kyle.payawal"
-                  className="flex items-center gap-2 text-[var(--black)] hover:text-[var(--red)] transition-colors"
-                >
-                  <Facebook size={20} />
-                  <span className="text-sm">Facebook</span>
-                </a>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link to="/contact">
-                <MagneticButton>
-                  <Mail size={18} />
-                  <span>Get in Touch</span>
-                  <ArrowRight size={18} />
-                </MagneticButton>
-              </Link>
-              <Link to="/work">
-                <MagneticButton variant="outline">
-                  <span>View Works</span>
-                  <ArrowRight size={18} />
-                </MagneticButton>
-              </Link>
-            </div>
-
-            <motion.div
-              className="relative h-32 overflow-hidden"
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+            <span
+              style={{
+                fontFamily:    "var(--font-body)",
+                fontSize:       "10px",
+                letterSpacing:  "2px",
+                textTransform:  "uppercase",
+                color:          "var(--ink-faint)",
+              }}
             >
-              <motion.div
-                className="absolute inset-0 flex items-center justify-center"
-                animate={{
-                  y: [0, -20, 0],
-                  rotate: [0, 5, -5, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <div className="text-[120px] font-display opacity-5 select-none">
-                  KP
-                </div>
-              </motion.div>
-            </motion.div>
+              Scroll
+            </span>
           </motion.div>
         </div>
-      </div>
+      </section>
+
+      {/* ── §2 BIO ──────────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--surface)",
+          padding:    `clamp(64px, 8vw, 120px) ${px}`,
+          display:    "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap:        "clamp(40px, 6vw, 96px)",
+          alignItems: "start",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <p
+            style={{
+              fontFamily:  "var(--font-body)",
+              fontWeight:   300,
+              fontSize:     "clamp(15px, 1.6vw, 17px)",
+              lineHeight:   1.75,
+              color:        "var(--ink)",
+              margin:       "0 0 24px",
+            }}
+          >
+            From debut celebrations to pageant advocacy films, product shoots
+            to wedding days — I bring a consistent obsession with light,
+            texture, and the in-between moments that make everything real.
+          </p>
+          <p
+            style={{
+              fontFamily:  "var(--font-body)",
+              fontWeight:   300,
+              fontSize:     "clamp(15px, 1.6vw, 17px)",
+              lineHeight:   1.75,
+              color:        "var(--ink)",
+              margin:       0,
+            }}
+          >
+            The work comes from a belief that photography isn't about
+            capturing what's there — it's about noticing what almost wasn't.
+            The blink before the tears. The hands that don't know where to
+            go. The light that arrives exactly once.
+          </p>
+        </motion.div>
+
+        {/* Pull quote */}
+        <motion.blockquote
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          style={{
+            margin:        0,
+            paddingLeft:   "clamp(20px, 3vw, 36px)",
+            borderLeft:    "0.5px solid var(--border)",
+          }}
+        >
+          <p
+            style={{
+              fontFamily:           "var(--font-display)",
+              fontStyle:             "italic",
+              fontWeight:            300,
+              fontSize:              "clamp(21px, 2.4vw, 28px)",
+              lineHeight:            1.35,
+              letterSpacing:        "-0.015em",
+              color:                 "var(--ink)",
+              fontVariationSettings: "'opsz' 48",
+              margin:                "0 0 20px",
+            }}
+          >
+            "Every frame is a conversation between the light and what it
+            refuses to show."
+          </p>
+          <cite
+            style={{
+              fontFamily:    "var(--font-body)",
+              fontSize:       "10px",
+              letterSpacing:  "2px",
+              textTransform:  "uppercase",
+              color:          "var(--ink-muted)",
+              fontStyle:      "normal",
+            }}
+          >
+            Kyle Payawal
+          </cite>
+        </motion.blockquote>
+      </section>
+
+      {/* ── §3 SERVICES MARQUEE ─────────────────────────────────────────────── */}
+      <section
+        style={{
+          background:    "var(--bg)",
+          padding:       `clamp(48px, 6vw, 80px) 0`,
+          borderTop:     "0.5px solid var(--border)",
+          borderBottom:  "0.5px solid var(--border)",
+          overflow:      "hidden",
+        }}
+      >
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          style={{
+            fontFamily:    "var(--font-body)",
+            fontSize:       "10px",
+            letterSpacing:  "3px",
+            textTransform:  "uppercase",
+            color:          "var(--ink-muted)",
+            textAlign:      "center",
+            marginBottom:   "clamp(24px, 3vh, 40px)",
+          }}
+        >
+          Services
+        </motion.p>
+        <ServiceMarquee />
+      </section>
+
+      {/* ── §4 BEHIND THE LENS ──────────────────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--bg-dim)",
+          padding:    `clamp(64px, 8vw, 120px) ${px}`,
+          display:    "grid",
+          gridTemplateColumns: "1fr 2fr",
+          gap:        "clamp(32px, 5vw, 80px)",
+          alignItems: "start",
+        }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2
+            style={{
+              fontFamily:            "var(--font-display)",
+              fontWeight:             700,
+              fontSize:               "clamp(36px, 4.5vw, 56px)",
+              letterSpacing:         "-0.03em",
+              lineHeight:             0.92,
+              color:                  "var(--ink)",
+              margin:                 0,
+              textTransform:          "uppercase",
+              fontVariationSettings:  "'opsz' 72",
+            }}
+          >
+            Behind
+          </h2>
+          <h2
+            style={{
+              fontFamily:           "var(--font-display)",
+              fontStyle:             "italic",
+              fontWeight:            300,
+              fontSize:              "clamp(32px, 4vw, 48px)",
+              letterSpacing:        "-0.02em",
+              lineHeight:            1.05,
+              color:                 "var(--ink)",
+              margin:                0,
+              fontVariationSettings: "'opsz' 60",
+            }}
+          >
+            the Lens
+          </h2>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          style={{
+            display:       "flex",
+            flexDirection: "column",
+            gap:            0,
+          }}
+        >
+          {GEAR.map(({ label, value }, i) => (
+            <motion.div
+              key={label}
+              initial={{ opacity: 0, x: -8 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 0.1 + i * 0.07 }}
+              style={{
+                display:       "grid",
+                gridTemplateColumns: "clamp(110px, 14vw, 160px) 1fr",
+                gap:            "clamp(16px, 3vw, 40px)",
+                alignItems:    "baseline",
+                padding:        "clamp(16px, 2.2vw, 24px) 0",
+                borderBottom:   "0.5px solid var(--border)",
+              }}
+            >
+              <span
+                style={{
+                  fontFamily:    "var(--font-body)",
+                  fontSize:       "10px",
+                  letterSpacing:  "1.8px",
+                  textTransform:  "uppercase",
+                  color:          "var(--ink-muted)",
+                }}
+              >
+                {label}
+              </span>
+              <span
+                style={{
+                  fontFamily:  "var(--font-body)",
+                  fontSize:     "clamp(13px, 1.4vw, 15px)",
+                  color:        "var(--ink)",
+                  lineHeight:   1.5,
+                }}
+              >
+                {value}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
+
+      {/* ── §5 CONNECT ──────────────────────────────────────────────────────── */}
+      <section
+        style={{
+          background: "var(--bg)",
+          padding:    `clamp(64px, 8vw, 120px) ${px}`,
+          display:    "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap:        "clamp(40px, 6vw, 96px)",
+          alignItems: "end",
+        }}
+      >
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2
+            style={{
+              fontFamily:            "var(--font-display)",
+              fontWeight:             900,
+              fontSize:               "clamp(40px, 5.5vw, 80px)",
+              letterSpacing:         "-0.035em",
+              lineHeight:             0.9,
+              color:                  "var(--ink)",
+              textTransform:          "uppercase",
+              fontVariationSettings:  "'opsz' 144",
+              margin:                 "0 0 8px",
+            }}
+          >
+            Let's make
+          </h2>
+          <h2
+            style={{
+              fontFamily:           "var(--font-display)",
+              fontStyle:             "italic",
+              fontWeight:            300,
+              fontSize:              "clamp(36px, 5vw, 72px)",
+              letterSpacing:        "-0.025em",
+              lineHeight:            1.0,
+              color:                 "var(--ink)",
+              fontVariationSettings: "'opsz' 120",
+              margin:                0,
+            }}
+          >
+            something real.
+          </h2>
+        </motion.div>
+
+        {/* Links + CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+          style={{
+            display:       "flex",
+            flexDirection: "column",
+            gap:            "clamp(32px, 4vh, 48px)",
+          }}
+        >
+          {/* Social links */}
+          <div
+            style={{
+              display:       "flex",
+              flexDirection: "column",
+              gap:            16,
+            }}
+          >
+            {SOCIAL.map(({ href, Icon, label }) => (
+              <a
+                key={label}
+                href={href}
+                target={href.startsWith("mailto") ? undefined : "_blank"}
+                rel="noreferrer"
+                style={{
+                  display:        "flex",
+                  alignItems:     "center",
+                  gap:             10,
+                  color:           "var(--ink-muted)",
+                  textDecoration:  "none",
+                  transition:      "color 0.2s",
+                  width:           "fit-content",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--ink)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--ink-muted)")}
+              >
+                <Icon size={15} strokeWidth={1.5} />
+                <span
+                  style={{
+                    fontFamily:    "var(--font-body)",
+                    fontSize:       "11px",
+                    letterSpacing:  "2px",
+                    textTransform:  "uppercase",
+                  }}
+                >
+                  {label}
+                </span>
+              </a>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={{ display: "flex", gap: 12 }}>
+            <Link
+              to="/inquire"
+              style={{
+                display:        "inline-flex",
+                alignItems:     "center",
+                gap:             8,
+                padding:         "14px 28px",
+                background:      "var(--ink)",
+                color:           "var(--off-white)",
+                textDecoration:  "none",
+                fontFamily:      "var(--font-body)",
+                fontSize:         "11px",
+                letterSpacing:    "2.5px",
+                textTransform:    "uppercase",
+                transition:       "background 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gray-dark)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--ink)")}
+            >
+              Book a Session
+              <ArrowUpRight size={13} strokeWidth={1.5} />
+            </Link>
+            <Link
+              to="/work"
+              style={{
+                display:        "inline-flex",
+                alignItems:     "center",
+                gap:             8,
+                padding:         "14px 28px",
+                background:      "transparent",
+                border:          "0.5px solid var(--ink)",
+                color:           "var(--ink)",
+                textDecoration:  "none",
+                fontFamily:      "var(--font-body)",
+                fontSize:         "11px",
+                letterSpacing:    "2.5px",
+                textTransform:    "uppercase",
+                transition:       "border-color 0.2s, color 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--ink)";
+                e.currentTarget.style.color       = "var(--ink)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--ink)";
+                e.currentTarget.style.color       = "var(--ink)";
+              }}
+            >
+              View Work
+            </Link>
+          </div>
+
+          {/* Location note */}
+          <p
+            style={{
+              fontFamily:    "var(--font-body)",
+              fontSize:       "10px",
+              letterSpacing:  "2px",
+              textTransform:  "uppercase",
+              color:          "var(--ink-faint)",
+              margin:         0,
+            }}
+          >
+            Tarlac · Angeles City, Pampanga · Philippines
+          </p>
+        </motion.div>
+      </section>
     </motion.div>
   );
 }

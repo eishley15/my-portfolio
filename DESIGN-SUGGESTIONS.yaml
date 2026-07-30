@@ -1,0 +1,298 @@
+design_suggestions:
+  project: "kylepayawal.studio"
+  reviewed_by: "Claude Code"
+  date: "2026-07-30"
+  scope: "Design & visual feel improvements — no bug fixes, purely aesthetic and experiential"
+
+# ─────────────────────────────────────────────
+#  TYPOGRAPHY
+# ─────────────────────────────────────────────
+typography:
+  - id: TYP-01
+    priority: high
+    title: "Tighten hero line-height — it reads too loose at mid-screen sizes"
+    detail: >
+      The hero title uses lineHeight: 0.6 on the serif italic line and 0.9 on
+      the last display line. At 768px–1024px viewport widths the inter-line
+      spacing creates an awkward gap between 'IT'S GONNA LOOK' and 'a little
+      different.' — the italic drop feels disconnected from the display lines
+      above and below it. Consider using a consistent lineHeight of 0.82–0.88
+      across all three lines and tightening the italic even further (0.75–0.78)
+      so the three lines read as a single locked-up typographic unit.
+
+  - id: TYP-02
+    priority: high
+    title: "Body text on the off-white sections is too small and too light"
+    detail: >
+      The intro statement paragraph in the Home page uses fontSize: 15px and
+      color rgba(14,12,11,0.7). At that opacity on cream (#e8e0d0), the contrast
+      ratio falls below 4.5:1 (WCAG AA minimum). Increase to 16px and use
+      rgba(14,12,11,0.85) or the flat black var(--black) for body paragraphs.
+      The current treatment reads as intentionally ghosted — which is fine for
+      eyebrows and labels, but not for the main descriptive copy.
+
+  - id: TYP-03
+    priority: medium
+    title: "Add a numeric tabular variant for the animated stat counters"
+    detail: >
+      The hero stat counters (200+, 10, 5+) use Bebas Neue which is a display
+      font. As the numbers animate they shift width on each frame since the
+      glyphs are not monospaced/tabular. This causes the number to visually
+      jump left-right during animation. Using font-variant-numeric: tabular-nums
+      would keep all digits the same width and make the count animation smoother.
+
+  - id: TYP-04
+    priority: low
+    title: "Service tag pills on About page lack visual weight — consider filled treatment"
+    detail: >
+      The service tags ('Wedding', 'Debut', 'Christening' etc.) on the About
+      page are outlined with only a 0.5px border at rgba(240,235,224,0.15) opacity.
+      On the dark background this reads as nearly invisible. Either increase the
+      border opacity to 0.35, or use a very subtle fill
+      (background: rgba(240,235,224,0.05)) with a more visible border.
+
+# ─────────────────────────────────────────────
+#  LAYOUT & SPACING
+# ─────────────────────────────────────────────
+layout:
+  - id: LAY-01
+    priority: high
+    title: "Add a footer navigation grid to replace the barren footer"
+    detail: >
+      The current footer is nearly empty — brand name, tagline, and two social
+      links. A simple 3-column footer grid would significantly improve navigation
+      depth and feel more complete:
+        Column 1: Brand name + tagline (existing)
+        Column 2: Quick links (Home, Work, About, Contact, Inquire)
+        Column 3: Contact (email address, Instagram, Facebook, location)
+      This is especially important for photography portfolios where potential
+      clients scroll to the bottom looking for contact information.
+
+  - id: LAY-02
+    priority: high
+    title: "About page content column has no max-width constraint"
+    detail: >
+      The text column in About.jsx (the right side of the 2-column grid) has no
+      max-width. On large monitors (1400px+) the text block stretches very wide,
+      making the paragraphs difficult to read. Ideal line length is 55–75
+      characters. Add max-width: 540px to the text column to constrain it at
+      wide viewports.
+
+  - id: LAY-03
+    priority: medium
+    title: "Home FOOTER CTA section needs more visual separation from the Work grid above"
+    detail: >
+      The 'MAKE SOMETHING unforgettable.' CTA section transitions directly from
+      the dark selected-work grid with only a section background color change
+      (dark → off-white). Adding a horizontal rule or a thin color separator
+      accent (even a 1px var(--red) line or a pattern strip) would give the CTA
+      section a cleaner, more intentional entry point.
+
+  - id: LAY-04
+    priority: medium
+    title: "Work category grid would benefit from varying aspect ratios"
+    detail: >
+      All category cards in the Work page use a uniform aspect-[4/3] ratio.
+      Wedding (which typically features portrait-orientation images) and Portraits
+      could use a taller aspect-[3/4] card. Mixing aspect ratios (editorial
+      masonry-style) would make the Work landing page feel more dynamic and
+      artistic — consistent with the editorial brand identity.
+
+  - id: LAY-05
+    priority: low
+    title: "Add horizontal padding to Marquee strip section label"
+    detail: >
+      The marquee strip offers no surrounding context for the viewer — it begins
+      immediately after the hero with no label or section eyebrow. Consider
+      adding a tiny eyebrow above or below ('Recent Work · 2022–2024' or the
+      category list) to help users understand what they are seeing, especially
+      on first visit.
+
+# ─────────────────────────────────────────────
+#  COLOR & CONTRAST
+# ─────────────────────────────────────────────
+color:
+  - id: COL-01
+    priority: high
+    title: "Differentiate CTA red from error red using separate tokens"
+    detail: >
+      Currently var(--red) #8b1f30 serves both as the primary brand action color
+      (Inquire button, nav active state, card hover) and as the error/danger
+      color (field validation, error messages). This creates cognitive friction.
+      Consider:
+        --red-action: a slightly warmer, brighter red (#9b2335 or similar)
+        --red-error: the existing deeper #8b1f30
+      This preserves the brand palette while giving the two semantic states
+      visual distinction.
+
+  - id: COL-02
+    priority: medium
+    title: "Text muted color on the dark background is too invisible"
+    detail: >
+      var(--text-muted-dark) at rgba(240,235,224,0.22) and the copyright text at
+      rgba(240,235,224,0.18) are likely below a 2:1 contrast ratio on the dark
+      background (#0e0c0b). While these are decorative / supporting elements,
+      users with any visual impairment will find them unreadable. Raise to
+      rgba(240,235,224,0.35) minimum for all secondary on-dark text.
+
+  - id: COL-03
+    priority: medium
+    title: "Light sections (off-white bg) would benefit from a very subtle warm texture"
+    detail: >
+      The off-white (#f0ebe0) sections (Home intro, Contact form area) are
+      flat fills. A very subtle noise texture overlay (similar to the film grain
+      on the dark sections, but at lower opacity: 0.015–0.02) would unify the
+      warm, tactile feel across both dark and light sections. Currently the light
+      sections feel comparatively 'digital' next to the grained dark sections.
+
+  - id: COL-04
+    priority: low
+    title: "Nav active indicator color is always red regardless of context"
+    detail: >
+      The sliding underline for the active nav item uses var(--red) on both dark
+      and light navbar states. On the transparent dark hero (navbar-transparent
+      class inverts nav link colors to dark), the red indicator still looks fine.
+      But on pages where the navbar is light (scrolled or dark-background pages
+      with the light nav color), the red remains very saturated and can look
+      harsh against the off-white. Consider using var(--off-white) on the dark
+      transparent navbar state and var(--black) on the scrolled/light state,
+      reserving red for hover states only.
+
+# ─────────────────────────────────────────────
+#  MOTION & ANIMATION
+# ─────────────────────────────────────────────
+motion:
+  - id: MOT-01
+    priority: high
+    title: "Hero parallax effect applies to the video element directly — adds visual artifacts"
+    detail: >
+      The heroY transform (0% → 50% on scroll) and heroOpacity transform are
+      applied directly to the <motion.video> element. On mobile and mid-range
+      devices, animating the video element's Y position while it plays can
+      cause GPU memory pressure — the browser has to composite a video layer
+      while also transforming it. Consider wrapping the video in a separate div
+      and applying the parallax to the wrapper instead.
+
+  - id: MOT-02
+    priority: medium
+    title: "All page transitions use the same fade — consider directional entrance"
+    detail: >
+      AnimatePresence uses AnimatedRoutes with a simple opacity fade on each
+      page. The existing site already uses directional x-axis slides in the
+      Inquire multi-step form — applying a subtle (+24px → 0) Y entrance on all
+      page transitions (not just opacity) would make navigation feel more physical
+      and intentional. Ensure the exit animation is faster (200ms) than the
+      entrance (500ms) to avoid the 'old page lingering' feeling.
+
+  - id: MOT-03
+    priority: medium
+    title: "Curtain reveal effect on Selected Work fires too early at wide viewports"
+    detail: >
+      The 'curtain' (black div sliding right on whileInView) in the Home page
+      work grid uses viewport: { once: true } with no rootMargin offset. At
+      wide desktop monitors where all 4 cards are visible immediately on page
+      load without scrolling, the curtain reveal fires on mount (cards are in
+      view from the start) — the dramatic reveal effect is wasted. Add
+      rootMargin: '0px 0px -20% 0px' so the cards only trigger when the user
+      scrolls down to them.
+
+  - id: MOT-04
+    priority: low
+    title: "Mobile menu items stagger in but do not stagger out on close"
+    detail: >
+      The mobile nav menu items animate in with staggered delays (i * 0.1s)
+      creating a nice cascade effect. But on close, all items exit simultaneously
+      (delay: 0 for all on exit). Adding a reverse stagger on exit (bottom items
+      first, then up) would make the open/close feel symmetrical and polished.
+
+  - id: MOT-05
+    priority: low
+    title: "Add a subtle scroll-driven progress indicator on multi-step form"
+    detail: >
+      The Inquire multi-step form has a step indicator that updates the circle
+      fill. Adding a thin progress bar across the top of the form card (width
+      animated from 25% to 50% to 75% to 100% as steps advance) would give
+      users a cleaner spatial sense of how far they've progressed, especially
+      useful on mobile where the step labels are small.
+
+# ─────────────────────────────────────────────
+#  OVERALL FEEL & VIBE
+# ─────────────────────────────────────────────
+overall_feel:
+  - id: FEEL-01
+    priority: high
+    title: "Add a 'Process' or 'How It Works' section to build trust before booking"
+    detail: >
+      The site moves from portfolio (Work) directly to booking (Contact/Inquire)
+      without explaining how Kyle works. Photography clients — especially for
+      weddings or debuts — want to understand: how to book, what to expect, when
+      they receive photos/videos, and what is included. A simple 3-step process
+      section ('01 Inquiry → 02 Planning Call → 03 Shoot Day') on either the
+      About or Contact page would meaningfully increase conversion from viewer
+      to inquiry.
+
+  - id: FEEL-02
+    priority: high
+    title: "Testimonials / client quotes section is missing entirely"
+    detail: >
+      There are no client reviews, testimonials, or quotes anywhere on the site.
+      For a service business — especially wedding/events photography — social
+      proof is a primary conversion driver. Even 2–3 short client quotes with
+      the event type and location would significantly increase trust. A minimal
+      implementation: italic serif quote, client name in display font, event type
+      below in eyebrow style.
+
+  - id: FEEL-03
+    priority: medium
+    title: "Consider a 'Behind the Lens' micro-section on About page"
+    detail: >
+      The About page bio is strong but reads as a professional statement. Adding
+      a short, personal 3–4 item list (e.g., 'Shoots with: Sony A7 series.
+      Favorite light: golden hour. Always on location with: a reflector and three
+      backup cards. Never without: a playlist') would humanize Kyle and make the
+      page more memorable. This type of detail helps clients feel they know who
+      they are booking.
+
+  - id: FEEL-04
+    priority: medium
+    title: "The Gallery login gate has no brand storytelling — missed opportunity"
+    detail: >
+      The client gallery login page is purely functional. For clients who just
+      had their event shot, this is the moment of maximum emotional investment —
+      they are about to see their photos for the first time. Adding a single
+      warm line of brand copy above the access form ('Your memories are ready.')
+      would transform a utilitarian login screen into a brand touchpoint.
+
+  - id: FEEL-05
+    priority: medium
+    title: "The Work page category grid reads as a generic portfolio grid"
+    detail: >
+      The category thumbnails in /work all use the same tile layout and the same
+      metadata treatment (category name bottom-left, project count bottom-right).
+      Consider giving the hero/featured category (e.g., Wedding) a larger
+      spanning card (2-column on desktop) to establish visual hierarchy. The
+      current equal-weight grid makes all categories feel interchangeable —
+      it does not surface what Kyle is most known for or most proud of.
+
+  - id: FEEL-06
+    priority: low
+    title: "No 'Available for travel' badge or visual indicator on the hero"
+    detail: >
+      The location text 'Tarlac · Angeles City, Pampanga' and 'Available for
+      travel' appears as tiny muted text below the hero CTA. For clients outside
+      Central Luzon, this is a critical piece of information. Consider elevating
+      'Available for travel' as a subtle animated badge or pill (similar to an
+      availability indicator: a green/warm dot + 'Available 2026') near the
+      location line to make it more scannable and more inviting for out-of-town
+      clients.
+
+  - id: FEEL-07
+    priority: low
+    title: "Consider a 'Currently accepting bookings for [year]' availability signal"
+    detail: >
+      Many photography portfolio sites include a subtle availability note — either
+      a banner at the top of the page or a flag near the inquiry CTA indicating
+      which dates or time periods are still open. This creates urgency and helps
+      clients self-qualify before inquiring. Example: 'Taking bookings for Q3 &
+      Q4 2026 — inquire early' as a one-line note above the CTA buttons on both
+      the Home page and Contact/Inquire pages.

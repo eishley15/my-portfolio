@@ -1,949 +1,844 @@
-import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { motion, useInView, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
-import { useFeaturedPortfolio, usePortfolio } from "../hooks/usePortfolio";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
+import { motion, AnimatePresence } from "framer-motion";
+import { useFeaturedPortfolio } from "../hooks/usePortfolio";
 import LoadingScreen from "../components/LoadingScreen";
+import TrueFocus from "../components/reactbits/TrueFocus";
+import RotatingText from "../components/reactbits/RotatingText";
+import CountUp from "../components/reactbits/CountUp";
+import SpecularButton from "../components/reactbits/SpecularButton";
+import LineSidebar from "../components/reactbits/LineSidebar";
+import ScrollReveal from "../components/reactbits/ScrollReveal";
 
-// Magnetic button component
-function MagneticButton({ children, to, variant = "solid" }) {
-  const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springConfig = { damping: 15, stiffness: 150 };
-  const springX = useSpring(x, springConfig);
-  const springY = useSpring(y, springConfig);
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-  const handleMouseMove = (e) => {
-    if (!ref.current) return;
-    const rect = ref.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-    x.set((e.clientX - centerX) * 0.3);
-    y.set((e.clientY - centerY) * 0.3);
-  };
+const SERVICES = ["Weddings", "Debuts", "Pageants", "Portraits", "Campaigns"];
 
-  const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  const baseStyles = {
-    display: "inline-block",
-    fontFamily: "var(--font-body)",
-    fontSize: "11px",
-    letterSpacing: "2.5px",
-    textTransform: "uppercase",
-    textDecoration: "none",
-    padding: "16px 36px",
-    transition: "background 0.2s",
-  };
-
-  const variantStyles =
-    variant === "solid"
-      ? {
-          color: "var(--off-white)",
-          background: "var(--black)",
-        }
-      : {
-          color: "var(--black)",
-          background: "transparent",
-          border: "1px solid var(--black)",
-        };
-
-  return (
-    <motion.div
-      ref={ref}
-      style={{ x: springX, y: springY, display: "inline-block" }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-    >
-      <Link
-        to={to}
-        style={{ ...baseStyles, ...variantStyles }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = "var(--red)";
-          if (variant === "outline") {
-            e.currentTarget.style.color = "var(--off-white)";
-            e.currentTarget.style.borderColor = "var(--red)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background =
-            variant === "solid" ? "var(--black)" : "transparent";
-          if (variant === "outline") {
-            e.currentTarget.style.color = "var(--black)";
-            e.currentTarget.style.borderColor = "var(--black)";
-          }
-        }}
-      >
-        {children}
-      </Link>
-    </motion.div>
-  );
-}
-
-// Animated counter component
-function AnimatedCounter({ end, duration = 2, suffix = "" }) {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  useEffect(() => {
-    if (!isInView) return;
-
-    let startTime;
-    let animationFrame;
-
-    const animate = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-      const progress = (timestamp - startTime) / (duration * 1000);
-
-      if (progress < 1) {
-        setCount(Math.floor(end * progress));
-        animationFrame = requestAnimationFrame(animate);
-      } else {
-        setCount(end);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [isInView, end, duration]);
-
-  return (
-    <span ref={ref}>
-      {count}
-      {suffix}
-    </span>
-  );
-}
-
-// Video component that autoplays when in view
-function VideoWithAutoplay({ src, className }) {
-  const videoRef = useRef(null);
-  const [isIntersecting, setIsIntersecting] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsIntersecting(entry.isIntersecting);
-      },
-      { rootMargin: "50px" },
-    );
-
-    const currentVideoRef = videoRef.current;
-    if (currentVideoRef) {
-      observer.observe(currentVideoRef);
-    }
-
-    return () => {
-      if (currentVideoRef) {
-        observer.unobserve(currentVideoRef);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isIntersecting && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    } else if (videoRef.current) {
-      videoRef.current.pause();
-    }
-  }, [isIntersecting]);
-
-  return (
-    <video
-      ref={videoRef}
-      src={src}
-      className={className}
-      muted
-      loop
-      playsInline
-    />
-  );
-}
-
-// Lazy load image component
-function LazyImage({ src, alt, style }) {
-  const [loaded, setLoaded] = useState(false);
-  const [imageSrc, setImageSrc] = useState(null);
-  const imgRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setImageSrc(src);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "50px" },
-    );
-
-    if (imgRef.current) observer.observe(imgRef.current);
-    return () => observer.disconnect();
-  }, [src]);
-
-  return (
-    <img
-      ref={imgRef}
-      src={imageSrc}
-      alt={alt}
-      style={{
-        ...style,
-        opacity: loaded ? 1 : 0.5,
-        transition: "opacity 0.3s",
-      }}
-      onLoad={() => setLoaded(true)}
-    />
-  );
-}
-
-// Marquee placeholder items — replace src with real images when available
-const MARQUEE_ITEMS = [
-  { id: 1, label: "Wedding" },
-  { id: 2, label: "Debut" },
-  { id: 3, label: "Pageant" },
-  { id: 4, label: "Product" },
-  { id: 5, label: "Portrait" },
-  { id: 6, label: "Lifestyle" },
-  { id: 7, label: "Commercial" },
-  { id: 8, label: "Christening" },
+const STATS = [
+  { end: 200, suffix: "+", label: "Projects Delivered" },
+  { end: 5,   suffix: "+", label: "Years of Experience" },
+  { end: 10,  suffix: "",  label: "Disciplines Covered" },
 ];
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: i * 0.12 },
-  }),
-};
+const TESTIMONIALS = [
+  {
+    quote:
+      "Kyle captured every emotion from our wedding day. The photos are beyond anything we imagined — we'll cherish them forever.",
+    name: "Maria & Jared Santos",
+    event: "Wedding",
+    year: "2024",
+  },
+  {
+    quote:
+      "Every shot was intentional and beautiful. Kyle has a gift for making you feel at ease and the results speak for themselves.",
+    name: "Anne Claire Reyes",
+    event: "Portrait Session",
+    year: "2025",
+  },
+  {
+    quote:
+      "My debut photos were absolutely stunning. Kyle knows how to tell a story through images in a way that feels completely natural.",
+    name: "Sofia Dela Cruz",
+    event: "Debut",
+    year: "2024",
+  },
+];
+
+const FAQ = [
+  {
+    q: "What types of events do you cover?",
+    a: "Weddings, debuts, pageants, christenings, portrait sessions, and commercial campaigns. If it's worth capturing, it's worth doing right.",
+  },
+  {
+    q: "Where are you based and do you travel?",
+    a: "Based in Tarlac City and Angeles City, Pampanga. Available for travel anywhere in the Philippines — and internationally for the right project.",
+  },
+  {
+    q: "How far in advance should I book?",
+    a: "Weddings: 3–6 months in advance. Debuts, portraits, and commercial shoots: 2–4 weeks is usually enough, though earlier is always better during peak season.",
+  },
+  {
+    q: "How long until I receive my photos?",
+    a: "Weddings: 4–6 weeks. Portraits and shorter sessions: 1–2 weeks. Rush delivery is available for time-sensitive projects.",
+  },
+  {
+    q: "Do you offer both photography and videography?",
+    a: "Yes — both services are available together or separately. Combined photo + video packages offer better value and a unified visual story from the same shoot.",
+  },
+  {
+    q: "How many images will I receive?",
+    a: "Weddings typically receive 400–600 fully edited images. Portrait sessions: 80–150 images. The count is driven by the work, not an arbitrary cap.",
+  },
+  {
+    q: "Do you offer same-day edits?",
+    a: "Same-day edits (SDEs) are available as an add-on for events — a highlight reel delivered on the day itself, perfect for debut programs and wedding receptions.",
+  },
+  {
+    q: "What does the booking process look like?",
+    a: "Send an inquiry → receive a quote and package details → sign contract + pay deposit to hold your date → shoot day → photo delivery. Simple and transparent.",
+  },
+];
+
+const HOME_SECTIONS = [
+  { id: "hero",         label: "Intro"   },
+  { id: "work-preview", label: "Work"    },
+  { id: "stats",        label: "Stats"   },
+  { id: "testimonials", label: "Reviews" },
+  { id: "faq",          label: "FAQ"     },
+  { id: "cta",          label: "Book"    },
+];
+
+// ─── CategoryCard ─────────────────────────────────────────────────────────────
+
+function CategoryCard({ item }) {
+  return (
+    <Link
+      to={`/work?category=${encodeURIComponent(item.category)}`}
+      style={{ display: "block", textDecoration: "none" }}
+    >
+      <motion.div
+        whileHover="hover"
+        initial="rest"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          aspectRatio: "3 / 4",
+          background: "var(--bg-dim)",
+          cursor: "pointer",
+        }}
+      >
+        <motion.img
+          variants={{ rest: { scale: 1 }, hover: { scale: 1.06 } }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          src={item.url}
+          alt={item.category}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          loading="lazy"
+        />
+
+        {/* Always-on gradient */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background:
+              "linear-gradient(to top, rgba(14,12,11,0.85) 0%, rgba(14,12,11,0.12) 55%, transparent 100%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Text block */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "clamp(14px, 2.5vw, 24px)",
+          }}
+        >
+          <motion.p
+            variants={{ rest: { y: 0 }, hover: { y: -6 } }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 700,
+              fontSize: "clamp(18px, 2.2vw, 28px)",
+              color: "#F0EBE0",
+              letterSpacing: "-0.02em",
+              lineHeight: 1,
+              marginBottom: 6,
+            }}
+          >
+            {item.category}
+          </motion.p>
+
+          <motion.span
+            variants={{ rest: { opacity: 0, y: 8 }, hover: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.28, ease: "easeOut" }}
+            style={{
+              display: "inline-block",
+              fontFamily: "var(--font-body)",
+              fontSize: "10px",
+              letterSpacing: "2.5px",
+              textTransform: "uppercase",
+              color: "rgba(240,235,224,0.6)",
+            }}
+          >
+            View Work →
+          </motion.span>
+        </div>
+      </motion.div>
+    </Link>
+  );
+}
+
+// ─── FaqItem ──────────────────────────────────────────────────────────────────
+
+function FaqItem({ q, a, isOpen, onToggle }) {
+  return (
+    <div className="faq-item">
+      <button
+        onClick={onToggle}
+        style={{
+          width: "100%",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 24,
+          padding: "22px 0",
+          textAlign: "left",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-body)",
+            fontSize: "clamp(14px, 1.6vw, 17px)",
+            fontWeight: 400,
+            color: "var(--ink)",
+            letterSpacing: "0.2px",
+          }}
+        >
+          {q}
+        </span>
+        <motion.span
+          animate={{ rotate: isOpen ? 45 : 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          style={{
+            display: "inline-flex",
+            fontFamily: "var(--font-body)",
+            fontSize: "18px",
+            fontWeight: 300,
+            color: "var(--ink-muted)",
+            flexShrink: 0,
+          }}
+        >
+          +
+        </motion.span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            key="answer"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "clamp(13px, 1.4vw, 15px)",
+                fontWeight: 300,
+                lineHeight: 1.75,
+                color: "var(--ink-muted)",
+                paddingBottom: 24,
+                maxWidth: 620,
+              }}
+            >
+              {a}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Home ─────────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const revealRef = useRef([]);
-  const heroVideoRef = useRef(null);
-  const heroRef = useRef(null);
-  const { items: selectedWork, loading } = useFeaturedPortfolio(4);
-  const { items: marqueeItems, loading: marqueeLoading } =
-    useFeaturedPortfolio(6);
-  const [enableAutoplay, setEnableAutoplay] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Parallax effect for hero
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5, 1], [1, 0.8, 0.3]);
-
-  // Wait for data to load before hiding loading screen
-  useEffect(() => {
-    if (!loading && !marqueeLoading) {
-      const timer = setTimeout(() => {
-        setIsLoading(false);
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, marqueeLoading]);
+  const { items, isLoading } = useFeaturedPortfolio(12);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("visible");
-        }),
-      { threshold: 0.12 },
-    );
-    revealRef.current.forEach((el) => el && observer.observe(el));
-    return () => observer.disconnect();
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler, { passive: true });
+    return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // Enable video autoplay after initial page load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setEnableAutoplay(true);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const addReveal = (el) => {
-    if (el && !revealRef.current.includes(el)) revealRef.current.push(el);
-  };
+  const heroPhoto = "/kylepayawalprofile.webp";
 
   return (
     <>
-      <LoadingScreen isVisible={isLoading} />
-      <main>
-        {/* ============ HERO ============ */}
-        <section
-          ref={heroRef}
+      <Helmet>
+        <title>Kyle Payawal — Photographer & Videographer | Tarlac & Angeles City</title>
+        <meta
+          name="description"
+          content="Kyle Payawal is a photographer and videographer based in Tarlac and Angeles City, Philippines. Specializing in weddings, debuts, pageants, portraits, and commercial campaigns."
+        />
+        <meta property="og:title" content="Kyle Payawal — Photographer & Videographer" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+
+      <AnimatePresence>
+        {isLoading && <LoadingScreen key="loading" isVisible={isLoading} />}
+      </AnimatePresence>
+
+      <LineSidebar sections={HOME_SECTIONS} />
+
+      {/* ══ HERO ════════════════════════════════════════════════════════════════ */}
+      <section
+        id="hero"
+        style={{
+          height: "100svh",
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gridTemplateRows: isMobile ? "40svh 1fr" : "1fr",
+          overflow: "hidden",
+        }}
+      >
+        {/* Mobile: photo on top */}
+        {isMobile && (
+          <div style={{ position: "relative", overflow: "hidden", background: "var(--bg-dim)" }}>
+            {heroPhoto && (
+              <motion.img
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.9 }}
+                src={heroPhoto}
+                alt="Portfolio"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Text column */}
+        <div
           style={{
-            position: "relative",
-            height: "100svh",
-            minHeight: "600px",
+            background: "var(--bg)",
             display: "flex",
             flexDirection: "column",
             justifyContent: "center",
-            alignItems: "center",
+            padding: isMobile
+              ? "clamp(32px, 6vw, 48px) clamp(24px, 5vw, 40px)"
+              : "clamp(40px, 6vw, 80px)",
+            position: "relative",
             overflow: "hidden",
-            textAlign: "center",
           }}
         >
-          <motion.video
-            ref={heroVideoRef}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Crect fill='%230e0c0b' width='1920' height='1080'/%3E%3C/svg%3E"
-            src="https://cdn.kylepayawal.studio/portfolio/commercial/CG%20AVP%2016%209.mp4"
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              zIndex: 0,
-            }}
-            initial={{ scale: 1 }}
-            animate={{ y: heroY, opacity: heroOpacity }}
-          />
-
-          {/* Overlay — warmer than pure black */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background:
-                "linear-gradient(to bottom, rgba(14,12,11,0.6) 0%, rgba(14,12,11,0.45) 50%, rgba(14,12,11,0.72) 100%)",
-              zIndex: 1,
-            }}
-          />
-
-          {/* Hero content */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              padding: "0 24px",
-              maxWidth: "900px",
-            }}
+          <motion.p
+            className="eyebrow"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            style={{ marginBottom: "clamp(20px, 3vw, 32px)" }}
           >
-            {/* Eyebrow */}
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={0}
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                letterSpacing: "4px",
-                textTransform: "uppercase",
-                color: "var(--red)",
-                marginBottom: "28px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "12px",
-              }}
-            >
-              <span
-                style={{
-                  width: "24px",
-                  height: "0.5px",
-                  background: "var(--red)",
-                  display: "inline-block",
-                }}
-              />
-              Photographer · Videographer
-              <span
-                style={{
-                  width: "24px",
-                  height: "0.5px",
-                  background: "var(--red)",
-                  display: "inline-block",
-                }}
-              />
-            </motion.p>
+            Photographer · Videographer
+          </motion.p>
 
-            {/* Main title */}
-            <motion.h1
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={1}
+          <TrueFocus
+            duration={1.0}
+            pause={1.6}
+            blurAmount={5}
+            borderColor="var(--ink-faint)"
+          >
+            <span
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: "clamp(52px, 9vw, 112px)",
-                lineHeight: 0.6,
-                letterSpacing: "-0.5px",
-                color: "var(--off-white)",
-                marginBottom: "0",
+                fontWeight: 900,
+                fontSize: isMobile
+                  ? "clamp(40px, 11vw, 56px)"
+                  : "clamp(44px, 5.2vw, 84px)",
+                textTransform: "uppercase",
+                letterSpacing: "-0.03em",
+                lineHeight: 0.92,
+                fontVariationSettings: "'opsz' 144",
+                display: "block",
+                color: "var(--ink)",
               }}
             >
-              IT'S GONNA LOOK
-            </motion.h1>
-
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={2}
-              className="font-serif"
+              It's gonna look
+            </span>
+            <span
               style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 300,
                 fontStyle: "italic",
-                fontSize: "clamp(44px, 7.5vw, 96px)",
-                lineHeight: 1.0,
-                color: "var(--off-white)",
-                marginBottom: "0",
+                fontSize: isMobile
+                  ? "clamp(34px, 9.5vw, 48px)"
+                  : "clamp(38px, 4.5vw, 72px)",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.05,
+                fontVariationSettings: "'opsz' 120",
+                display: "block",
+                color: "var(--ink)",
               }}
             >
               a little different.
-            </motion.p>
-
-            <motion.h1
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={3}
+            </span>
+            <span
               style={{
                 fontFamily: "var(--font-display)",
-                fontSize: "clamp(52px, 9vw, 112px)",
-                lineHeight: 0.9,
-                color: "var(--off-white)",
-                marginBottom: "40px",
-              }}
-            >
-              THAT'S THE POINT.
-            </motion.h1>
-
-            {/* Sub */}
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={4}
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "13px",
-                fontWeight: 300,
-                color: "var(--text-muted)",
-                letterSpacing: "0.5px",
-                marginBottom: "8px",
-              }}
-            >
-              Available for weddings, debuts, pageants, products & brand
-              campaigns
-            </motion.p>
-
-            <motion.p
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={5}
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                letterSpacing: "3px",
+                fontWeight: 900,
+                fontSize: isMobile
+                  ? "clamp(40px, 11vw, 56px)"
+                  : "clamp(44px, 5.2vw, 84px)",
                 textTransform: "uppercase",
-                color: "var(--text-muted-dark)",
-                marginBottom: "48px",
+                letterSpacing: "-0.03em",
+                lineHeight: 0.92,
+                fontVariationSettings: "'opsz' 144",
+                display: "block",
+                color: "var(--ink)",
               }}
             >
-              Tarlac · Angeles City, Pampanga
-            </motion.p>
+              That's the point.
+            </span>
+          </TrueFocus>
 
-            {/* Single CTA — quiet, not a button */}
-            <motion.div
-              variants={fadeUp}
-              initial="hidden"
-              animate="show"
-              custom={6}
-            >
-              <MagneticButton to="/work">
-                View Work
-              </MagneticButton>
-            </motion.div>
-          </div>
-
-          {/* Stats — bottom right */}
-          <div
+          {/* Divider */}
+          <motion.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.8, delay: 0.55, ease: "easeOut" }}
             style={{
-              position: "absolute",
-              right: "40px",
-              bottom: "48px",
-              zIndex: 2,
-              display: "flex",
-              flexDirection: "column",
-              gap: "20px",
-              textAlign: "right",
+              height: "0.5px",
+              background: "var(--border)",
+              margin: "clamp(20px, 3.5vw, 36px) 0",
+              transformOrigin: "left",
             }}
-          >
-            {[
-              [200, "+", "Projects"],
-              [10, "", "Categories"],
-              [5, "+", "Years"],
-            ].map(([num, suffix, label]) => (
-              <motion.div
-                key={label}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-              >
-                <div
-                  style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "28px",
-                    lineHeight: 1,
-                    color: "var(--off-white)",
-                  }}
-                >
-                  <AnimatedCounter end={num} suffix={suffix} />
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-body)",
-                    fontSize: "9px",
-                    letterSpacing: "2px",
-                    textTransform: "uppercase",
-                    color: "var(--text-muted-dark)",
-                    marginTop: "2px",
-                  }}
-                >
-                  {label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          />
 
-          {/* Scroll indicator — left */}
-          <div
+          {/* Available for */}
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.65 }}
             style={{
-              position: "absolute",
-              left: "40px",
-              bottom: "40px",
-              zIndex: 2,
               fontFamily: "var(--font-body)",
-              fontSize: "9px",
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-              color: "var(--text-muted-dark)",
-              writingMode: "vertical-lr",
+              fontSize: "clamp(14px, 1.5vw, 16px)",
+              fontWeight: 300,
+              color: "var(--ink-muted)",
+              lineHeight: 1.5,
             }}
           >
-            Scroll
-          </div>
-        </section>
+            Available for{" "}
+            <RotatingText
+              words={SERVICES}
+              style={{
+                fontWeight: 400,
+                color: "var(--ink)",
+                minWidth: "6.5em",
+              }}
+            />
+          </motion.p>
 
-        {/* ============ MARQUEE STRIP ============ */}
-        <section
-          style={{
-            overflow: "hidden",
-            background: "var(--black-pure)",
-            borderTop: "0.5px solid rgba(240,235,224,0.05)",
-            borderBottom: "0.5px solid rgba(240,235,224,0.05)",
-          }}
-        >
-          <div className="marquee-track">
-            {marqueeItems.length > 0
-              ? [...marqueeItems, ...marqueeItems, ...marqueeItems].map(
-                  (item, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        width: "320px",
-                        height: "220px",
-                        flexShrink: 0,
-                        borderRight: "0.5px solid rgba(240,235,224,0.04)",
-                        overflow: "hidden",
-                        position: "relative",
-                      }}
-                    >
-                      {(() => {
-                        const isVideo = () => {
-                          if (item.type === "video") return true;
-                          if (!item.url) return false;
-                          const videoExtensions = [
-                            "mp4",
-                            "webm",
-                            "ogg",
-                            "mov",
-                            "avi",
-                            "mkv",
-                          ];
-                          const url = item.url.toLowerCase();
-                          return videoExtensions.some((ext) =>
-                            url.includes(`.${ext}`),
-                          );
-                        };
-                        return isVideo() ? (
-                          <VideoWithAutoplay
-                            src={item.url}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <LazyImage
-                            src={item.url}
-                            alt={item.title}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        );
-                      })()}
-                      <span
-                        style={{
-                          position: "absolute",
-                          bottom: "14px",
-                          left: "16px",
-                          fontFamily: "var(--font-body)",
-                          fontSize: "9px",
-                          letterSpacing: "2px",
-                          textTransform: "uppercase",
-                          color: "rgba(240,235,224,0.5)",
-                        }}
-                      >
-                        {item.category}
-                      </span>
-                    </div>
-                  ),
-                )
-              : [...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      width: "320px",
-                      height: "220px",
-                      flexShrink: 0,
-                      background: `hsl(${20 + i * 7}, 8%, ${8 + (i % 3) * 3}%)`,
-                      display: "flex",
-                      alignItems: "flex-end",
-                      padding: "14px 16px",
-                      borderRight: "0.5px solid rgba(240,235,224,0.04)",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: "9px",
-                        letterSpacing: "2px",
-                        textTransform: "uppercase",
-                        color: "rgba(240,235,224,0.2)",
-                      }}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-                ))}
-          </div>
-        </section>
+          <motion.p
+            className="eyebrow"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.75 }}
+            style={{ marginTop: 6 }}
+          >
+            Tarlac · Angeles City, Pampanga
+          </motion.p>
 
-        {/* ============ INTRO STATEMENT ============ */}
-        <section
-          ref={addReveal}
-          className="reveal section-light"
-          style={{
-            padding: "clamp(80px, 12vw, 160px) clamp(24px, 8vw, 120px)",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "80px",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <p
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                letterSpacing: "3px",
-                textTransform: "uppercase",
-                color: "rgba(14,12,11,0.35)",
-                marginBottom: "20px",
-              }}
-            >
-              The approach
-            </p>
-            <h2
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(40px, 5vw, 72px)",
-                lineHeight: 0.9,
-                color: "var(--black)",
-                marginBottom: "32px",
-              }}
-            >
-              FLASH.
-              <br />
-              <span
-                className="font-serif"
-                style={{
-                  fontStyle: "italic",
-                  lineHeight: 0.6,
-                }}
-              >
-                grain.
-              </span>
-              <br />
-              TRUTH.
-            </h2>
-          </div>
-          <div>
-            <p
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "15px",
-                fontWeight: 300,
-                lineHeight: 1.2,
-                color: "rgba(14,12,11,0.7)",
-                marginBottom: "28px",
-              }}
-            >
-              I shoot images and films that live somewhere between flash-lit
-              editorial and sun-bleached handycam footage. Every event deserves
-              both polish and soul.
-            </p>
-            <Link
-              to="/about"
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                letterSpacing: "2.5px",
-                textTransform: "uppercase",
-                color: "var(--black)",
-                textDecoration: "none",
-                borderBottom: "0.5px solid rgba(14,12,11,0.3)",
-                paddingBottom: "3px",
-                transition: "border-color 0.2s",
-              }}
-            >
-              About Kyle →
-            </Link>
-          </div>
-        </section>
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.85 }}
+            style={{ marginTop: "clamp(28px, 4.5vw, 52px)" }}
+          >
+            <SpecularButton to="/work">View Work</SpecularButton>
+          </motion.div>
 
-        {/* ============ CATEGORY PREVIEW ============ */}
-        <section
-          ref={addReveal}
-          className="reveal"
-          style={{
-            background: "var(--black)",
-            padding: "clamp(60px, 10vw, 120px) clamp(24px, 6vw, 80px)",
-          }}
-        >
+          {/* Desktop scroll indicator */}
+          {!isMobile && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.3, duration: 0.6 }}
+              style={{
+                position: "absolute",
+                bottom: 32,
+                left: "clamp(40px, 6vw, 80px)",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <motion.div
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                style={{ width: "0.5px", height: 36, background: "var(--ink-faint)" }}
+              />
+              <span className="eyebrow">Scroll</span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Desktop: photo on right */}
+        {!isMobile && (
+          <div style={{ position: "relative", overflow: "hidden", background: "var(--bg-dim)" }}>
+            {heroPhoto && (
+              <motion.img
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                src={heroPhoto}
+                alt="Portfolio"
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ══ WORK PREVIEW ════════════════════════════════════════════════════════ */}
+      <section
+        id="work-preview"
+        style={{
+          padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
+          background: "var(--bg)",
+        }}
+      >
+        <ScrollReveal>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "flex-end",
-              marginBottom: "40px",
+              marginBottom: "clamp(32px, 5vw, 60px)",
+              flexWrap: "wrap",
+              gap: 16,
             }}
           >
-            <h2
-              style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(36px, 5vw, 64px)",
-                color: "var(--off-white)",
-                letterSpacing: "1px",
-              }}
-            >
-              SELECTED WORK
-            </h2>
+            <div>
+              <p className="eyebrow" style={{ marginBottom: 12 }}>Selected Work</p>
+              <h2
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 900,
+                  fontSize: "clamp(36px, 5vw, 72px)",
+                  letterSpacing: "-0.03em",
+                  lineHeight: 0.95,
+                  fontVariationSettings: "'opsz' 144",
+                  color: "var(--ink)",
+                }}
+              >
+                What I{" "}
+                <span className="font-serif">Shoot.</span>
+              </h2>
+            </div>
             <Link
               to="/work"
               style={{
                 fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                letterSpacing: "2px",
+                fontSize: "11px",
+                letterSpacing: "2.5px",
                 textTransform: "uppercase",
-                color: "var(--text-muted)",
+                color: "var(--ink-muted)",
                 textDecoration: "none",
-                borderBottom: "0.5px solid rgba(240,235,224,0.2)",
-                paddingBottom: "2px",
+                borderBottom: "0.5px solid var(--border)",
+                paddingBottom: 2,
+                alignSelf: "flex-end",
+                transition: "color 0.2s",
               }}
             >
-              View All →
+              All Work →
             </Link>
           </div>
+        </ScrollReveal>
 
-          {/* 2x2 asymmetric preview grid */}
+        {items.length > 0 ? (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gridTemplateRows: "auto auto",
-              gap: "4px",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(240px, 100%), 1fr))",
+              gap: "clamp(8px, 1.2vw, 16px)",
             }}
           >
-            {(selectedWork.length > 0
-              ? selectedWork
-              : [
-                  { id: 1, category: "Wedding", type: "photo", url: "" },
-                  { id: 2, category: "Pageant", type: "photo", url: "" },
-                  { id: 3, category: "Debut", type: "photo", url: "" },
-                  { id: 4, category: "Portrait", type: "photo", url: "" },
-                ]
-            ).map((item, i) => (
+            {items.map((item, i) => (
               <motion.div
-                key={item.id}
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                style={{ position: "relative", overflow: "hidden" }}
+                key={item.id || item.category}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
               >
-                <Link
-                  key={item.id}
-                  to={`/work?category=${encodeURIComponent(item.category?.toLowerCase())}`}
-                  style={{
-                    display: "block",
-                    aspectRatio: "4/3",
-                    position: "relative",
-                    overflow: "hidden",
-                    textDecoration: "none",
-                    background: `hsl(${20 + i * 12}, 7%, ${9 + i * 2}%)`,
-                  }}
-                >
-                  {/* Curtain reveal effect */}
-                  <motion.div
-                    initial={{ x: "0%" }}
-                    whileInView={{ x: "100%" }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, delay: i * 0.1, ease: "easeInOut" }}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      background: "var(--black)",
-                      zIndex: 2,
-                    }}
-                  />
-                {item.url &&
-                  (() => {
-                    const isVideo = () => {
-                      if (item.type === "video") return true;
-                      const videoExtensions = [
-                        "mp4",
-                        "webm",
-                        "ogg",
-                        "mov",
-                        "avi",
-                        "mkv",
-                      ];
-                      const url = item.url.toLowerCase();
-                      return videoExtensions.some((ext) =>
-                        url.includes(`.${ext}`),
-                      );
-                    };
-                    return isVideo() ? (
-                      <video
-                        src={item.url}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          position: "absolute",
-                          inset: 0,
-                        }}
-                      />
-                    ) : (
-                      <img
-                        src={item.url}
-                        alt={item.category}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          objectFit: "cover",
-                          position: "absolute",
-                          inset: 0,
-                        }}
-                      />
-                    );
-                  })()}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(to top, rgba(14,12,11,0.85) 0%, transparent 55%)",
-                    opacity: 0,
-                    transition: "opacity 0.35s ease",
-                    display: "flex",
-                    alignItems: "flex-end",
-                    padding: "20px",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "0")}
-                >
-                  <span
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontSize: "22px",
-                      letterSpacing: "1px",
-                      color: "var(--off-white)",
-                    }}
-                  >
-                    {item.category?.toUpperCase()}
-                  </span>
-                </div>
-                </Link>
+                <CategoryCard item={item} />
               </motion.div>
             ))}
           </div>
-        </section>
+        ) : (
+          !isLoading && (
+            <p
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 14,
+                color: "var(--ink-muted)",
+              }}
+            >
+              No portfolio categories found.
+            </p>
+          )
+        )}
+      </section>
 
-        {/* ============ FOOTER CTA ============ */}
-        <section
-          ref={addReveal}
-          className="reveal section-light"
+      {/* ══ STATS ═══════════════════════════════════════════════════════════════ */}
+      <section
+        id="stats"
+        style={{
+          padding: "clamp(56px, 7vw, 96px) clamp(24px, 6vw, 80px)",
+          borderTop: "0.5px solid var(--border)",
+          borderBottom: "0.5px solid var(--border)",
+          background: "var(--bg)",
+        }}
+      >
+        <div
           style={{
-            padding: "clamp(80px, 12vw, 160px) clamp(24px, 8vw, 120px)",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: "clamp(32px, 4vw, 48px)",
             textAlign: "center",
           }}
         >
-          <p
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "10px",
-              letterSpacing: "3px",
-              textTransform: "uppercase",
-              color: "rgba(14,12,11,0.35)",
-              marginBottom: "20px",
-            }}
-          >
-            Let's work together
-          </p>
+          {STATS.map(({ end, suffix, label }) => (
+            <div key={label}>
+              <p
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 900,
+                  fontSize: "clamp(56px, 7vw, 96px)",
+                  letterSpacing: "-0.04em",
+                  lineHeight: 0.9,
+                  fontVariationSettings: "'opsz' 144",
+                  color: "var(--ink)",
+                }}
+              >
+                <CountUp end={end} suffix={suffix} duration={2} />
+              </p>
+              <p className="eyebrow" style={{ marginTop: 14 }}>
+                {label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ TESTIMONIALS ════════════════════════════════════════════════════════ */}
+      <section
+        id="testimonials"
+        style={{
+          padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
+          background: "var(--surface)",
+        }}
+      >
+        <ScrollReveal>
+          <p className="eyebrow" style={{ marginBottom: 12 }}>Client Words</p>
           <h2
             style={{
               fontFamily: "var(--font-display)",
-              fontSize: "clamp(48px, 7vw, 96px)",
-              lineHeight: 0.8,
-              color: "var(--black)",
-              marginBottom: "36px",
+              fontWeight: 900,
+              fontSize: "clamp(32px, 4.5vw, 64px)",
+              letterSpacing: "-0.03em",
+              lineHeight: 0.95,
+              marginBottom: "clamp(40px, 6vw, 72px)",
+              fontVariationSettings: "'opsz' 144",
+              color: "var(--ink)",
             }}
           >
-            MAKE SOMETHING
-            <br />
-            <span
-              className="font-serif"
-              style={{ fontStyle: "italic", lineHeight: 0.5 }}
-            >
-              unforgettable.
-            </span>
+            What they{" "}
+            <span className="font-serif">say.</span>
           </h2>
-          <MagneticButton to="/contact">
-            Start a Project
-          </MagneticButton>
-        </section>
-      </main>
+        </ScrollReveal>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))",
+            gap: "clamp(16px, 2vw, 24px)",
+          }}
+        >
+          {TESTIMONIALS.map((t, i) => (
+            <motion.div
+              key={t.name}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.55, delay: i * 0.1 }}
+              style={{
+                padding: "clamp(24px, 3vw, 36px)",
+                border: "0.5px solid var(--border)",
+                background: "var(--bg)",
+              }}
+            >
+              <p
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontStyle: "italic",
+                  fontWeight: 300,
+                  fontSize: "clamp(16px, 1.8vw, 21px)",
+                  lineHeight: 1.5,
+                  color: "var(--ink)",
+                  letterSpacing: "-0.01em",
+                  marginBottom: 24,
+                }}
+              >
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div
+                style={{
+                  borderTop: "0.5px solid var(--border)",
+                  paddingTop: 16,
+                }}
+              >
+                <p
+                  style={{
+                    fontFamily: "var(--font-body)",
+                    fontWeight: 400,
+                    fontSize: 13,
+                    color: "var(--ink)",
+                    marginBottom: 3,
+                  }}
+                >
+                  {t.name}
+                </p>
+                <p className="eyebrow">
+                  {t.event} · {t.year}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* ══ FAQ ═════════════════════════════════════════════════════════════════ */}
+      <section
+        id="faq"
+        style={{
+          padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
+          background: "var(--bg-dim)",
+        }}
+      >
+        <div style={{ maxWidth: 720, margin: "0 auto" }}>
+          <ScrollReveal>
+            <p className="eyebrow" style={{ marginBottom: 12 }}>Got Questions</p>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 900,
+                fontSize: "clamp(32px, 4.5vw, 64px)",
+                letterSpacing: "-0.03em",
+                lineHeight: 0.95,
+                marginBottom: "clamp(36px, 5.5vw, 64px)",
+                fontVariationSettings: "'opsz' 144",
+                color: "var(--ink)",
+              }}
+            >
+              Let's clear{" "}
+              <span className="font-serif">things up.</span>
+            </h2>
+          </ScrollReveal>
+
+          {FAQ.map((item, i) => (
+            <FaqItem
+              key={i}
+              {...item}
+              isOpen={openFaq === i}
+              onToggle={() => setOpenFaq(openFaq === i ? null : i)}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* ══ CTA ═════════════════════════════════════════════════════════════════ */}
+      <section
+        id="cta"
+        style={{
+          padding: "clamp(80px, 10vw, 140px) clamp(24px, 6vw, 80px)",
+          background: "var(--black)",
+          textAlign: "center",
+        }}
+      >
+        <ScrollReveal>
+          <p
+            className="eyebrow"
+            style={{ color: "rgba(240,235,224,0.35)", marginBottom: 20 }}
+          >
+            Ready When You Are
+          </p>
+
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 900,
+              fontSize: "clamp(48px, 8.5vw, 120px)",
+              letterSpacing: "-0.04em",
+              lineHeight: 0.88,
+              color: "var(--off-white)",
+              textTransform: "uppercase",
+              fontVariationSettings: "'opsz' 144",
+              marginBottom: 4,
+            }}
+          >
+            Make something
+          </h2>
+
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontStyle: "italic",
+              fontWeight: 300,
+              fontSize: "clamp(42px, 7.5vw, 108px)",
+              letterSpacing: "-0.03em",
+              lineHeight: 1.05,
+              color: "var(--off-white)",
+              fontVariationSettings: "'opsz' 120",
+              marginBottom: "clamp(40px, 5.5vw, 72px)",
+            }}
+          >
+            unforgettable.
+          </h2>
+
+          <div
+            style={{
+              display: "flex",
+              gap: 16,
+              justifyContent: "center",
+              flexWrap: "wrap",
+            }}
+          >
+            <SpecularButton to="/inquire">Book a Session</SpecularButton>
+
+            <Link
+              to="/work"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "14px 32px",
+                border: "0.5px solid rgba(240,235,224,0.18)",
+                color: "rgba(240,235,224,0.55)",
+                fontFamily: "var(--font-body)",
+                fontSize: "11px",
+                letterSpacing: "2.5px",
+                textTransform: "uppercase",
+                textDecoration: "none",
+                transition: "border-color 0.25s, color 0.25s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(240,235,224,0.45)";
+                e.currentTarget.style.color = "rgba(240,235,224,0.9)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(240,235,224,0.18)";
+                e.currentTarget.style.color = "rgba(240,235,224,0.55)";
+              }}
+            >
+              View Work
+            </Link>
+          </div>
+        </ScrollReveal>
+      </section>
     </>
   );
 }

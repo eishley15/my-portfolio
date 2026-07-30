@@ -19,12 +19,13 @@ import { useClientGallery } from "../hooks/usePortfolio";
 import { useToast, ToastContainer } from "../components/Toast";
 import DownloadButton from "../components/DownloadButton";
 import { useDownloadZip } from "../hooks/useDownloadZip";
+import LazyImage from "../components/LazyImage";
 
 // Custom navbar for accessed gallery
 function GalleryNavbar({ onLogout, previewOpen }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -173,7 +174,9 @@ function GalleryNavbar({ onLogout, previewOpen }) {
             style={{
               maxHeight: menuOpen ? "400px" : "0",
               overflow: "hidden",
-              transition: "max-height 0.4s ease",
+              transition: "opacity 0.3s ease",
+              opacity: menuOpen ? 1 : 0,
+              pointerEvents: menuOpen ? "auto" : "none",
               padding: menuOpen ? "0 40px 20px 40px" : "0 40px",
             }}
           >
@@ -358,60 +361,6 @@ function AnimatedLock() {
 }
 
 // Lazy load image component
-function LazyImage({ src, alt, className, onLoad }) {
-  const [loaded, setLoaded] = useState(false);
-  const [imageSrc, setImageSrc] = useState(null);
-  const [error, setError] = useState(false);
-  const imgRef = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setImageSrc(src);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "50px" },
-    );
-    if (imgRef.current) observer.observe(imgRef.current);
-    return () => observer.disconnect();
-  }, [src]);
-
-  const handleLoad = (e) => {
-    setLoaded(true);
-    if (onLoad) {
-      const img = e.target;
-      const isLandscape = img.naturalWidth > img.naturalHeight;
-      const isPortrait = img.naturalHeight > img.naturalWidth;
-      onLoad({ isLandscape, isPortrait, isSquare: !isLandscape && !isPortrait });
-    }
-  };
-
-  return (
-    <>
-      <img
-        ref={imgRef}
-        src={imageSrc}
-        alt={alt}
-        className={className}
-        onLoad={handleLoad}
-        onError={() => {
-          setError(true);
-          setLoaded(true);
-        }}
-        style={{ opacity: loaded ? 1 : 0.3, transition: "opacity 0.3s" }}
-      />
-      {error && (
-        <div
-          className={`absolute inset-0 bg-[var(--gray-dark)] flex items-center justify-center text-xs text-[var(--gray-light)] ${className}`}
-        >
-          Image unavailable
-        </div>
-      )}
-    </>
-  );
-}
 
 // Preview modal component
 function PreviewModal({ item, allItems, onClose, onNext, onPrev, isVideo, selectedItems, toggleSelect, accessCode, onError }) {
@@ -576,9 +525,9 @@ function GalleryGrid({
                     className="w-4 h-4 shrink-0"
                   />
                   <div className="w-16 h-10 shrink-0 bg-[var(--gray-dark)] overflow-hidden">
-                    <LazyImage src={photo.url} alt="" className="w-full h-full object-cover" onLoad={() => {}} />
+                    <LazyImage src={photo.url} alt={photo.filename} className="w-full h-full object-cover" onLoad={() => {}} />
                   </div>
-                  <span className="text-[12px] text-[var(--gray-light)] tracking-[1px] font-body flex-1">
+                  <span className="text-[11px] text-[var(--gray-light)] tracking-[1px] font-body flex-1">
                     {String(i + 1).padStart(3, "0")}
                   </span>
                   <div onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -655,7 +604,7 @@ function GalleryGrid({
                     <video src={video.url} className="w-full h-full object-cover" muted />
                     <Play size={12} className="absolute text-white" />
                   </div>
-                  <span className="text-[12px] text-[var(--gray-light)] tracking-[1px] font-body flex-1">
+                  <span className="text-[11px] text-[var(--gray-light)] tracking-[1px] font-body flex-1">
                     {String(i + 1).padStart(3, "0")}
                   </span>
                   <div onClick={(e) => e.stopPropagation()} className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -912,9 +861,10 @@ export default function Gallery() {
         />
 
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           className="min-h-screen bg-[var(--off-white)] text-[var(--black)] pt-24 pb-20 px-6"
         >
           <div className="max-w-[1800px] mx-auto">
@@ -1089,224 +1039,262 @@ export default function Gallery() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="min-h-screen relative overflow-hidden"
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        style={{
+          display:             "grid",
+          gridTemplateColumns: "1fr 1fr",
+          minHeight:           "100svh",
+        }}
       >
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-[var(--black)]">
-          <motion.div
-            className="absolute inset-0"
-            animate={{
-              background: [
-                "radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%)",
-                "radial-gradient(circle at 80% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%)",
-                "radial-gradient(circle at 20% 50%, rgba(220, 38, 38, 0.15) 0%, transparent 50%)",
-              ],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        </div>
-
-        {/* Particle field */}
-        <ParticleField />
-
-        {/* Grid overlay */}
-        <div 
-          className="absolute inset-0 opacity-5"
+        {/* ── Left — editorial dark panel ── */}
+        <div
           style={{
-            backgroundImage: `linear-gradient(var(--red) 1px, transparent 1px),
-                             linear-gradient(90deg, var(--red) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
+            background:     "var(--ink)",
+            display:        "flex",
+            flexDirection:  "column",
+            justifyContent: "flex-end",
+            padding:        "clamp(80px, 10vh, 120px) clamp(32px, 5vw, 64px) clamp(48px, 6vh, 72px)",
           }}
-        />
-
-        <div className="relative text-[var(--off-white)] min-h-screen flex items-center justify-center px-6">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-center">
-            {/* Left side - Info */}
-            <div>
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="eyebrow text-[var(--red)] mb-6 flex items-center gap-2"
-              >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                >
-                  <Lock size={12} />
-                </motion.div>
-                PRIVATE ACCESS
-              </motion.div>
-              
-              <motion.h1
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 }}
-                className="font-display text-[clamp(48px,8vw,96px)] leading-[0.88] mb-6"
-              >
-                <motion.span
-                  className="inline-block"
-                  whileHover={{ scale: 1.05, color: "var(--red)" }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  CLIENT
-                </motion.span>
-                <br />
-                <motion.span
-                  className="inline-block italic-accent"
-                  whileHover={{ scale: 1.05, color: "var(--red)" }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  Gallery
-                </motion.span>
-              </motion.h1>
-              
-              <motion.p
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 }}
-                className="text-[var(--text-muted)] leading-relaxed mb-8"
-              >
-                Your photos and videos, delivered privately. Enter your unique
-                access code to view and download your files.
-              </motion.p>
-
-              {/* Animated stats */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex gap-8"
-              >
-                {["Secure", "Private", "HD Quality"].map((text, i) => (
-                  <motion.div
-                    key={text}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + i * 0.1 }}
-                    className="text-xs tracking-[2px] uppercase text-[var(--gray-light)]"
-                  >
-                    <motion.div
-                      className="w-8 h-0.5 bg-[var(--red)] mb-2"
-                      initial={{ width: 0 }}
-                      animate={{ width: 32 }}
-                      transition={{ delay: 0.8 + i * 0.1, duration: 0.5 }}
-                    />
-                    {text}
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* Right side - Login form with 3D tilt */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring" }}
-            >
-              <TiltCard>
-                <div className="bg-[var(--gray-dark)] p-10 relative overflow-hidden">
-                  {/* Animated corner accents */}
-                  <motion.div
-                    className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-[var(--red)]"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 }}
-                  />
-                  <motion.div
-                    className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-[var(--red)]"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.7 }}
-                  />
-
-                  <AnimatedLock />
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                    className="mb-6"
-                  >
-                    <label className="block text-[10px] tracking-[2px] uppercase mb-3 text-[var(--gray-light)]">
-                      Access Code
-                    </label>
-                    <motion.input
-                      type="text"
-                      value={accessCode}
-                      onChange={(e) => setAccessCode(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                      placeholder="santos-wedding-2024"
-                      className="w-full px-4 py-3 bg-[var(--black)] text-[var(--off-white)] font-mono text-sm focus:outline-none focus:ring-2 focus:ring-[var(--red)] transition-all"
-                      style={{ border: "0.5px solid rgba(240,235,224,0.3)" }}
-                      whileFocus={{ scale: 1.02 }}
-                    />
-                  </motion.div>
-
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="mb-4 text-[var(--red)] text-sm flex items-center gap-2"
-                    >
-                      <motion.div
-                        animate={{ rotate: [0, 10, -10, 0] }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        ⚠
-                      </motion.div>
-                      {error}
-                    </motion.div>
-                  )}
-
-                  <motion.button
-                    onClick={handleLogin}
-                    className="w-full px-6 py-4 bg-[var(--off-white)] text-[var(--black)] text-[11px] uppercase tracking-[2px] relative overflow-hidden group"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <motion.div
-                      className="absolute inset-0 bg-[var(--red)]"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    <span className="relative z-10 group-hover:text-[var(--off-white)] transition-colors">
-                      Access My Gallery
-                    </span>
-                  </motion.button>
-
-                  <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="text-xs text-[var(--gray-light)] mt-6 text-center"
-                  >
-                    Your access code was sent via email after your session.
-                  </motion.p>
-                </div>
-              </TiltCard>
-            </motion.div>
-          </div>
-
-          {/* Floating elements */}
-          <motion.div
-            className="absolute bottom-10 left-10 text-[200px] font-display opacity-5 select-none pointer-events-none hidden lg:block"
-            animate={{
-              y: [0, -30, 0],
-              rotate: [0, 5, 0],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut",
+        >
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.5 }}
+            style={{
+              fontFamily:    "var(--font-body)",
+              fontSize:       "10px",
+              letterSpacing:  "3px",
+              textTransform:  "uppercase",
+              color:          "rgba(240,235,224,0.3)",
+              marginBottom:   "clamp(20px, 3vh, 32px)",
+              display:        "flex",
+              alignItems:     "center",
+              gap:             8,
             }}
           >
-            KP
+            <Lock size={10} strokeWidth={1.5} style={{ opacity: 0.5 }} />
+            Private Access
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22, duration: 0.6 }}
+            style={{
+              fontFamily:            "var(--font-display)",
+              fontWeight:             900,
+              fontSize:               "clamp(48px, 6.5vw, 88px)",
+              letterSpacing:         "-0.035em",
+              lineHeight:             0.88,
+              color:                  "var(--off-white)",
+              textTransform:          "uppercase",
+              fontVariationSettings:  "'opsz' 144",
+              margin:                 0,
+            }}
+          >
+            Client
+          </motion.h1>
+          <motion.h2
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.30, duration: 0.6 }}
+            style={{
+              fontFamily:            "var(--font-display)",
+              fontWeight:             300,
+              fontStyle:              "italic",
+              fontSize:               "clamp(40px, 5.5vw, 76px)",
+              letterSpacing:         "-0.025em",
+              lineHeight:             1.0,
+              color:                  "rgba(240,235,224,0.5)",
+              fontVariationSettings:  "'opsz' 120",
+              margin:                 "0 0 clamp(24px, 4vh, 40px)",
+            }}
+          >
+            Gallery.
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45, duration: 0.5 }}
+            style={{
+              fontFamily:  "var(--font-body)",
+              fontWeight:   300,
+              fontSize:     "clamp(13px, 1.3vw, 15px)",
+              lineHeight:   1.7,
+              color:        "rgba(240,235,224,0.35)",
+              maxWidth:     "38ch",
+              margin:       "0 0 clamp(32px, 5vh, 48px)",
+            }}
+          >
+            Your photos and videos, delivered privately. Enter your access code
+            to view and download your files.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            style={{ display: "flex", gap: 24 }}
+          >
+            {["Secure", "Private", "HD Quality"].map((tag) => (
+              <span
+                key={tag}
+                style={{
+                  fontFamily:    "var(--font-body)",
+                  fontSize:       "10px",
+                  letterSpacing:  "2px",
+                  textTransform:  "uppercase",
+                  color:          "rgba(240,235,224,0.2)",
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* ── Right — access form ── */}
+        <div
+          style={{
+            background:     "var(--bg)",
+            display:        "flex",
+            flexDirection:  "column",
+            justifyContent: "center",
+            padding:        "clamp(80px, 10vh, 120px) clamp(32px, 5vw, 72px)",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35, duration: 0.55 }}
+            style={{ maxWidth: 400 }}
+          >
+            {/* Heading */}
+            <p
+              style={{
+                fontFamily:    "var(--font-body)",
+                fontSize:       "10px",
+                letterSpacing:  "2.5px",
+                textTransform:  "uppercase",
+                color:          "var(--ink-muted)",
+                marginBottom:   "clamp(28px, 4vh, 40px)",
+              }}
+            >
+              Enter your access code
+            </p>
+
+            {/* Input */}
+            <div style={{ marginBottom: 16 }}>
+              <label
+                htmlFor="gallery-code"
+                style={{
+                  display:       "block",
+                  fontFamily:    "var(--font-body)",
+                  fontSize:       "10px",
+                  letterSpacing:  "2px",
+                  textTransform:  "uppercase",
+                  color:          "var(--ink-muted)",
+                  marginBottom:   10,
+                }}
+              >
+                Access Code
+              </label>
+              <input
+                id="gallery-code"
+                type="text"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                placeholder="santos-wedding-2024"
+                style={{
+                  width:          "100%",
+                  padding:        "14px 16px",
+                  background:     "var(--surface)",
+                  border:         error ? "1px solid var(--ink)" : "0.5px solid var(--border)",
+                  color:          "var(--ink)",
+                  fontFamily:     "var(--font-body)",
+                  fontSize:       "14px",
+                  outline:        "none",
+                  boxSizing:      "border-box",
+                  transition:     "border-color 0.2s",
+                  letterSpacing:  "0.5px",
+                }}
+                onFocus={(e) => (e.target.style.borderColor = "var(--ink)")}
+                onBlur={(e)  => (e.target.style.borderColor = error ? "var(--ink)" : "rgba(14,12,11,0.09)")}
+              />
+            </div>
+
+            {/* Error */}
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                  fontFamily:    "var(--font-body)",
+                  fontSize:       "10px",
+                  letterSpacing:  "1.5px",
+                  textTransform:  "uppercase",
+                  color:          "var(--ink)",
+                  opacity:        0.6,
+                  marginBottom:   16,
+                }}
+              >
+                {error}
+              </motion.p>
+            )}
+
+            {/* Submit */}
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              style={{
+                width:          "100%",
+                padding:        "15px 24px",
+                background:     loading ? "var(--ink-muted)" : "var(--ink)",
+                color:          "var(--off-white)",
+                fontFamily:     "var(--font-body)",
+                fontSize:       "11px",
+                letterSpacing:  "2.5px",
+                textTransform:  "uppercase",
+                border:         "none",
+                cursor:         loading ? "not-allowed" : "pointer",
+                display:        "flex",
+                alignItems:     "center",
+                justifyContent: "center",
+                gap:             10,
+                transition:     "background 0.2s",
+                marginBottom:   "clamp(28px, 4vh, 40px)",
+              }}
+              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "var(--gray-dark)"; }}
+              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = "var(--ink)"; }}
+            >
+              {loading ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    style={{ width: 13, height: 13, border: "1.5px solid rgba(240,235,224,0.3)", borderTop: "1.5px solid var(--off-white)", borderRadius: "50%" }}
+                  />
+                  Unlocking…
+                </>
+              ) : (
+                "Access My Gallery"
+              )}
+            </button>
+
+            {/* Hint */}
+            <p
+              style={{
+                fontFamily:    "var(--font-body)",
+                fontSize:       "10px",
+                letterSpacing:  "1.5px",
+                color:          "var(--ink-faint)",
+                lineHeight:     1.6,
+              }}
+            >
+              Your access code was sent via email after your session.
+            </p>
           </motion.div>
         </div>
       </motion.div>
