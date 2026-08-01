@@ -4,6 +4,8 @@ import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, LayoutGrid } from "lucide-react";
 import { usePortfolio } from "../hooks/usePortfolio";
+import DraggableStrip from "../components/DraggableStrip";
+import ScatteredCanvas from "../components/ScatteredCanvas";
 import { isVideo } from "../lib/isVideo";
 import VideoWithAutoplay from "../components/VideoWithAutoplay";
 import LazyImage from "../components/LazyImage";
@@ -218,270 +220,6 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
   );
 }
 
-// ─── DomeGallery ──────────────────────────────────────────────────────────────
-
-const DOME_SLOTS   = 7;   // visible cards at once
-const DOME_HALF    = Math.floor(DOME_SLOTS / 2);
-const ANGLE_STEP   = 20;  // degrees between adjacent cards
-const CARD_W_BASE  = 200; // px — center card width reference
-
-function DomeGallery({ items, onSelect }) {
-  const [centerIdx, setCenterIdx] = useState(0);
-  const n = items.length;
-
-  useEffect(() => { setCenterIdx(0); }, [items]);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "ArrowLeft")  setCenterIdx((i) => (i - 1 + n) % n);
-      if (e.key === "ArrowRight") setCenterIdx((i) => (i + 1) % n);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [n]);
-
-  if (n === 0) return null;
-
-  const goTo  = (idx) => setCenterIdx(((idx % n) + n) % n);
-  const prev  = () => setCenterIdx((i) => (i - 1 + n) % n);
-  const next  = () => setCenterIdx((i) => (i + 1) % n);
-
-  // Build the visible slots: centerIdx ± DOME_HALF
-  const slots = Array.from({ length: DOME_SLOTS }, (_, k) => {
-    const offset = k - DOME_HALF;
-    const idx    = ((centerIdx + offset) + n) % n;
-    return { offset, idx, item: items[idx] };
-  });
-
-  return (
-    <div style={{ userSelect: "none" }}>
-      {/* ── Fan stage ── */}
-      <div
-        style={{
-          position: "relative",
-          height: "clamp(400px, 62vh, 660px)",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "center",
-        }}
-      >
-        {slots.map(({ offset, idx, item }) => {
-          const abs      = Math.abs(offset);
-          const isCenter = offset === 0;
-          const angle    = offset * ANGLE_STEP;
-          const scale    = 1 - abs * 0.13;
-          const opacity  = 1 - abs * 0.22;
-          const zIndex   = DOME_SLOTS - abs;
-          // Width shrinks away from center
-          const cardW    = `clamp(${CARD_W_BASE * 0.5}px, ${13 - abs * 1.2}vw, ${CARD_W_BASE * (1 - abs * 0.1)}px)`;
-
-          return (
-            <motion.div
-              key={`${idx}-${offset}`}
-              animate={{ rotate: angle, scale, opacity }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              whileHover={
-                isCenter
-                  ? { scale: scale * 1.03 }
-                  : { scale: scale * 1.06, opacity: opacity + 0.1 }
-              }
-              onClick={() => isCenter ? onSelect(item) : goTo(idx)}
-              style={{
-                position:        "absolute",
-                bottom:          "clamp(32px, 5vh, 60px)",
-                left:            "50%",
-                marginLeft:      `calc(${cardW} / -2)`,
-                width:           cardW,
-                aspectRatio:     "2 / 3",
-                overflow:        "hidden",
-                cursor:          isCenter ? "zoom-in" : "pointer",
-                transformOrigin: "bottom center",
-                zIndex,
-                willChange:      "transform, opacity",
-              }}
-            >
-              <img
-                src={item.url}
-                alt={item.category}
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                loading="lazy"
-              />
-
-              {/* Tint for non-center cards */}
-              {!isCenter && (
-                <div
-                  style={{
-                    position:   "absolute",
-                    inset:       0,
-                    background: `rgba(237,232,220,${abs * 0.18})`,
-                    pointerEvents: "none",
-                  }}
-                />
-              )}
-
-              {/* Center card — bottom label + "tap to open" hint */}
-              {isCenter && (
-                <>
-                  <div
-                    style={{
-                      position:   "absolute",
-                      inset:       0,
-                      border:      "0.5px solid rgba(14,12,11,0.18)",
-                      pointerEvents: "none",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position:   "absolute",
-                      bottom:      0,
-                      left:        0,
-                      right:       0,
-                      padding:     "16px 14px",
-                      background:  "linear-gradient(to top, rgba(14,12,11,0.82) 0%, transparent 100%)",
-                    }}
-                  >
-                    {item.title && (
-                      <p
-                        style={{
-                          fontFamily:   "var(--font-display)",
-                          fontStyle:    "italic",
-                          fontWeight:    300,
-                          fontSize:      "clamp(13px, 1.3vw, 16px)",
-                          color:         "rgba(240,235,224,0.9)",
-                          letterSpacing: "-0.01em",
-                          marginBottom:  4,
-                          lineHeight:    1.2,
-                        }}
-                      >
-                        {item.title}
-                      </p>
-                    )}
-                    <p
-                      style={{
-                        fontFamily:    "var(--font-body)",
-                        fontSize:       "10px",
-                        letterSpacing:  "2px",
-                        textTransform:  "uppercase",
-                        color:          "rgba(240,235,224,0.5)",
-                      }}
-                    >
-                      {item.category}
-                    </p>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* ── Navigation row ── */}
-      <div
-        style={{
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "center",
-          gap:             24,
-          marginTop:       "clamp(20px, 3vh, 36px)",
-        }}
-      >
-        <button
-          onClick={prev}
-          aria-label="Previous"
-          style={{
-            background:    "none",
-            border:         "0.5px solid var(--border)",
-            color:          "var(--ink-muted)",
-            width:           36,
-            height:          36,
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            cursor:         "pointer",
-            transition:     "border-color 0.2s, color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--ink)";
-            e.currentTarget.style.color       = "var(--ink)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color       = "var(--ink-muted)";
-          }}
-        >
-          <ChevronLeft size={14} strokeWidth={1.5} />
-        </button>
-
-        {/* Dot strip */}
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {items.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => goTo(i)}
-              aria-label={`Go to item ${i + 1}`}
-              style={{
-                background:   i === centerIdx ? "var(--ink)" : "var(--ink-faint)",
-                border:        "none",
-                borderRadius:  "50%",
-                width:          6,
-                height:         6,
-                cursor:        "pointer",
-                padding:        0,
-                transform:     i === centerIdx ? "scale(1)" : "scale(0.67)",
-                transition:    "background 0.25s, transform 0.25s",
-                flexShrink:     0,
-                display:       Math.abs(i - centerIdx) > 8 ? "none" : "block",
-              }}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={next}
-          aria-label="Next"
-          style={{
-            background:    "none",
-            border:         "0.5px solid var(--border)",
-            color:          "var(--ink-muted)",
-            width:           36,
-            height:          36,
-            display:        "flex",
-            alignItems:     "center",
-            justifyContent: "center",
-            cursor:         "pointer",
-            transition:     "border-color 0.2s, color 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--ink)";
-            e.currentTarget.style.color       = "var(--ink)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--border)";
-            e.currentTarget.style.color       = "var(--ink-muted)";
-          }}
-        >
-          <ChevronRight size={14} strokeWidth={1.5} />
-        </button>
-      </div>
-
-      {/* ── Counter + hint ── */}
-      <p
-        style={{
-          textAlign:     "center",
-          fontFamily:    "var(--font-body)",
-          fontSize:       "10px",
-          letterSpacing:  "2px",
-          textTransform:  "uppercase",
-          color:          "var(--ink-faint)",
-          marginTop:       12,
-        }}
-      >
-        {centerIdx + 1} of {n} · Click center to preview · ← → to browse
-      </p>
-    </div>
-  );
-}
-
 // ─── MasonryGrid ──────────────────────────────────────────────────────────────
 
 function MasonryGrid({ items, onSelect, loading }) {
@@ -647,7 +385,7 @@ function MasonryGrid({ items, onSelect, loading }) {
 export default function Work() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState(null);
-  const [viewMode, setViewMode] = useState("dome"); // "dome" | "grid"
+  const [viewMode, setViewMode] = useState("strip"); // "strip" | "grid"
   const [lightboxItem, setLightboxItem] = useState(null);
 
   const { items, categories, loading } = usePortfolio(activeCategory);
@@ -829,6 +567,28 @@ export default function Work() {
               paddingLeft: 24,
             }}
           >
+            {/* Strip toggle */}
+            <button
+              onClick={() => setViewMode("strip")}
+              aria-label="Strip view"
+              title="Strip"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "6px",
+                color: viewMode === "strip" ? "var(--ink)" : "var(--ink-faint)",
+                display: "flex",
+                transition: "color 0.2s",
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <rect x="1" y="3" width="3.5" height="8" rx="0.5" />
+                <rect x="5.25" y="3" width="3.5" height="8" rx="0.5" />
+                <rect x="9.5" y="3" width="3.5" height="8" rx="0.5" />
+              </svg>
+            </button>
+
             <button
               onClick={() => setViewMode("grid")}
               aria-label="Grid view"
@@ -846,30 +606,6 @@ export default function Work() {
               <LayoutGrid size={14} strokeWidth={1.5} />
             </button>
 
-            {/* Dome toggle — custom icon (fan shape) */}
-            <button
-              onClick={() => setViewMode(viewMode === "dome" ? "grid" : "dome")}
-              aria-label="Dome view"
-              title="Dome"
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "6px",
-                color: viewMode === "dome" ? "var(--ink)" : "var(--ink-faint)",
-                display: "flex",
-                transition: "color 0.2s",
-              }}
-            >
-              {/* Fan SVG icon */}
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <path d="M7 12 L7 4" />
-                <path d="M7 12 L2 5" />
-                <path d="M7 12 L12 5" />
-                <path d="M7 12 L1 8" />
-                <path d="M7 12 L13 8" />
-              </svg>
-            </button>
           </div>
         </div>
       </div>
@@ -878,26 +614,35 @@ export default function Work() {
       <section
         id="work-grid"
         style={{
-          padding: "clamp(24px, 4vw, 48px) clamp(24px, 6vw, 80px) clamp(64px, 8vw, 120px)",
-          background: "var(--bg)",
-          minHeight: "60vh",
+          padding: viewMode === "strip"
+            ? "0"
+            : "clamp(24px, 4vw, 48px) clamp(24px, 6vw, 80px) clamp(64px, 8vw, 120px)",
+          background: viewMode === "strip" ? "#0E0C0B" : "var(--bg)",
+          minHeight: viewMode === "strip" ? 0 : "60vh",
         }}
       >
         <AnimatePresence mode="wait">
-          {viewMode === "dome" ? (
+          {viewMode === "strip" ? (
             <motion.div
-              key="dome"
+              key={`strip-${activeCategory ?? "all"}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35 }}
+              style={{ margin: 0 }}
             >
               {loading ? (
                 <div style={{ textAlign: "center", padding: "80px 0" }}>
                   <p className="eyebrow">Loading...</p>
                 </div>
               ) : (
-                <DomeGallery items={items} onSelect={setLightboxItem} />
+                <ScatteredCanvas
+                  items={items}
+                  onViewGallery={(item) => {
+                    handleCategoryChange(item.category);
+                    setViewMode("grid");
+                  }}
+                />
               )}
             </motion.div>
           ) : (

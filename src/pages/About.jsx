@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Instagram, Facebook, Mail, ArrowUpRight } from "lucide-react";
+import { ButtonLink } from "../components/ui/button";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -580,57 +581,14 @@ export default function About() {
           </div>
 
           {/* CTA */}
-          <div style={{ display: "flex", gap: 12 }}>
-            <Link
-              to="/inquire"
-              style={{
-                display:        "inline-flex",
-                alignItems:     "center",
-                gap:             8,
-                padding:         "14px 28px",
-                background:      "var(--ink)",
-                color:           "var(--off-white)",
-                textDecoration:  "none",
-                fontFamily:      "var(--font-body)",
-                fontSize:         "11px",
-                letterSpacing:    "2.5px",
-                textTransform:    "uppercase",
-                transition:       "background 0.2s",
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gray-dark)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "var(--ink)")}
-            >
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            <ButtonLink to="/inquire" variant="default">
               Book a Session
               <ArrowUpRight size={13} strokeWidth={1.5} />
-            </Link>
-            <Link
-              to="/work"
-              style={{
-                display:        "inline-flex",
-                alignItems:     "center",
-                gap:             8,
-                padding:         "14px 28px",
-                background:      "transparent",
-                border:          "0.5px solid var(--ink)",
-                color:           "var(--ink)",
-                textDecoration:  "none",
-                fontFamily:      "var(--font-body)",
-                fontSize:         "11px",
-                letterSpacing:    "2.5px",
-                textTransform:    "uppercase",
-                transition:       "border-color 0.2s, color 0.2s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "var(--ink)";
-                e.currentTarget.style.color       = "var(--ink)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--ink)";
-                e.currentTarget.style.color       = "var(--ink)";
-              }}
-            >
+            </ButtonLink>
+            <ButtonLink to="/work" variant="outline">
               View Work
-            </Link>
+            </ButtonLink>
           </div>
 
           {/* Location note */}

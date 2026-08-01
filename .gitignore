@@ -28,6 +28,10 @@ dist-ssr
 .env.local
 .env.production
 
+# Local-only folders
+supabase/
+lightroom-plugin/
+
 # Claude Code - Session files (do not commit)
 memory/sessions/*.jsonl
 memory/.temp/

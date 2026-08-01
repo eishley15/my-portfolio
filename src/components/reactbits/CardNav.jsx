@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { isVideo } from "../../lib/isVideo";
 
 const NAV_CARDS = [
   { to: "/",        label: "Home",    subtitle: "Start here"    },
@@ -129,7 +130,8 @@ export default function CardNav({ isOpen, onClose, thumbnails = [] }) {
             >
               {NAV_CARDS.map((card, i) => {
                 const isActive = location.pathname === card.to;
-                const thumb = thumbnails[i]?.url || null;
+                const thumbItem = thumbnails[i] || null;
+                const thumb = thumbItem?.url || null;
 
                 return (
                   <motion.div
@@ -168,22 +170,41 @@ export default function CardNav({ isOpen, onClose, thumbnails = [] }) {
                         e.currentTarget.style.transform = "translateY(0)";
                       }}
                     >
-                      {/* Thumbnail photo */}
+                      {/* Thumbnail */}
                       {thumb && (
-                        <img
-                          src={thumb}
-                          alt={card.label}
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            display: "block",
-                            opacity: 0.75,
-                          }}
-                          loading="lazy"
-                        />
+                        thumbItem && isVideo(thumbItem) ? (
+                          <video
+                            src={thumb}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                              opacity: 0.75,
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={thumb}
+                            alt={card.label}
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                              display: "block",
+                              opacity: 0.75,
+                            }}
+                            loading="lazy"
+                          />
+                        )
                       )}
 
                       {/* Gradient overlay — always present */}

@@ -4,10 +4,12 @@ import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeaturedPortfolio } from "../hooks/usePortfolio";
 import LoadingScreen from "../components/LoadingScreen";
+import DraggableStrip from "../components/DraggableStrip";
 import TrueFocus from "../components/reactbits/TrueFocus";
 import RotatingText from "../components/reactbits/RotatingText";
 import CountUp from "../components/reactbits/CountUp";
 import SpecularButton from "../components/reactbits/SpecularButton";
+import { ButtonLink } from "../components/ui/button";
 import LineSidebar from "../components/reactbits/LineSidebar";
 import ScrollReveal from "../components/reactbits/ScrollReveal";
 
@@ -497,85 +499,73 @@ export default function Home() {
       <section
         id="work-preview"
         style={{
-          padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
-          background: "var(--bg)",
+          paddingTop:    "clamp(64px, 8vw, 120px)",
+          paddingBottom: "clamp(40px, 5vw, 72px)",
+          background:    "var(--bg)",
         }}
       >
-        <ScrollReveal>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              marginBottom: "clamp(32px, 5vw, 60px)",
-              flexWrap: "wrap",
-              gap: 16,
-            }}
-          >
-            <div>
-              <p className="eyebrow" style={{ marginBottom: 12 }}>Selected Work</p>
-              <h2
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontWeight: 900,
-                  fontSize: "clamp(36px, 5vw, 72px)",
-                  letterSpacing: "-0.03em",
-                  lineHeight: 0.95,
-                  fontVariationSettings: "'opsz' 144",
-                  color: "var(--ink)",
-                }}
-              >
-                What I{" "}
-                <span className="font-serif">Shoot.</span>
-              </h2>
-            </div>
-            <Link
-              to="/work"
+        {/* Header — padded horizontally */}
+        <div style={{ paddingLeft: "clamp(24px, 6vw, 80px)", paddingRight: "clamp(24px, 6vw, 80px)" }}>
+          <ScrollReveal>
+            <div
               style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "11px",
-                letterSpacing: "2.5px",
-                textTransform: "uppercase",
-                color: "var(--ink-muted)",
-                textDecoration: "none",
-                borderBottom: "0.5px solid var(--border)",
-                paddingBottom: 2,
-                alignSelf: "flex-end",
-                transition: "color 0.2s",
+                display:        "flex",
+                justifyContent: "space-between",
+                alignItems:     "flex-end",
+                marginBottom:   "clamp(28px, 4vw, 48px)",
+                flexWrap:       "wrap",
+                gap:             16,
               }}
             >
-              All Work →
-            </Link>
-          </div>
-        </ScrollReveal>
-
-        {items.length > 0 ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(min(240px, 100%), 1fr))",
-              gap: "clamp(8px, 1.2vw, 16px)",
-            }}
-          >
-            {items.map((item, i) => (
-              <motion.div
-                key={item.id || item.category}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 12 }}>Selected Work</p>
+                <h2
+                  style={{
+                    fontFamily:           "var(--font-display)",
+                    fontWeight:            900,
+                    fontSize:              "clamp(36px, 5vw, 72px)",
+                    letterSpacing:        "-0.03em",
+                    lineHeight:            0.95,
+                    fontVariationSettings: "'opsz' 144",
+                    color:                 "var(--ink)",
+                  }}
+                >
+                  What I{" "}
+                  <span className="font-serif">Shoot.</span>
+                </h2>
+              </div>
+              <Link
+                to="/work"
+                style={{
+                  fontFamily:    "var(--font-body)",
+                  fontSize:       "11px",
+                  letterSpacing:  "2.5px",
+                  textTransform:  "uppercase",
+                  color:          "var(--ink-muted)",
+                  textDecoration: "none",
+                  borderBottom:   "0.5px solid var(--border)",
+                  paddingBottom:   2,
+                  alignSelf:      "flex-end",
+                  transition:     "color 0.2s",
+                }}
               >
-                <CategoryCard item={item} />
-              </motion.div>
-            ))}
-          </div>
+                All Work →
+              </Link>
+            </div>
+          </ScrollReveal>
+        </div>
+
+        {/* Draggable strip — full bleed */}
+        {items.length > 0 ? (
+          <DraggableStrip items={items} />
         ) : (
           !isLoading && (
             <p
               style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 14,
-                color: "var(--ink-muted)",
+                fontFamily:  "var(--font-body)",
+                fontSize:     14,
+                color:        "var(--ink-muted)",
+                paddingLeft:  "clamp(24px, 6vw, 80px)",
               }}
             >
               No portfolio categories found.
@@ -810,32 +800,9 @@ export default function Home() {
           >
             <SpecularButton to="/inquire">Book a Session</SpecularButton>
 
-            <Link
-              to="/work"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "14px 32px",
-                border: "0.5px solid rgba(240,235,224,0.18)",
-                color: "rgba(240,235,224,0.55)",
-                fontFamily: "var(--font-body)",
-                fontSize: "11px",
-                letterSpacing: "2.5px",
-                textTransform: "uppercase",
-                textDecoration: "none",
-                transition: "border-color 0.25s, color 0.25s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "rgba(240,235,224,0.45)";
-                e.currentTarget.style.color = "rgba(240,235,224,0.9)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "rgba(240,235,224,0.18)";
-                e.currentTarget.style.color = "rgba(240,235,224,0.55)";
-              }}
-            >
+            <ButtonLink to="/work" variant="outline-inverse">
               View Work
-            </Link>
+            </ButtonLink>
           </div>
         </ScrollReveal>
       </section>

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -11,10 +11,16 @@ import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Inquire from "./pages/Inquire";
 import NotFound from "./pages/NotFound";
+import ClientPicks from "./pages/ClientPicks";
+import StudioAdmin from "./pages/StudioAdmin";
+
+// Routes that render their own nav/footer — skip the shared shell
+const STANDALONE_ROUTES = ["/studio"];
+const startsWithStandalone = (path) =>
+  STANDALONE_ROUTES.some((r) => path === r || path.startsWith("/picks/"));
 
 function AnimatedRoutes() {
   const location = useLocation();
-
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -31,6 +37,22 @@ function AnimatedRoutes() {
 }
 
 function AppContent() {
+  const location = useLocation();
+  const standalone = startsWithStandalone(location.pathname);
+
+  // Standalone pages (picks + studio) render without shared Navbar/Footer
+  if (standalone) {
+    return (
+      <>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/picks/:galleryId" element={<ClientPicks />} />
+          <Route path="/studio" element={<StudioAdmin />} />
+        </Routes>
+      </>
+    );
+  }
+
   return (
     <>
       <BackToTop />
