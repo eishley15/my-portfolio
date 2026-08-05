@@ -99,7 +99,7 @@ export function ProjectShowcaseList({ items = [] }) {
               style={{
                 position: "relative",
                 padding: "20px 0",
-                borderTop: "0.5px solid rgba(240,235,224,0.1)",
+                borderTop: "0.5px solid rgba(255,252,242,0.1)",
               }}
             >
               {/* Subtle bg shimmer on hover */}
@@ -107,7 +107,7 @@ export function ProjectShowcaseList({ items = [] }) {
                 style={{
                   position: "absolute",
                   inset: 0,
-                  background: "rgba(240,235,224,0.02)",
+                  background: "rgba(255,252,242,0.02)",
                   opacity: hoveredIndex === i ? 1 : 0,
                   transition: "opacity 0.25s ease",
                 }}
@@ -120,7 +120,7 @@ export function ProjectShowcaseList({ items = [] }) {
                       fontFamily: "var(--font-display)",
                       fontSize: "clamp(24px, 3.5vw, 48px)",
                       letterSpacing: "1px",
-                      color: hoveredIndex === i ? "var(--off-white)" : "rgba(240,235,224,0.55)",
+                      color: hoveredIndex === i ? "var(--off-white)" : "rgba(255,252,242,0.55)",
                       transition: "color 0.25s ease",
                       lineHeight: 1,
                       position: "relative",
@@ -151,7 +151,7 @@ export function ProjectShowcaseList({ items = [] }) {
                       fontSize: "9px",
                       letterSpacing: "2px",
                       textTransform: "uppercase",
-                      color: "rgba(240,235,224,0.3)",
+                      color: "rgba(255,252,242,0.3)",
                     }}
                   >
                     {item.type === "video" ? "Film" : "Photo"}
@@ -170,7 +170,7 @@ export function ProjectShowcaseList({ items = [] }) {
             </div>
           </Link>
         ))}
-        <div style={{ borderTop: "0.5px solid rgba(240,235,224,0.1)" }} />
+        <div style={{ borderTop: "0.5px solid rgba(255,252,242,0.1)" }} />
       </div>
     </div>
   );

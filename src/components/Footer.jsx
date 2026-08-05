@@ -23,33 +23,6 @@ export default function Footer() {
   return (
     <footer style={{ background: "var(--ink)", color: "var(--off-white)" }}>
 
-      {/* ── Top — tagline ── */}
-      <div
-        style={{
-          padding:      `clamp(48px, 6vh, 80px) ${px} 0`,
-          borderBottom: "0.5px solid rgba(240,235,224,0.08)",
-          paddingBottom: "clamp(40px, 5vh, 64px)",
-        }}
-      >
-        <p
-          style={{
-            fontFamily:            "var(--font-display)",
-            fontStyle:              "italic",
-            fontWeight:             300,
-            fontSize:               "clamp(28px, 4vw, 52px)",
-            letterSpacing:         "-0.02em",
-            lineHeight:             1.1,
-            color:                  "rgba(240,235,224,0.18)",
-            fontVariationSettings:  "'opsz' 72",
-            margin:                 0,
-          }}
-        >
-          It's gonna look a little different.
-          <br />
-          That's the point.
-        </p>
-      </div>
-
       {/* ── Middle — columns ── */}
       <div
         style={{
@@ -57,7 +30,7 @@ export default function Footer() {
           gridTemplateColumns:   "1fr auto auto",
           gap:                   "clamp(40px, 6vw, 96px)",
           padding:               `clamp(40px, 5vh, 64px) ${px}`,
-          borderBottom:          "0.5px solid rgba(240,235,224,0.08)",
+          borderBottom:          "0.5px solid rgba(255,252,242,0.08)",
         }}
       >
         {/* Brand */}
@@ -82,7 +55,7 @@ export default function Footer() {
                 fontSize:       "11px",
                 letterSpacing:  "2px",
                 textTransform:  "uppercase",
-                color:          "rgba(240,235,224,0.25)",
+                color:          "rgba(255,252,242,0.25)",
                 margin:         0,
               }}
             >
@@ -94,7 +67,7 @@ export default function Footer() {
               fontFamily:    "var(--font-body)",
               fontSize:       "10px",
               letterSpacing:  "1.5px",
-              color:          "rgba(240,235,224,0.15)",
+              color:          "rgba(255,252,242,0.15)",
               marginTop:      32,
             }}
           >
@@ -111,8 +84,8 @@ export default function Footer() {
                 key={to}
                 to={to}
                 style={navLink}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--off-white)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.32)")}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.32)")}
               >
                 {label}
               </Link>
@@ -131,8 +104,8 @@ export default function Footer() {
                 target={href.startsWith("mailto") ? undefined : "_blank"}
                 rel="noreferrer"
                 style={{ ...navLink, display: "flex", alignItems: "center", gap: 8 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--off-white)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.32)")}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.32)")}
               >
                 <Icon size={12} strokeWidth={1.5} />
                 {label}
@@ -166,7 +139,7 @@ const colHeading = {
   fontSize:       "10px",
   letterSpacing:  "2.5px",
   textTransform:  "uppercase",
-  color:          "rgba(240,235,224,0.2)",
+  color:          "rgba(255,252,242,0.20)",
   margin:         "0 0 16px",
 };
 
@@ -175,7 +148,7 @@ const navLink = {
   fontSize:       "11px",
   letterSpacing:  "1.5px",
   textTransform:  "uppercase",
-  color:          "rgba(240,235,224,0.32)",
+  color:          "rgba(255,252,242,0.32)",
   textDecoration: "none",
   transition:     "color 0.2s",
 };
@@ -184,6 +157,6 @@ const bottomText = {
   fontFamily:    "var(--font-body)",
   fontSize:       "10px",
   letterSpacing:  "1px",
-  color:          "rgba(240,235,224,0.15)",
+  color:          "rgba(255,252,242,0.15)",
   margin:         0,
 };

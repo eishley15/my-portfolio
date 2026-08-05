@@ -53,7 +53,7 @@ function PicksNavbar({ galleryName, selectionCount, maxSelections }) {
             fontSize:       "10px",
             letterSpacing:  "2px",
             textTransform:  "uppercase",
-            color:          scrolled ? "var(--ink-muted)" : "rgba(240,235,224,0.6)",
+            color:          scrolled ? "var(--ink-muted)" : "rgba(255,252,242,0.6)",
             transition:    "color 0.35s",
           }}
         >
@@ -155,7 +155,7 @@ function PhotoCard({ photo, index, isSelected, onClick }) {
           fontFamily:    "var(--font-body)",
           fontSize:       "10px",
           letterSpacing:  "1.5px",
-          color:          "rgba(240,235,224,0.5)",
+          color:          "rgba(255,252,242,0.5)",
           textShadow:    "0 1px 3px rgba(0,0,0,0.5)",
         }}
       >
@@ -198,7 +198,7 @@ function PhotoCard({ photo, index, isSelected, onClick }) {
             width:       26,
             height:      26,
             borderRadius: "50%",
-            border:      "1.5px solid rgba(240,235,224,0.35)",
+            border:      "1.5px solid rgba(255,252,242,0.35)",
           }}
         />
       )}
@@ -251,7 +251,7 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
           alignItems:     "center",
           justifyContent: "space-between",
           padding:        "16px 20px",
-          borderBottom:   "0.5px solid rgba(240,235,224,0.08)",
+          borderBottom:   "0.5px solid rgba(255,252,242,0.08)",
           flexShrink:      0,
         }}
         onClick={(e) => e.stopPropagation()}
@@ -262,7 +262,7 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             fontSize:       "10px",
             letterSpacing:  "2px",
             textTransform:  "uppercase",
-            color:          "rgba(240,235,224,0.3)",
+            color:          "rgba(255,252,242,0.3)",
           }}
         >
           {index + 1} / {photos.length}
@@ -271,14 +271,14 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
           onClick={onClose}
           style={{
             background: "none", border: "none",
-            color: "rgba(240,235,224,0.5)", cursor: "pointer",
+            color: "rgba(255,252,242,0.5)", cursor: "pointer",
             display: "flex", alignItems: "center", gap: 6,
             fontFamily: "var(--font-body)", fontSize: "10px",
             letterSpacing: "2px", textTransform: "uppercase",
             transition: "color 0.2s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.9)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.5)")}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.9)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.5)")}
         >
           <X size={14} strokeWidth={1.5} /> Close
         </button>
@@ -316,7 +316,7 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             onClick={(e) => { e.stopPropagation(); onNav(-1); }}
             style={arrowStyle("left")}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--off-white)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.4)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.4)")}
           >
             <ChevronLeft size={28} strokeWidth={1.5} />
           </button>
@@ -326,7 +326,7 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             onClick={(e) => { e.stopPropagation(); onNav(1); }}
             style={arrowStyle("right")}
             onMouseEnter={(e) => (e.currentTarget.style.color = "var(--off-white)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(240,235,224,0.4)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.4)")}
           >
             <ChevronRight size={28} strokeWidth={1.5} />
           </button>
@@ -336,7 +336,7 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
       {/* Bottom panel */}
       <div
         style={{
-          borderTop:   "0.5px solid rgba(240,235,224,0.08)",
+          borderTop:   "0.5px solid rgba(255,252,242,0.08)",
           padding:     "16px 24px",
           display:     "flex",
           gap:          16,
@@ -355,7 +355,7 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
               fontSize:       "9px",
               letterSpacing:  "2px",
               textTransform:  "uppercase",
-              color:          "rgba(240,235,224,0.25)",
+              color:          "rgba(255,252,242,0.25)",
               marginBottom:   7,
             }}
           >
@@ -368,10 +368,10 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             rows={2}
             style={{
               width:       "100%",
-              background:  "rgba(240,235,224,0.05)",
-              border:      "0.5px solid rgba(240,235,224,0.15)",
+              background:  "rgba(255,252,242,0.05)",
+              border:      "0.5px solid rgba(255,252,242,0.15)",
               padding:     "10px 14px",
-              color:       "rgba(240,235,224,0.85)",
+              color:       "rgba(255,252,242,0.85)",
               fontFamily:  "var(--font-body)",
               fontSize:     "13px",
               resize:      "none",
@@ -379,8 +379,8 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
               transition:  "border-color 0.2s",
               boxSizing:   "border-box",
             }}
-            onFocus={(e)  => (e.target.style.borderColor = "rgba(240,235,224,0.4)")}
-            onBlur={(e)   => (e.target.style.borderColor = "rgba(240,235,224,0.15)")}
+            onFocus={(e)  => (e.target.style.borderColor = "rgba(255,252,242,0.4)")}
+            onBlur={(e)   => (e.target.style.borderColor = "rgba(255,252,242,0.15)")}
           />
         </div>
 
@@ -390,8 +390,8 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
           style={{
             padding:       "12px 24px",
             background:    isSelected ? "var(--off-white)" : "transparent",
-            color:         isSelected ? "var(--ink)" : "rgba(240,235,224,0.7)",
-            border:        `0.5px solid ${isSelected ? "var(--off-white)" : "rgba(240,235,224,0.3)"}`,
+            color:         isSelected ? "var(--ink)" : "rgba(255,252,242,0.7)",
+            border:        `0.5px solid ${isSelected ? "var(--off-white)" : "rgba(255,252,242,0.3)"}`,
             fontFamily:    "var(--font-body)",
             fontSize:       "10px",
             letterSpacing:  "2.5px",
@@ -405,8 +405,8 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             minWidth:       140,
             justifyContent: "center",
           }}
-          onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(240,235,224,0.7)"; e.currentTarget.style.color = "var(--off-white)"; }}}
-          onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(240,235,224,0.3)"; e.currentTarget.style.color = "rgba(240,235,224,0.7)"; }}}
+          onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(255,252,242,0.7)"; e.currentTarget.style.color = "var(--off-white)"; }}}
+          onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(255,252,242,0.3)"; e.currentTarget.style.color = "rgba(255,252,242,0.7)"; }}}
         >
           {isSelected ? <><Check size={12} strokeWidth={2.5} /> Selected</> : "Select Photo"}
         </button>
@@ -422,7 +422,7 @@ const arrowStyle = (side) => ({
   transform:  "translateY(-50%)",
   background: "none",
   border:     "none",
-  color:      "rgba(240,235,224,0.4)",
+  color:      "rgba(255,252,242,0.4)",
   cursor:     "pointer",
   padding:    "16px",
   transition: "color 0.2s",
@@ -530,7 +530,7 @@ function SuccessToast({ onDone }) {
         maxWidth:        440,
         zIndex:          300,
         background:     "var(--ink)",
-        border:         "0.5px solid rgba(240,235,224,0.12)",
+        border:         "0.5px solid rgba(255,252,242,0.12)",
         padding:        "18px 24px",
         display:        "flex",
         alignItems:     "center",
@@ -561,7 +561,7 @@ function SuccessToast({ onDone }) {
         <p style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--off-white)", margin: 0 }}>
           Selections sent
         </p>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "1px", color: "rgba(240,235,224,0.35)", margin: "3px 0 0" }}>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "1px", color: "rgba(255,252,242,0.35)", margin: "3px 0 0" }}>
           Your photographer will receive your picks
         </p>
       </div>
@@ -652,7 +652,7 @@ export default function ClientPicks() {
         <motion.div
           animate={{ opacity: [0.3, 0.7, 0.3] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(240,235,224,0.3)" }}
+          style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "3px", textTransform: "uppercase", color: "rgba(255,252,242,0.3)" }}
         >
           Loading gallery…
         </motion.div>
@@ -709,7 +709,7 @@ export default function ClientPicks() {
                 fontSize:       "10px",
                 letterSpacing:  "3px",
                 textTransform:  "uppercase",
-                color:          "rgba(240,235,224,0.3)",
+                color:          "rgba(255,252,242,0.3)",
                 marginBottom:   "clamp(12px, 2vh, 20px)",
               }}
             >
@@ -746,7 +746,7 @@ export default function ClientPicks() {
               fontWeight:    300,
               fontSize:      "clamp(20px, 2.8vw, 36px)",
               letterSpacing: "-0.01em",
-              color:         "rgba(240,235,224,0.35)",
+              color:         "rgba(255,252,242,0.35)",
               margin:        "8px 0 0",
             }}
           >
@@ -894,5 +894,5 @@ const tagStyle = {
   fontSize:       "10px",
   letterSpacing:  "2px",
   textTransform:  "uppercase",
-  color:          "rgba(240,235,224,0.2)",
+  color:          "rgba(255,252,242,0.2)",
 };

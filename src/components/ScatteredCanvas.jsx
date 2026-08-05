@@ -117,7 +117,7 @@ function ProjectOverlay({ item, onClose, onViewGallery }) {
               fontFamily: "var(--font-body)",
               fontSize: "9px", letterSpacing: "3.5px",
               textTransform: "uppercase",
-              color: "rgba(240,235,224,0.4)",
+              color: "rgba(255,252,242,0.4)",
               marginBottom: 12,
             }}
           >
@@ -129,7 +129,7 @@ function ProjectOverlay({ item, onClose, onViewGallery }) {
               fontFamily: "var(--font-display)",
               fontStyle: "italic", fontWeight: 300,
               fontSize: "clamp(28px, 5.5vw, 80px)",
-              color: "#F0EBE0",
+              color: "#FFFCF2",
               letterSpacing: "-0.025em",
               lineHeight: 1.04,
               marginBottom: 32,
@@ -142,8 +142,8 @@ function ProjectOverlay({ item, onClose, onViewGallery }) {
             onClick={onViewGallery}
             style={{
               background: "none",
-              border: "0.5px solid rgba(240,235,224,0.28)",
-              color: "rgba(240,235,224,0.8)",
+              border: "0.5px solid rgba(255,252,242,0.28)",
+              color: "rgba(255,252,242,0.8)",
               fontFamily: "var(--font-body)",
               fontSize: "9px", letterSpacing: "2.5px",
               textTransform: "uppercase",
@@ -152,14 +152,14 @@ function ProjectOverlay({ item, onClose, onViewGallery }) {
               transition: "border-color 0.2s, background 0.2s, color 0.2s",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "rgba(240,235,224,0.65)";
-              e.currentTarget.style.background  = "rgba(240,235,224,0.07)";
-              e.currentTarget.style.color       = "#F0EBE0";
+              e.currentTarget.style.borderColor = "rgba(255,252,242,0.65)";
+              e.currentTarget.style.background  = "rgba(255,252,242,0.07)";
+              e.currentTarget.style.color       = "#FFFCF2";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = "rgba(240,235,224,0.28)";
+              e.currentTarget.style.borderColor = "rgba(255,252,242,0.28)";
               e.currentTarget.style.background  = "none";
-              e.currentTarget.style.color       = "rgba(240,235,224,0.8)";
+              e.currentTarget.style.color       = "rgba(255,252,242,0.8)";
             }}
           >
             View {item.category} Gallery →
@@ -176,16 +176,16 @@ function ProjectOverlay({ item, onClose, onViewGallery }) {
           aria-label="Close"
           style={{
             position: "absolute", top: 20, right: 20,
-            background: "rgba(240,235,224,0.06)",
-            border: "0.5px solid rgba(240,235,224,0.12)",
-            color: "rgba(240,235,224,0.65)",
+            background: "rgba(255,252,242,0.06)",
+            border: "0.5px solid rgba(255,252,242,0.12)",
+            color: "rgba(255,252,242,0.65)",
             width: 40, height: 40,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", zIndex: 302,
             transition: "background 0.2s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(240,235,224,0.14)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(240,235,224,0.06)")}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,252,242,0.14)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,252,242,0.06)")}
         >
           <X size={14} strokeWidth={1.5} />
         </motion.button>
@@ -245,7 +245,7 @@ function CanvasCard({ item, pos, index, isDragging, onSelect }) {
         transition={{ duration: 0.22 }}
         style={{
           position: "absolute", inset: 0,
-          background: "rgba(240,235,224,0.07)",
+          background: "rgba(255,252,242,0.07)",
           pointerEvents: "none",
         }}
       />
@@ -267,7 +267,7 @@ function CanvasCard({ item, pos, index, isDragging, onSelect }) {
             fontFamily: "var(--font-body)",
             fontSize: "9px", letterSpacing: "2.5px",
             textTransform: "uppercase",
-            color: "rgba(240,235,224,0.55)",
+            color: "rgba(255,252,242,0.55)",
           }}
         >
           {item.category}
@@ -278,7 +278,7 @@ function CanvasCard({ item, pos, index, isDragging, onSelect }) {
               fontFamily: "var(--font-display)",
               fontStyle: "italic", fontWeight: 300,
               fontSize: "clamp(11px, 1.1vw, 13px)",
-              color: "rgba(240,235,224,0.8)",
+              color: "rgba(255,252,242,0.8)",
               letterSpacing: "-0.01em",
               marginTop: 3, lineHeight: 1.2,
             }}
@@ -295,7 +295,7 @@ function CanvasCard({ item, pos, index, isDragging, onSelect }) {
             fontFamily: "var(--font-body)",
             fontSize: "8px", letterSpacing: "2px",
             textTransform: "uppercase",
-            color: "rgba(240,235,224,0.7)",
+            color: "rgba(255,252,242,0.7)",
             background: "rgba(8,7,6,0.6)",
             padding: "3px 8px",
           }}
@@ -356,7 +356,7 @@ export default function ScatteredCanvas({ items, onViewGallery }) {
           height: "calc(100svh - 106px)",
           minHeight: 480,
           overflow: "hidden",
-          background: "#0E0C0B",
+          background: "#252422",
           cursor: isDragging ? "grabbing" : "grab",
         }}
       >
@@ -389,7 +389,7 @@ export default function ScatteredCanvas({ items, onViewGallery }) {
             fontFamily: "var(--font-body)",
             fontSize: "9px", letterSpacing: "2.5px",
             textTransform: "uppercase",
-            color: "rgba(240,235,224,0.18)",
+            color: "rgba(255,252,242,0.18)",
             pointerEvents: "none", whiteSpace: "nowrap", zIndex: 5,
           }}
         >

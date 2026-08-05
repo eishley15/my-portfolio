@@ -105,7 +105,7 @@ function StripCard({ item, onClick, isDragging, cardWidth }) {
             fontSize:       "9px",
             letterSpacing:  "2.5px",
             textTransform:  "uppercase",
-            color:          "rgba(240,235,224,0.55)",
+            color:          "rgba(255,252,242,0.55)",
             marginBottom:   6,
           }}
         >
@@ -145,7 +145,7 @@ function StripCard({ item, onClick, isDragging, cardWidth }) {
               fontSize:       "9px",
               letterSpacing:  "2px",
               textTransform:  "uppercase",
-              color:          "rgba(240,235,224,0.42)",
+              color:          "rgba(255,252,242,0.42)",
             }}
           >
             View Gallery →

@@ -45,11 +45,12 @@ Kyle works across both photo and video, rooted in the Central Luzon market, with
 ## Brand Commitments
 
 - **Name:** Kyle Payawal / Kyle Payawal Studio
-- **Palette:** Deep black (#0e0c0b), off-white (#f0ebe0), cream (#e8e0d0), dark red accent (#8b1f30)
-- **Fonts:** Bebas Neue (display headlines), Instrument Serif (editorial accents), DM Sans 300/400 (body)
-- **Texture:** Subtle film grain overlay (SVG fractalNoise, mix-blend-mode: overlay) — a committed aesthetic signal, not decoration
-- **Tone:** Editorial, minimal, confident — no clutter, no cheerful stock language
-- **Motion:** Framer Motion throughout; magnetic buttons, 3D tilt cards, parallax, stagger reveals
+- **Palette:** Aged Cream (`#EDE8DC`) as page background, Near-Black Ink (`#0E0C0B`) as foreground, stepped cream ramp (Linen Dim `#E3D9C8`, Pale Surface `#F4EFE5`, Antique White `#F0EBE0`) — no accent color. The no-accent rule is absolute; ink on cream is the entire palette on light surfaces.
+- **Fonts:** Fraunces variable serif (display, weight 900 + italic 300 counterpoint) + Outfit 300/400 (body/UI) — replaces the previous Bebas Neue / Instrument Serif / DM Sans stack.
+- **Shape:** Zero border radius throughout — buttons, cards, inputs, images. Sharp corners are an identity signal.
+- **Texture:** Subtle film grain overlay (SVG fractalNoise, `mix-blend-mode: multiply`, ~3% opacity as `body::before`) — a committed aesthetic signal, not decoration.
+- **Tone:** Editorial, minimal, confident — no clutter, no cheerful stock language.
+- **Motion:** Framer Motion throughout; specular sheen on buttons, magnetic hover on cards, stagger reveals, parallax.
 
 ## Evidence on Hand
 

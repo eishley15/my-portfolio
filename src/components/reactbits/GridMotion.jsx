@@ -1,123 +1,152 @@
 import { useEffect, useRef } from "react";
-
-const ROWS = 4;
-const BASE_SPEED = 0.45; // px per frame
+import { gsap } from "gsap";
 
 /**
- * GridMotion — 4 rows of images scrolling in alternating directions.
- * Mouse X position subtly modulates speed, creating a living feel.
+ * GridMotion — GSAP-powered tilted 4×7 image grid.
+ * Mouse X position shifts rows left/right with inertia.
  *
  * Usage:
- *   <GridMotion items={[{ url, title }, ...]} rowHeight={200} gap={8} />
+ *   <GridMotion items={["https://...", ...]} gradientColor="black" />
+ *
+ * Items: URL strings, plain text, or JSX elements.
+ * Renders 28 slots (4 rows × 7 cols). Items cycle if fewer than 28.
  */
-export default function GridMotion({
-  items = [],
-  rowHeight = 210,
-  gap = 8,
-  className = "",
-  style = {},
-}) {
+export default function GridMotion({ items = [], gradientColor = "black" }) {
+  const gridRef = useRef(null);
   const rowRefs = useRef([]);
-  const posRef = useRef([]);
-  const mouseXRef = useRef(0.5);
-  const rafRef = useRef(null);
+  const mouseXRef = useRef(
+    typeof window !== "undefined" ? window.innerWidth / 2 : 0
+  );
 
-  // Must guard before the padding loop — empty items causes an infinite loop
-  const hasItems = items.length > 0;
-
-  const padded = hasItems ? [...items] : [];
-  if (hasItems) {
-    while (padded.length < ROWS * 8) padded.push(...items);
-  }
-
-  const rows = Array.from({ length: ROWS }, (_, i) => {
-    const perRow = Math.ceil(padded.length / ROWS);
-    const slice = padded.slice(i * perRow, (i + 1) * perRow);
-    // Double for seamless loop
-    return [...slice, ...slice];
-  });
+  const ROWS = 4;
+  const COLS = 7;
+  // Column-major distribution: slot (row, col) → items[(row + col*ROWS) % n]
+  // Spreads images diagonally so no column gets a monotone block.
 
   useEffect(() => {
-    // Start positions: even rows at 0, odd rows at -half (so they start offset)
-    posRef.current = rows.map((_, i) => (i % 2 === 0 ? 0 : -((rowRefs.current[i]?.scrollWidth ?? 0) / 2)));
+    gsap.ticker.lagSmoothing(0);
 
-    const onMouseMove = (e) => {
-      mouseXRef.current = e.clientX / window.innerWidth;
+    const handleMouseMove = (e) => {
+      mouseXRef.current = e.clientX;
     };
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
 
-    const tick = () => {
-      const speedMod = 0.6 + mouseXRef.current * 0.8;
-      rows.forEach((_, i) => {
-        const row = rowRefs.current[i];
+    const updateMotion = () => {
+      const maxMoveAmount = 300;
+      const baseDuration = 0.8;
+      const inertiaFactors = [0.6, 0.4, 0.3, 0.2];
+
+      rowRefs.current.forEach((row, index) => {
         if (!row) return;
-        const halfWidth = row.scrollWidth / 2;
-        const dir = i % 2 === 0 ? -1 : 1;
-        posRef.current[i] += BASE_SPEED * dir * speedMod;
-        // Reset for seamless loop
-        if (posRef.current[i] <= -halfWidth) posRef.current[i] += halfWidth;
-        if (posRef.current[i] >= 0) posRef.current[i] -= halfWidth;
-        row.style.transform = `translateX(${posRef.current[i]}px)`;
+        const direction = index % 2 === 0 ? 1 : -1;
+        const moveAmount =
+          ((mouseXRef.current / window.innerWidth) * maxMoveAmount -
+            maxMoveAmount / 2) *
+          direction;
+
+        gsap.to(row, {
+          x: moveAmount,
+          duration: baseDuration + inertiaFactors[index % inertiaFactors.length],
+          ease: "power3.out",
+          overwrite: "auto",
+        });
       });
-      rafRef.current = requestAnimationFrame(tick);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    const removeAnimationLoop = gsap.ticker.add(updateMotion);
+    window.addEventListener("mousemove", handleMouseMove);
+
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", handleMouseMove);
+      removeAnimationLoop();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length]);
-
-  if (!hasItems) return null;
+  }, []);
 
   return (
     <div
-      className={className}
-      style={{
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        gap,
-        userSelect: "none",
-        ...style,
-      }}
+      ref={gridRef}
+      style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}
     >
-      {rows.map((row, rowI) => (
-        <div key={rowI} style={{ overflow: "hidden", height: rowHeight, flexShrink: 0 }}>
-          <div
-            ref={(el) => { rowRefs.current[rowI] = el; }}
-            style={{ display: "flex", gap, height: "100%", width: "max-content" }}
-          >
-            {row.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  width: Math.round(rowHeight * 1.45),
-                  height: rowHeight,
-                  flexShrink: 0,
-                  overflow: "hidden",
-                  borderRadius: 2,
-                  background: "var(--bg-dim)",
-                }}
-              >
-                {item?.url ? (
-                  <img
-                    src={item.url}
-                    alt={item.title || ""}
-                    draggable={false}
-                    loading="lazy"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <div style={{ width: "100%", height: "100%", background: "var(--bg-dim)" }} />
-                )}
-              </div>
-            ))}
-          </div>
+      <section
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          position: "absolute",
+          inset: 0,
+          background: `radial-gradient(circle, ${gradientColor} 0%, transparent 100%)`,
+        }}
+      >
+        {/* Tilted 4×7 grid
+            Tiles use padding-top aspect-ratio trick so they never need
+            height from a parent — completely avoids the height-chain bug. */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.75rem",
+            position: "absolute",
+            width: "150vw",
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%) rotate(-15deg)",
+            transformOrigin: "center",
+            zIndex: 2,
+          }}
+        >
+          {[...Array(ROWS)].map((_, rowIndex) => (
+            <div
+              key={rowIndex}
+              ref={(el) => { rowRefs.current[rowIndex] = el; }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${COLS}, 1fr)`,
+                gap: "0.75rem",
+                willChange: "transform",
+              }}
+            >
+              {[...Array(COLS)].map((_, colIndex) => {
+                // Column-major distribution
+                const idx = items.length > 0
+                  ? (rowIndex + colIndex * ROWS) % items.length
+                  : -1;
+                const url = idx >= 0 ? items[idx] : null;
+                const valid = typeof url === "string" && url.length > 0;
+                return (
+                  <div
+                    key={colIndex}
+                    style={{
+                      // padding-top % creates intrinsic height from width
+                      // 3:2 ratio = 66.66%
+                      position: "relative",
+                      paddingTop: "66.66%",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      background: valid ? "#111" : "transparent",
+                    }}
+                  >
+                    {valid && (
+                      <img
+                        src={url}
+                        alt=""
+                        draggable={false}
+                        loading="lazy"
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
         </div>
-      ))}
+      </section>
     </div>
   );
 }

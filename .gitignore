@@ -39,6 +39,15 @@ memory/.temp/
 .claude/
 memory/
 
+# Claude Code - Harness internals
+.agents/
+.codex/
+skills-lock.json
+
+# Claude Code - Planning / session docs (not app code)
+*-PLAN.yaml
+*-STATUS.yaml
+
 # Claude Code - Documentation files (reference material)
 AUTO-SETUP.md
 AUTONOMOUS-EXECUTION-SUMMARY.md
@@ -60,3 +69,10 @@ WCAG-MODERN-STYLING-SUMMARY.md
 CLAUDE.md
 SOUL.md
 YAML-MEMORY-MIGRATION-COMPLETE.md
+.vercel
+.env*
+
+e2e/
+playwright-report/
+
+*.mjs

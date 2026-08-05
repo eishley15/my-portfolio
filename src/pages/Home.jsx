@@ -2,16 +2,17 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion, AnimatePresence } from "framer-motion";
-import { useFeaturedPortfolio } from "../hooks/usePortfolio";
+import { useFeaturedPortfolio, usePortfolio } from "../hooks/usePortfolio";
+import { isVideo } from "../lib/isVideo";
 import LoadingScreen from "../components/LoadingScreen";
 import DraggableStrip from "../components/DraggableStrip";
 import TrueFocus from "../components/reactbits/TrueFocus";
 import RotatingText from "../components/reactbits/RotatingText";
 import CountUp from "../components/reactbits/CountUp";
 import SpecularButton from "../components/reactbits/SpecularButton";
-import { ButtonLink } from "../components/ui/button";
 import LineSidebar from "../components/reactbits/LineSidebar";
 import ScrollReveal from "../components/reactbits/ScrollReveal";
+import GridMotion from "../components/reactbits/GridMotion";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -147,7 +148,7 @@ function CategoryCard({ item }) {
               fontFamily: "var(--font-display)",
               fontWeight: 700,
               fontSize: "clamp(18px, 2.2vw, 28px)",
-              color: "#F0EBE0",
+              color: "#FFFCF2",
               letterSpacing: "-0.02em",
               lineHeight: 1,
               marginBottom: 6,
@@ -165,7 +166,7 @@ function CategoryCard({ item }) {
               fontSize: "10px",
               letterSpacing: "2.5px",
               textTransform: "uppercase",
-              color: "rgba(240,235,224,0.6)",
+              color: "rgba(255,252,242,0.6)",
             }}
           >
             View Work →
@@ -200,8 +201,8 @@ function FaqItem({ q, a, isOpen, onToggle }) {
           style={{
             fontFamily: "var(--font-body)",
             fontSize: "clamp(14px, 1.6vw, 17px)",
-            fontWeight: 400,
-            color: "var(--ink)",
+            fontWeight: 500,
+            color: "var(--off-white)",
             letterSpacing: "0.2px",
           }}
         >
@@ -214,8 +215,8 @@ function FaqItem({ q, a, isOpen, onToggle }) {
             display: "inline-flex",
             fontFamily: "var(--font-body)",
             fontSize: "18px",
-            fontWeight: 300,
-            color: "var(--ink-muted)",
+            fontWeight: 500,
+            color: "rgba(255,252,242,0.6)",
             flexShrink: 0,
           }}
         >
@@ -237,9 +238,9 @@ function FaqItem({ q, a, isOpen, onToggle }) {
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "clamp(13px, 1.4vw, 15px)",
-                fontWeight: 300,
+                fontWeight: 500,
                 lineHeight: 1.75,
-                color: "var(--ink-muted)",
+                color: "rgba(255,252,242,0.7)",
                 paddingBottom: 24,
                 maxWidth: 620,
               }}
@@ -257,6 +258,11 @@ function FaqItem({ q, a, isOpen, onToggle }) {
 
 export default function Home() {
   const { items, isLoading } = useFeaturedPortfolio(12);
+  // Portfolio photos for CTA GridMotion background (all, no category filter)
+  const { items: allItems } = usePortfolio(null);
+  const gridMotionUrls = allItems
+    .filter((it) => it.url && !isVideo(it))
+    .map((it) => it.url);
   const [openFaq, setOpenFaq] = useState(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
 
@@ -291,51 +297,66 @@ export default function Home() {
         id="hero"
         style={{
           height: "100svh",
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          gridTemplateRows: isMobile ? "40svh 1fr" : "1fr",
           overflow: "hidden",
+          ...(isMobile
+            ? { position: "relative" }
+            : { display: "grid", gridTemplateColumns: "1fr 1fr", gridTemplateRows: "1fr" }),
         }}
       >
-        {/* Mobile: photo on top */}
-        {isMobile && (
-          <div style={{ position: "relative", overflow: "hidden", background: "var(--bg-dim)" }}>
-            {heroPhoto && (
-              <motion.img
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.9 }}
-                src={heroPhoto}
-                alt="Portfolio"
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-              />
-            )}
-          </div>
+        {/* Mobile: full-bleed background photo */}
+        {isMobile && heroPhoto && (
+          <motion.img
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            src={heroPhoto}
+            alt="Portfolio"
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              objectPosition: "center 15%",
+              display: "block",
+            }}
+          />
         )}
 
         {/* Text column */}
         <div
           style={{
-            background: "var(--bg)",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
-            padding: isMobile
-              ? "clamp(32px, 6vw, 48px) clamp(24px, 5vw, 40px)"
-              : "clamp(40px, 6vw, 80px)",
-            position: "relative",
-            overflow: "hidden",
+            justifyContent: "flex-end",
+            position: isMobile ? "absolute" : "relative",
+            ...(isMobile
+              ? {
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  background: "linear-gradient(to bottom, transparent, var(--bg) 30%)",
+                  padding: "0 clamp(20px, 5vw, 36px) clamp(28px, 5vw, 40px)",
+                }
+              : {
+                  background: "var(--bg)",
+                  justifyContent: "center",
+                  padding: "clamp(40px, 6vw, 80px)",
+                  overflow: "hidden",
+                }),
           }}
         >
-          <motion.p
-            className="eyebrow"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.25 }}
-            style={{ marginBottom: "clamp(20px, 3vw, 32px)" }}
-          >
-            Photographer · Videographer
-          </motion.p>
+          {!isMobile && (
+            <motion.p
+              className="eyebrow"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25 }}
+              style={{ marginBottom: "clamp(20px, 3vw, 32px)" }}
+            >
+              Photographer · Videographer
+            </motion.p>
+          )}
 
           <TrueFocus
             duration={1.0}
@@ -346,14 +367,13 @@ export default function Home() {
             <span
               style={{
                 fontFamily: "var(--font-display)",
-                fontWeight: 900,
+                fontWeight: 500,
                 fontSize: isMobile
-                  ? "clamp(40px, 11vw, 56px)"
-                  : "clamp(44px, 5.2vw, 84px)",
+                  ? "clamp(28px, 7.5vw, 40px)"
+                  : "clamp(42px, 4.9vw, 76px)",
                 textTransform: "uppercase",
                 letterSpacing: "-0.03em",
-                lineHeight: 0.92,
-                fontVariationSettings: "'opsz' 144",
+                lineHeight: isMobile ? 1.0 : 0.92,
                 display: "block",
                 color: "var(--ink)",
               }}
@@ -362,16 +382,17 @@ export default function Home() {
             </span>
             <span
               style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 300,
+                fontFamily: "'Fraunces', serif",
+                fontWeight: 700,
                 fontStyle: "italic",
                 fontSize: isMobile
-                  ? "clamp(34px, 9.5vw, 48px)"
+                  ? "clamp(22px, 6vw, 32px)"
                   : "clamp(38px, 4.5vw, 72px)",
                 letterSpacing: "-0.02em",
-                lineHeight: 1.05,
+                lineHeight: 1.15,
                 fontVariationSettings: "'opsz' 120",
                 display: "block",
+                paddingBottom: isMobile ? "2px" : 0,
                 color: "var(--ink)",
               }}
             >
@@ -380,14 +401,13 @@ export default function Home() {
             <span
               style={{
                 fontFamily: "var(--font-display)",
-                fontWeight: 900,
+                fontWeight: 500,
                 fontSize: isMobile
-                  ? "clamp(40px, 11vw, 56px)"
-                  : "clamp(44px, 5.2vw, 84px)",
+                  ? "clamp(28px, 7.5vw, 40px)"
+                  : "clamp(42px, 4.9vw, 76px)",
                 textTransform: "uppercase",
                 letterSpacing: "-0.03em",
-                lineHeight: 0.92,
-                fontVariationSettings: "'opsz' 144",
+                lineHeight: isMobile ? 1.0 : 0.92,
                 display: "block",
                 color: "var(--ink)",
               }}
@@ -404,7 +424,7 @@ export default function Home() {
             style={{
               height: "0.5px",
               background: "var(--border)",
-              margin: "clamp(20px, 3.5vw, 36px) 0",
+              margin: isMobile ? "clamp(16px, 4vw, 24px) 0" : "clamp(20px, 3.5vw, 36px) 0",
               transformOrigin: "left",
             }}
           />
@@ -417,7 +437,7 @@ export default function Home() {
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "clamp(14px, 1.5vw, 16px)",
-              fontWeight: 300,
+              fontWeight: 500,
               color: "var(--ink-muted)",
               lineHeight: 1.5,
             }}
@@ -426,7 +446,7 @@ export default function Home() {
             <RotatingText
               words={SERVICES}
               style={{
-                fontWeight: 400,
+                fontWeight: 500,
                 color: "var(--ink)",
                 minWidth: "6.5em",
               }}
@@ -448,9 +468,29 @@ export default function Home() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.85 }}
-            style={{ marginTop: "clamp(28px, 4.5vw, 52px)" }}
+            style={{ marginTop: isMobile ? "clamp(20px, 4vw, 32px)" : "clamp(28px, 4.5vw, 52px)" }}
           >
-            <SpecularButton to="/work">View Work</SpecularButton>
+            <SpecularButton
+              to="/work"
+              size="md"
+              radius={0}
+              tint="#252422"
+              tintOpacity={0.06}
+              blur={0}
+              textColor="#252422"
+              lineColor="#EB5E28"
+              baseColor="#403D39"
+              intensity={1.1}
+              shineSize={12}
+              shineFade={38}
+              thickness={1.2}
+              speed={0.3}
+              followMouse
+              proximity={280}
+              autoAnimate={false}
+            >
+              View Work
+            </SpecularButton>
           </motion.div>
 
           {/* Desktop scroll indicator */}
@@ -522,7 +562,7 @@ export default function Home() {
                 <h2
                   style={{
                     fontFamily:           "var(--font-display)",
-                    fontWeight:            900,
+                    fontWeight:            500,
                     fontSize:              "clamp(36px, 5vw, 72px)",
                     letterSpacing:        "-0.03em",
                     lineHeight:            0.95,
@@ -531,7 +571,7 @@ export default function Home() {
                   }}
                 >
                   What I{" "}
-                  <span className="font-serif">Shoot.</span>
+                  <span className="font-serif">shoot.</span>
                 </h2>
               </div>
               <Link
@@ -597,8 +637,8 @@ export default function Home() {
               <p
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontWeight: 900,
-                  fontSize: "clamp(56px, 7vw, 96px)",
+                  fontWeight: 500,
+                  fontSize: "clamp(40px, 5vw, 72px)",
                   letterSpacing: "-0.04em",
                   lineHeight: 0.9,
                   fontVariationSettings: "'opsz' 144",
@@ -628,7 +668,7 @@ export default function Home() {
           <h2
             style={{
               fontFamily: "var(--font-display)",
-              fontWeight: 900,
+              fontWeight: 500,
               fontSize: "clamp(32px, 4.5vw, 64px)",
               letterSpacing: "-0.03em",
               lineHeight: 0.95,
@@ -666,7 +706,7 @@ export default function Home() {
                 style={{
                   fontFamily: "var(--font-display)",
                   fontStyle: "italic",
-                  fontWeight: 300,
+                  fontWeight: 500,
                   fontSize: "clamp(16px, 1.8vw, 21px)",
                   lineHeight: 1.5,
                   color: "var(--ink)",
@@ -708,21 +748,22 @@ export default function Home() {
         style={{
           padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
           background: "var(--bg-dim)",
+          "--border": "rgba(255,252,242,0.2)",
         }}
       >
         <div style={{ maxWidth: 720, margin: "0 auto" }}>
           <ScrollReveal>
-            <p className="eyebrow" style={{ marginBottom: 12 }}>Got Questions</p>
+            <p className="eyebrow" style={{ marginBottom: 12, color: "rgba(255,252,242,0.6)" }}>Got Questions</p>
             <h2
               style={{
                 fontFamily: "var(--font-display)",
-                fontWeight: 900,
+                fontWeight: 500,
                 fontSize: "clamp(32px, 4.5vw, 64px)",
                 letterSpacing: "-0.03em",
                 lineHeight: 0.95,
                 marginBottom: "clamp(36px, 5.5vw, 64px)",
                 fontVariationSettings: "'opsz' 144",
-                color: "var(--ink)",
+                color: "var(--off-white)",
               }}
             >
               Let's clear{" "}
@@ -745,15 +786,46 @@ export default function Home() {
       <section
         id="cta"
         style={{
+          position: "relative",
+          overflow: "hidden",
           padding: "clamp(80px, 10vw, 140px) clamp(24px, 6vw, 80px)",
           background: "var(--black)",
           textAlign: "center",
         }}
       >
+        {/* GridMotion background */}
+        {gridMotionUrls.length > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 0,
+              pointerEvents: "none",
+              opacity: 0.2,
+            }}
+          >
+            <GridMotion items={gridMotionUrls} gradientColor="rgba(14,12,11,0.55)" />
+          </div>
+        )}
+
+        {/* Dark vignette overlay so text stays readable */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 1,
+            background:
+              "radial-gradient(ellipse at center, rgba(14,12,11,0.35) 0%, rgba(14,12,11,0.82) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* CTA content sits above the background */}
+        <div style={{ position: "relative", zIndex: 2 }}>
         <ScrollReveal>
           <p
             className="eyebrow"
-            style={{ color: "rgba(240,235,224,0.35)", marginBottom: 20 }}
+            style={{ color: "rgba(255,252,242,0.35)", marginBottom: 20 }}
           >
             Ready When You Are
           </p>
@@ -761,13 +833,12 @@ export default function Home() {
           <h2
             style={{
               fontFamily: "var(--font-display)",
-              fontWeight: 900,
-              fontSize: "clamp(48px, 8.5vw, 120px)",
-              letterSpacing: "-0.04em",
-              lineHeight: 0.88,
+              fontWeight: 500,
+              fontSize: "clamp(42px, 4.9vw, 76px)",
+              letterSpacing: "-0.03em",
+              lineHeight: 0.92,
               color: "var(--off-white)",
               textTransform: "uppercase",
-              fontVariationSettings: "'opsz' 144",
               marginBottom: 4,
             }}
           >
@@ -776,35 +847,89 @@ export default function Home() {
 
           <h2
             style={{
-              fontFamily: "var(--font-display)",
+              fontFamily: "'Fraunces', serif",
               fontStyle: "italic",
-              fontWeight: 300,
-              fontSize: "clamp(42px, 7.5vw, 108px)",
-              letterSpacing: "-0.03em",
-              lineHeight: 1.05,
+              fontWeight: 700,
+              fontSize: "clamp(38px, 4.5vw, 72px)",
+              letterSpacing: "-0.02em",
+              lineHeight: 1.15,
               color: "var(--off-white)",
               fontVariationSettings: "'opsz' 120",
-              marginBottom: "clamp(40px, 5.5vw, 72px)",
+              marginBottom: "clamp(28px, 3.5vw, 48px)",
             }}
           >
             unforgettable.
           </h2>
 
+          {/* thin divider rule */}
+          <div
+            style={{
+              width: 40,
+              height: 1,
+              background: "rgba(255,252,242,0.18)",
+              margin: "0 auto clamp(24px, 3vw, 40px)",
+            }}
+          />
+
           <div
             style={{
               display: "flex",
-              gap: 16,
-              justifyContent: "center",
-              flexWrap: "wrap",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 20,
             }}
           >
-            <SpecularButton to="/inquire">Book a Session</SpecularButton>
+            <SpecularButton
+              to="/inquire"
+              size="lg"
+              radius={0}
+              tint="#FFFCF2"
+              tintOpacity={0.92}
+              blur={0}
+              textColor="#252422"
+              lineColor="#EB5E28"
+              baseColor="#403D39"
+              intensity={1.2}
+              shineSize={12}
+              shineFade={38}
+              thickness={1.2}
+              speed={0.3}
+              followMouse
+              proximity={280}
+              autoAnimate={false}
+            >
+              Book a Session
+            </SpecularButton>
 
-            <ButtonLink to="/work" variant="outline-inverse">
-              View Work
-            </ButtonLink>
+            <motion.div whileHover={{ x: 4 }} transition={{ duration: 0.2, ease: "easeOut" }}>
+              <Link
+                to="/work"
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: "11px",
+                  fontWeight: 400,
+                  letterSpacing: "2.5px",
+                  textTransform: "uppercase",
+                  color: "rgba(255,252,242,0.65)",
+                  textDecoration: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  transition: "color 0.22s",
+                  background: "rgba(255,252,242,0.08)",
+                  padding: "10px 24px",
+                  border: "0.5px solid rgba(255,252,242,0.2)",
+                }}
+                onMouseEnter={e => e.currentTarget.style.color = "rgba(255,252,242,1)"}
+                onMouseLeave={e => e.currentTarget.style.color = "rgba(255,252,242,0.65)"}
+              >
+                View Work
+                <span style={{ fontSize: 13, letterSpacing: 0 }}>→</span>
+              </Link>
+            </motion.div>
           </div>
         </ScrollReveal>
+        </div>{/* /content z-index wrapper */}
       </section>
     </>
   );

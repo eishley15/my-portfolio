@@ -28,8 +28,9 @@ const SOCIAL = [
 
 // ─── Service Marquee ──────────────────────────────────────────────────────────
 
-function ServiceMarquee() {
+function ServiceMarquee({ onAccent = false }) {
   const doubled = [...SERVICES, ...SERVICES];
+  const textColor = onAccent ? "rgba(255,252,242,0.85)" : "var(--ink-muted)";
   return (
     <div style={{ overflow: "hidden" }}>
       <motion.div
@@ -50,10 +51,10 @@ function ServiceMarquee() {
               style={{
                 fontFamily:            "var(--font-display)",
                 fontStyle:             isItalic ? "italic" : "normal",
-                fontWeight:            isItalic ? 300 : 700,
+                fontWeight:            300,
                 fontSize:              "clamp(32px, 4vw, 52px)",
                 letterSpacing:         "-0.025em",
-                color:                 isItalic ? "var(--ink-muted)" : "var(--ink)",
+                color:                 textColor,
                 flexShrink:            0,
                 fontVariationSettings: "'opsz' 72",
                 lineHeight:            1,
@@ -115,7 +116,7 @@ export default function About() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      style={{ background: "var(--bg)", color: "var(--ink)", minHeight: "100svh" }}
+      style={{ background: "var(--bg)", color: "var(--ink)", minHeight: "100svh", "--font-display": "'Fraunces', serif" }}
     >
       <Helmet>
         <title>About — Kyle Payawal</title>
@@ -167,8 +168,8 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22, duration: 0.55 }}
             style={{
-              fontFamily:            "var(--font-display)",
-              fontWeight:             900,
+              fontFamily:            "'Outfit', sans-serif",
+              fontWeight:             500,
               fontSize:               "clamp(56px, 7.5vw, 96px)",
               letterSpacing:         "-0.035em",
               lineHeight:             0.88,
@@ -187,7 +188,7 @@ export default function About() {
             transition={{ delay: 0.3, duration: 0.55 }}
             style={{
               fontFamily:           "var(--font-display)",
-              fontWeight:            300,
+              fontWeight:            500,
               fontStyle:             "italic",
               fontSize:              "clamp(44px, 6.5vw, 84px)",
               letterSpacing:        "-0.025em",
@@ -207,7 +208,7 @@ export default function About() {
             transition={{ delay: 0.45, duration: 0.6 }}
             style={{
               fontFamily:  "var(--font-body)",
-              fontWeight:   300,
+              fontWeight:   500,
               fontSize:     "clamp(14px, 1.5vw, 16px)",
               lineHeight:   1.7,
               color:        "var(--ink-muted)",
@@ -258,7 +259,7 @@ export default function About() {
       {/* ── §2 BIO ──────────────────────────────────────────────────────────── */}
       <section
         style={{
-          background: "var(--surface)",
+          background: "var(--bg)",
           padding:    `clamp(64px, 8vw, 120px) ${px}`,
           display:    "grid",
           gridTemplateColumns: "1fr 1fr",
@@ -275,7 +276,7 @@ export default function About() {
           <p
             style={{
               fontFamily:  "var(--font-body)",
-              fontWeight:   300,
+              fontWeight:   500,
               fontSize:     "clamp(15px, 1.6vw, 17px)",
               lineHeight:   1.75,
               color:        "var(--ink)",
@@ -289,7 +290,7 @@ export default function About() {
           <p
             style={{
               fontFamily:  "var(--font-body)",
-              fontWeight:   300,
+              fontWeight:   500,
               fontSize:     "clamp(15px, 1.6vw, 17px)",
               lineHeight:   1.75,
               color:        "var(--ink)",
@@ -312,14 +313,14 @@ export default function About() {
           style={{
             margin:        0,
             paddingLeft:   "clamp(20px, 3vw, 36px)",
-            borderLeft:    "0.5px solid var(--border)",
+            borderLeft:    "0.5px solid rgba(37,36,34,0.2)",
           }}
         >
           <p
             style={{
               fontFamily:           "var(--font-display)",
               fontStyle:             "italic",
-              fontWeight:            300,
+              fontWeight:            500,
               fontSize:              "clamp(21px, 2.4vw, 28px)",
               lineHeight:            1.35,
               letterSpacing:        "-0.015em",
@@ -349,10 +350,8 @@ export default function About() {
       {/* ── §3 SERVICES MARQUEE ─────────────────────────────────────────────── */}
       <section
         style={{
-          background:    "var(--bg)",
+          background:    "var(--accent)",
           padding:       `clamp(48px, 6vw, 80px) 0`,
-          borderTop:     "0.5px solid var(--border)",
-          borderBottom:  "0.5px solid var(--border)",
           overflow:      "hidden",
         }}
       >
@@ -365,20 +364,20 @@ export default function About() {
             fontSize:       "10px",
             letterSpacing:  "3px",
             textTransform:  "uppercase",
-            color:          "var(--ink-muted)",
+            color:          "rgba(255,252,242,0.7)",
             textAlign:      "center",
             marginBottom:   "clamp(24px, 3vh, 40px)",
           }}
         >
           Services
         </motion.p>
-        <ServiceMarquee />
+        <ServiceMarquee onAccent />
       </section>
 
       {/* ── §4 BEHIND THE LENS ──────────────────────────────────────────────── */}
       <section
         style={{
-          background: "var(--bg-dim)",
+          background: "var(--bg)",
           padding:    `clamp(64px, 8vw, 120px) ${px}`,
           display:    "grid",
           gridTemplateColumns: "1fr 2fr",
@@ -395,7 +394,7 @@ export default function About() {
           <h2
             style={{
               fontFamily:            "var(--font-display)",
-              fontWeight:             700,
+              fontWeight:             500,
               fontSize:               "clamp(36px, 4.5vw, 56px)",
               letterSpacing:         "-0.03em",
               lineHeight:             0.92,
@@ -411,7 +410,7 @@ export default function About() {
             style={{
               fontFamily:           "var(--font-display)",
               fontStyle:             "italic",
-              fontWeight:            300,
+              fontWeight:            500,
               fontSize:              "clamp(32px, 4vw, 48px)",
               letterSpacing:        "-0.02em",
               lineHeight:            1.05,
@@ -448,7 +447,7 @@ export default function About() {
                 gap:            "clamp(16px, 3vw, 40px)",
                 alignItems:    "baseline",
                 padding:        "clamp(16px, 2.2vw, 24px) 0",
-                borderBottom:   "0.5px solid var(--border)",
+                borderBottom:   "0.5px solid rgba(37,36,34,0.15)",
               }}
             >
               <span
@@ -485,48 +484,9 @@ export default function About() {
           display:    "grid",
           gridTemplateColumns: "1fr 1fr",
           gap:        "clamp(40px, 6vw, 96px)",
-          alignItems: "end",
+          alignItems: "start",
         }}
       >
-        {/* Headline */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          <h2
-            style={{
-              fontFamily:            "var(--font-display)",
-              fontWeight:             900,
-              fontSize:               "clamp(40px, 5.5vw, 80px)",
-              letterSpacing:         "-0.035em",
-              lineHeight:             0.9,
-              color:                  "var(--ink)",
-              textTransform:          "uppercase",
-              fontVariationSettings:  "'opsz' 144",
-              margin:                 "0 0 8px",
-            }}
-          >
-            Let's make
-          </h2>
-          <h2
-            style={{
-              fontFamily:           "var(--font-display)",
-              fontStyle:             "italic",
-              fontWeight:            300,
-              fontSize:              "clamp(36px, 5vw, 72px)",
-              letterSpacing:        "-0.025em",
-              lineHeight:            1.0,
-              color:                 "var(--ink)",
-              fontVariationSettings: "'opsz' 120",
-              margin:                0,
-            }}
-          >
-            something real.
-          </h2>
-        </motion.div>
-
         {/* Links + CTA */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -537,6 +497,7 @@ export default function About() {
             display:       "flex",
             flexDirection: "column",
             gap:            "clamp(32px, 4vh, 48px)",
+            order:          2,
           }}
         >
           {/* Social links */}
@@ -604,6 +565,45 @@ export default function About() {
           >
             Tarlac · Angeles City, Pampanga · Philippines
           </p>
+        </motion.div>
+
+        {/* Headline */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          style={{ order: 1 }}
+        >
+          <h2
+            style={{
+              fontFamily:   "'Outfit', sans-serif",
+              fontWeight:    500,
+              fontSize:      "clamp(40px, 5.5vw, 80px)",
+              letterSpacing: "-0.035em",
+              lineHeight:    0.9,
+              color:         "var(--ink)",
+              textTransform: "uppercase",
+              margin:        "0 0 8px",
+            }}
+          >
+            Let's make
+          </h2>
+          <h2
+            style={{
+              fontFamily:           "var(--font-display)",
+              fontStyle:             "italic",
+              fontWeight:            500,
+              fontSize:              "clamp(36px, 5vw, 72px)",
+              letterSpacing:        "-0.025em",
+              lineHeight:            1.0,
+              color:                 "var(--ink)",
+              fontVariationSettings: "'opsz' 120",
+              margin:                0,
+            }}
+          >
+            something real.
+          </h2>
         </motion.div>
       </section>
     </motion.div>

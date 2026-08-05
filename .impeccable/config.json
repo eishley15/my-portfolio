@@ -3,7 +3,8 @@
     "ignoreRules": [],
     "ignoreFiles": [
       "design-concepts.html",
-      "design-concepts-2.html"
+      "design-concepts-2.html",
+      "src/pages/StudioAdmin.jsx"
     ],
     "ignoreValues": [
       {
@@ -152,6 +153,48 @@
         "value": "64px",
         "createdAt": "2026-07-30T13:29:55.944Z",
         "reason": "display-lg step in documented font-sizes type ramp — clamp() min for Work page h1"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "20px",
+        "createdAt": "2026-08-05T16:11:46.942Z",
+        "reason": "Clamp minimum for centered display label; 28px max matches card-label in DESIGN.md"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(255,252,242,0.38)",
+        "createdAt": "2026-08-05T16:11:46.974Z",
+        "reason": "Pre-existing off-white opacity ramp for subtitle text on dark overlay"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(255,252,242,0.35)",
+        "createdAt": "2026-08-05T16:11:47.005Z",
+        "reason": "Pre-existing off-white opacity ramp for studio label on dark overlay"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(255,252,242,0.14)",
+        "createdAt": "2026-08-05T16:11:47.036Z",
+        "reason": "Pre-existing off-white opacity ramp for close button border on dark overlay"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(255,252,242,0.18)",
+        "createdAt": "2026-08-05T16:11:47.068Z",
+        "reason": "Pre-existing off-white opacity ramp for footer text on dark overlay"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(255,252,242,0.8)",
+        "createdAt": "2026-08-05T16:25:59.715Z",
+        "reason": "Intentional off-white opacity for category badge text on dark thumbnail overlay"
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgba(255,252,242,0.7)",
+        "createdAt": "2026-08-05T16:25:59.747Z",
+        "reason": "Intentional off-white opacity for current indicator text on dark thumbnail overlay"
       }
     ]
   }

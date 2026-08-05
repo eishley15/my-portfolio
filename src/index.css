@@ -2,43 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Cream / light theme */
-  --bg:          #EDE8DC;
-  --bg-dim:      #E3D9C8;
-  --surface:     #F4EFE5;
-  --ink:         #0E0C0B;
-  --ink-muted:   rgba(14,12,11,0.45);
-  --ink-faint:   rgba(14,12,11,0.14);
-  --border:      rgba(14,12,11,0.09);
+@font-face {
+  font-family: 'KiyaHandwrite';
+  src: url('/fonts/KiyaHandwrite.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
-  /* Keep for overlays / CardNav dark sections */
-  --black:      #0E0C0B;
-  --black-pure: #080706;
-  --off-white:  #F0EBE0;
-  --gray-dark:  #1C1A18;
+@font-face {
+  font-family: 'MontaguSlab';
+  src: url('/fonts/MontaguSlab-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MontaguSlab';
+  src: url('/fonts/MontaguSlab-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ── Palette: #FFFCF2 · #CCC5B9 · #403D39 · #252422 · #EB5E28 ── */
+
+  /* Light surfaces */
+  --bg:          #FFFCF2;
+  --bg-dim:      var(--accent);
+  --surface:     #FFFCF2;
+
+  /* Ink scale — derived from #252422 */
+  --ink:         #252422;
+  --ink-muted:   rgba(37,36,34,0.50);
+  --ink-faint:   rgba(37,36,34,0.10);
+  --border:      rgba(64,61,57,0.14);
+
+  /* Dark sections — #252422 base, #403D39 mid */
+  --black:      #252422;
+  --black-pure: #252422;
+  --gray-dark:  #403D39;
+  --off-white:  #FFFCF2;
+
+  /* Accent — burnt orange, one live color, used sparingly */
+  --accent:      #EB5E28;
+  --accent-dim:  rgba(235,94,40,0.12);
 
   /* Status */
-  --green-available:     #4caf72;
+  --green-available:      #4caf72;
   --green-available-glow: rgba(76,175,114,0.2);
 
-  /* Legacy aliases — keep until all pages are rebuilt */
-  --red:        var(--ink);
-  --red-action: var(--ink);
-  --red-hover:  rgba(14,12,11,0.75);
+  /* Legacy aliases */
+  --red:        var(--accent);
+  --red-action: var(--accent);
+  --red-hover:  rgba(235,94,40,0.80);
   --text-muted: var(--ink-muted);
 
-  /* Typography — Fraunces (display serif) + Outfit (body sans) */
-  --font-display: 'Fraunces', serif;
+  /* Typography — Outfit (display + body sans) */
+  --font-display: 'Outfit', sans-serif;
   --font-body:    'Outfit', sans-serif;
 }
 
 @layer utilities {
-  /* Fraunces italic — editorial accent within headlines */
+  /* Display accent — Fraunces italic serif for script contrast */
   .font-serif {
-    font-family: var(--font-display);
+    font-family: 'Fraunces', serif;
     font-style: italic;
+    font-weight: 700;
     letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 144;
   }
   /* Optical size for very large display use */
   .font-display-xl {
@@ -65,7 +99,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
@@ -82,9 +116,9 @@ body::before {
   mix-blend-mode: multiply;
 }
 
-/* Keyboard focus ring */
+/* Keyboard focus ring — accent signals interaction */
 :focus-visible {
-  outline: 1.5px solid var(--ink);
+  outline: 1.5px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -133,10 +167,14 @@ body::before {
 .nav-link:hover { color: var(--ink); }
 .nav-link:hover::after { transform: scaleX(1); }
 
-/* Active nav indicator */
+/* Active nav indicator — accent marks the current location */
 .nav-link-active {
-  color: var(--ink) !important;
-  font-weight: 400;
+  color: var(--accent) !important;
+  font-weight: 500;
+}
+.nav-link-active::after {
+  background: var(--accent) !important;
+  transform: scaleX(1) !important;
 }
 
 /* Shared typographic utilities */
@@ -156,6 +194,11 @@ body::before {
 .surface-dark {
   background: var(--black);
   color: var(--off-white);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 /* Marquee */

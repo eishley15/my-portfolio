@@ -27,8 +27,8 @@ const buttonVariants = cva(
           "focus-visible:ring-offset-[var(--bg)]",
         ],
         "outline-inverse": [
-          "border border-[rgba(240,235,224,0.2)] bg-transparent text-[rgba(240,235,224,0.55)]",
-          "hover:border-[rgba(240,235,224,0.5)] hover:text-[var(--off-white)]",
+          "border border-[rgba(255,252,242,0.2)] bg-transparent text-[rgba(255,252,242,0.55)]",
+          "hover:border-[rgba(255,252,242,0.5)] hover:text-[var(--off-white)]",
           "focus-visible:ring-[var(--off-white)] focus-visible:ring-offset-[var(--black)]",
         ],
       },

@@ -20,8 +20,8 @@ export default function LineSidebar({ sections = [], dark = false }) {
   const [visible, setVisible] = useState(false);
   const ticking = useRef(false);
 
-  const ink = dark ? "rgba(240,235,224,0.8)" : "var(--ink)";
-  const inkFaint = dark ? "rgba(240,235,224,0.18)" : "var(--ink-faint)";
+  const ink = dark ? "rgba(255,252,242,0.8)" : "var(--ink)";
+  const inkFaint = dark ? "rgba(255,252,242,0.18)" : "var(--ink-faint)";
 
   useEffect(() => {
     const onScroll = () => {

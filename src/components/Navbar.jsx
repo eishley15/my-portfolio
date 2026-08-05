@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import CardNav from "./reactbits/CardNav";
-import { useFeaturedPortfolio } from "../hooks/usePortfolio";
+import { useNavThumbnails } from "../hooks/useNavThumbnails";
 
 // Routes whose top-of-page hero is dark — navbar needs light text
 const DARK_HERO_ROUTES = ["/inquire", "/gallery"];
@@ -11,15 +11,20 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-  const { items } = useFeaturedPortfolio(5);
+  const { thumbnails } = useNavThumbnails();
 
   const isDarkHero  = DARK_HERO_ROUTES.includes(location.pathname);
   // Once scrolled, the cream backdrop appears → always use ink text
   const useLightText = isDarkHero && !scrolled;
+  // /gallery is split-screen: logo is over dark left, menu button is over cream right
+  const isGallery = location.pathname === "/gallery";
 
-  const logoColor = useLightText ? "rgba(240,235,224,0.85)" : "var(--ink)";
-  const menuColor = useLightText ? "rgba(240,235,224,0.5)"  : "var(--ink-muted)";
-  const menuHover = useLightText ? "rgba(240,235,224,0.9)"  : "var(--ink)";
+  // Logo filter mirrors menu color logic: white on dark hero, dark (ink) on cream
+  const logoFilter = useLightText ? "brightness(0) invert(1)" : "brightness(0)";
+
+  // On gallery the menu button sits over the cream right panel — always use ink
+  const menuColor = (useLightText && !isGallery) ? "rgba(255,252,242,0.5)" : "var(--ink-muted)";
+  const menuHover = (useLightText && !isGallery) ? "rgba(255,252,242,0.9)" : "var(--ink)";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -55,18 +60,20 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             to="/"
-            style={{
-              fontFamily:    "var(--font-display)",
-              fontWeight:     400,
-              fontSize:       "13px",
-              letterSpacing:  "3.5px",
-              color:           logoColor,
-              textDecoration: "none",
-              textTransform:  "uppercase",
-              transition:     "color 0.35s ease",
-            }}
+            aria-label="Kyle Payawal — home"
+            style={{ textDecoration: "none", display: "flex", alignItems: "center" }}
           >
-            Kyle Payawal
+            <img
+              src="/logo.svg"
+              alt="Kyle Payawal"
+              width={48}
+              height={48}
+              style={{
+                filter:     logoFilter,
+                transition: "filter 0.35s ease",
+                display:    "block",
+              }}
+            />
           </Link>
 
           {/* Menu button */}
@@ -83,8 +90,8 @@ export default function Navbar() {
               gap:            7,
               padding:        0,
               fontFamily:    "var(--font-body)",
-              fontSize:       "11px",
-              letterSpacing:  "2.5px",
+              fontSize:       "13px",
+              letterSpacing:  "2px",
               textTransform:  "uppercase",
               transition:     "color 0.35s ease",
             }}
@@ -113,7 +120,7 @@ export default function Navbar() {
       <CardNav
         isOpen={menuOpen}
         onClose={() => setMenuOpen(false)}
-        thumbnails={items}
+        thumbnails={thumbnails}
       />
     </>
   );

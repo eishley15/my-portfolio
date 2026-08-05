@@ -5,6 +5,9 @@ import { ArrowRight, ArrowLeft, Send, ChevronDown, AlignJustify, Layers } from "
 import CalendarPicker from "../components/CalendarPicker";
 import Confetti from "../components/Confetti";
 import VenueSearch from "../components/VenueSearch";
+import GridMotion from "../components/reactbits/GridMotion";
+import { usePortfolio } from "../hooks/usePortfolio";
+import { isVideo } from "../lib/isVideo";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -80,8 +83,8 @@ const inputBorder = (hasError) => ({
 const labelStyle = {
   display:       "block",
   fontFamily:    "var(--font-body)",
-  fontSize:       "10px",
-  letterSpacing:  "2px",
+  fontSize:       "12px",
+  letterSpacing:  "1.5px",
   textTransform:  "uppercase",
   color:          "var(--ink-muted)",
   marginBottom:   10,
@@ -99,8 +102,8 @@ function ToggleBtn({ field, value, label, formData, setField, fieldErrors }) {
       style={{
         padding:       "10px 16px",
         fontFamily:    "var(--font-body)",
-        fontSize:       "10px",
-        letterSpacing:  "1.8px",
+        fontSize:       "12px",
+        letterSpacing:  "1.5px",
         textTransform:  "uppercase",
         border:         isActive
           ? "0.5px solid var(--ink)"
@@ -309,7 +312,7 @@ function SectionVision({ formData, setField, fieldErrors }) {
 function FieldError({ children }) {
   return (
     <p style={{
-      fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "1.5px",
+      fontFamily: "var(--font-body)", fontSize: "12px", letterSpacing: "1px",
       textTransform: "uppercase", color: "var(--ink)", marginTop: 8, opacity: 0.6,
     }}>
       {children}
@@ -331,7 +334,7 @@ function StepError({ message }) {
             background: "rgba(14,12,11,0.04)",
           }}
         >
-          <span style={{ fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "1.5px", textTransform: "uppercase", color: "var(--ink)" }}>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: "13px", letterSpacing: "1px", textTransform: "uppercase", color: "var(--ink)" }}>
             {message}
           </span>
         </motion.div>
@@ -349,8 +352,8 @@ function SubmitBtn({ onClick, loading }) {
         padding: "15px 32px",
         background: loading ? "var(--ink-muted)" : "var(--ink)",
         color: "var(--off-white)",
-        fontFamily: "var(--font-body)", fontSize: "11px",
-        letterSpacing: "2.5px", textTransform: "uppercase",
+        fontFamily: "var(--font-body)", fontSize: "13px",
+        letterSpacing: "2px", textTransform: "uppercase",
         border: "none", cursor: loading ? "not-allowed" : "pointer",
         transition: "background 0.2s",
       }}
@@ -362,7 +365,7 @@ function SubmitBtn({ onClick, loading }) {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            style={{ width: 13, height: 13, border: "1.5px solid rgba(240,235,224,0.3)", borderTop: "1.5px solid var(--off-white)", borderRadius: "50%" }}
+            style={{ width: 13, height: 13, border: "1.5px solid rgba(255,252,242,0.3)", borderTop: "1.5px solid var(--off-white)", borderRadius: "50%" }}
           />
           Sending…
         </>
@@ -381,6 +384,11 @@ function SubmitBtn({ onClick, loading }) {
 const px = "clamp(24px, 6vw, 80px)";
 
 export default function Inquire() {
+  const { items: allItems } = usePortfolio(null);
+  const gridMotionUrls = allItems
+    .filter((it) => it.url && !isVideo(it))
+    .map((it) => it.url);
+
   const [formMode, setFormMode]         = useState("multi");
   const [step, setStep]                 = useState(1);
   const [dir, setDir]                   = useState(1);
@@ -476,17 +484,34 @@ export default function Inquire() {
       {/* ── §1 HERO ─────────────────────────────────────────────────────────── */}
       <section
         style={{
+          position:   "relative",
+          overflow:   "hidden",
           background: "var(--ink)",
           padding:    `clamp(120px, 16vh, 180px) ${px} clamp(64px, 8vh, 100px)`,
         }}
       >
+        {/* GridMotion background — same pattern as CTA section */}
+        {gridMotionUrls.length > 0 && (
+          <div style={{ position: "absolute", inset: 0, zIndex: 0, pointerEvents: "none", opacity: 0.2 }}>
+            <GridMotion items={gridMotionUrls} gradientColor="rgba(14,12,11,0.55)" />
+          </div>
+        )}
+        {/* Dark vignette so text stays readable */}
+        <div
+          style={{
+            position: "absolute", inset: 0, zIndex: 1, pointerEvents: "none",
+            background: "radial-gradient(ellipse at center, rgba(14,12,11,0.35) 0%, rgba(14,12,11,0.82) 100%)",
+          }}
+        />
+        {/* Content */}
+        <div style={{ position: "relative", zIndex: 2 }}>
         <motion.p
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.5 }}
           style={{
-            fontFamily:    "var(--font-body)", fontSize: "10px",
-            letterSpacing:  "3px", textTransform: "uppercase",
-            color:          "rgba(240,235,224,0.35)", marginBottom: "clamp(20px, 3vh, 32px)",
+            fontFamily:    "var(--font-body)", fontSize: "12px",
+            letterSpacing:  "2px", textTransform: "uppercase",
+            color:          "rgba(255,252,242,0.35)", marginBottom: "clamp(20px, 3vh, 32px)",
           }}
         >
           {BOOKING_STATUS}
@@ -496,11 +521,11 @@ export default function Inquire() {
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.18, duration: 0.6 }}
           style={{
-            fontFamily:           "var(--font-display)", fontWeight: 900,
-            fontSize:              "clamp(56px, 9vw, 120px)",
-            letterSpacing:        "-0.035em", lineHeight: 0.88,
-            color:                 "var(--off-white)", textTransform: "uppercase",
-            fontVariationSettings: "'opsz' 144", margin: 0,
+            fontFamily:    "'Outfit', sans-serif", fontWeight: 500,
+            fontSize:       "clamp(56px, 9vw, 120px)",
+            letterSpacing: "-0.035em", lineHeight: 0.88,
+            color:          "var(--off-white)", textTransform: "uppercase",
+            margin:         0,
           }}
         >
           Book Your
@@ -509,10 +534,10 @@ export default function Inquire() {
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.26, duration: 0.6 }}
           style={{
-            fontFamily:           "var(--font-display)", fontWeight: 300, fontStyle: "italic",
+            fontFamily:           "'Fraunces', serif", fontWeight: 700, fontStyle: "italic",
             fontSize:              "clamp(48px, 7.5vw, 100px)",
             letterSpacing:        "-0.025em", lineHeight: 1.0,
-            color:                 "rgba(240,235,224,0.55)",
+            color:                 "rgba(255,252,242,0.55)",
             fontVariationSettings: "'opsz' 120", margin: 0,
           }}
         >
@@ -523,13 +548,14 @@ export default function Inquire() {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ delay: 0.45, duration: 0.5 }}
           style={{
-            fontFamily:  "var(--font-body)", fontSize: "11px",
-            letterSpacing: "2px", textTransform: "uppercase",
-            color:         "rgba(240,235,224,0.25)", marginTop: "clamp(28px, 4vh, 44px)",
+            fontFamily:  "var(--font-body)", fontSize: "13px",
+            letterSpacing: "1.5px", textTransform: "uppercase",
+            color:         "rgba(255,252,242,0.25)", marginTop: "clamp(28px, 4vh, 44px)",
           }}
         >
           Tarlac · Angeles City, Pampanga · Available for travel
         </motion.p>
+        </div>{/* /content z-index wrapper */}
       </section>
 
       {/* ── §2 PROCESS ──────────────────────────────────────────────────────── */}
@@ -537,13 +563,13 @@ export default function Inquire() {
         style={{
           background:    "var(--bg-dim)",
           padding:       `clamp(56px, 7vw, 96px) ${px}`,
-          borderBottom:  "0.5px solid var(--border)",
+          borderBottom:  "0.5px solid rgba(255,252,242,0.2)",
         }}
       >
         <p style={{
-          fontFamily:    "var(--font-body)", fontSize: "10px",
-          letterSpacing:  "3px", textTransform: "uppercase",
-          color:          "var(--ink-muted)", marginBottom: "clamp(32px, 5vh, 56px)",
+          fontFamily:    "var(--font-body)", fontSize: "12px",
+          letterSpacing:  "2px", textTransform: "uppercase",
+          color:          "rgba(255,252,242,0.6)", marginBottom: "clamp(32px, 5vh, 56px)",
           textAlign:      "center",
         }}>
           The Process
@@ -556,28 +582,27 @@ export default function Inquire() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              style={{ borderTop: "0.5px solid var(--border)", paddingTop: "clamp(20px, 3vh, 28px)" }}
+              style={{ borderTop: "0.5px solid rgba(255,252,242,0.2)", paddingTop: "clamp(20px, 3vh, 28px)" }}
             >
               <div style={{
-                fontFamily:           "var(--font-display)", fontWeight: 700,
-                fontSize:              "clamp(36px, 4vw, 52px)",
-                letterSpacing:        "-0.03em", lineHeight: 1,
-                color:                 "var(--ink-faint)",
-                fontVariationSettings: "'opsz' 72",
-                marginBottom:          16,
+                fontFamily:    "'Outfit', sans-serif", fontWeight: 500,
+                fontSize:       "clamp(36px, 4vw, 52px)",
+                letterSpacing: "-0.03em", lineHeight: 1,
+                color:          "rgba(255,252,242,0.2)",
+                marginBottom:   16,
               }}>
                 {s.num}
               </div>
               <div style={{
-                fontFamily:    "var(--font-body)", fontSize: "11px",
-                letterSpacing:  "2px", textTransform: "uppercase",
-                color:          "var(--ink)", marginBottom: 12,
+                fontFamily:    "var(--font-body)", fontSize: "13px",
+                letterSpacing:  "1.5px", textTransform: "uppercase",
+                color:          "var(--off-white)", marginBottom: 12,
               }}>
                 {s.title}
               </div>
               <p style={{
                 fontFamily:  "var(--font-body)", fontSize: "13px",
-                color:        "var(--ink-muted)", lineHeight: 1.7, margin: 0,
+                color:        "rgba(255,252,242,0.7)", lineHeight: 1.7, margin: 0,
               }}>
                 {s.body}
               </p>
@@ -607,8 +632,8 @@ export default function Inquire() {
                       style={{
                         display: "inline-flex", alignItems: "center", gap: 7,
                         padding: "10px 20px",
-                        fontFamily: "var(--font-body)", fontSize: "10px",
-                        letterSpacing: "2px", textTransform: "uppercase",
+                        fontFamily: "var(--font-body)", fontSize: "12px",
+                        letterSpacing: "1.5px", textTransform: "uppercase",
                         border: "none", cursor: "pointer", transition: "all 0.2s",
                         background: formMode === id ? "var(--ink)" : "transparent",
                         color:      formMode === id ? "var(--off-white)" : "var(--ink-muted)",
@@ -643,7 +668,7 @@ export default function Inquire() {
                               transition={{ duration: 0.3 }}
                               style={{
                                 width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
-                                fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "1px",
+                                fontFamily: "var(--font-body)", fontSize: "11px", letterSpacing: "0.5px",
                                 border: "0.5px solid var(--ink)",
                                 color:  s <= step ? "var(--off-white)" : "var(--ink)",
                                 flexShrink: 0,
@@ -652,8 +677,8 @@ export default function Inquire() {
                               {s < step ? "✓" : `0${s}`}
                             </motion.div>
                             <span style={{
-                              fontFamily:    "var(--font-body)", fontSize: "9px",
-                              letterSpacing:  "1.5px", textTransform: "uppercase",
+                              fontFamily:    "var(--font-body)", fontSize: "11px",
+                              letterSpacing:  "1px", textTransform: "uppercase",
                               color:          s === step ? "var(--ink)" : "var(--ink-muted)",
                               marginTop:      6, whiteSpace: "nowrap", transition: "color 0.3s",
                             }}>
@@ -721,8 +746,8 @@ export default function Inquire() {
                               type="button" onClick={goPrev} whileHover={{ x: -3 }}
                               style={{
                                 display: "inline-flex", alignItems: "center", gap: 8,
-                                fontFamily: "var(--font-body)", fontSize: "11px",
-                                letterSpacing: "2px", textTransform: "uppercase",
+                                fontFamily: "var(--font-body)", fontSize: "13px",
+                                letterSpacing: "1.5px", textTransform: "uppercase",
                                 color: "var(--ink-muted)", background: "none", border: "none",
                                 cursor: "pointer", transition: "color 0.2s",
                               }}
@@ -738,8 +763,8 @@ export default function Inquire() {
                               style={{
                                 display: "inline-flex", alignItems: "center", gap: 10,
                                 padding: "14px 28px", background: "var(--ink)", color: "var(--off-white)",
-                                fontFamily: "var(--font-body)", fontSize: "11px",
-                                letterSpacing: "2.5px", textTransform: "uppercase",
+                                fontFamily: "var(--font-body)", fontSize: "13px",
+                                letterSpacing: "2px", textTransform: "uppercase",
                                 border: "none", cursor: "pointer", transition: "background 0.2s",
                               }}
                               onMouseEnter={(e) => (e.currentTarget.style.background = "var(--gray-dark)")}
@@ -803,20 +828,19 @@ export default function Inquire() {
             >
               <div style={{ background: "var(--ink)", padding: "clamp(48px, 8vw, 88px)" }}>
                 <h2 style={{
-                  fontFamily:           "var(--font-display)", fontWeight: 900,
-                  fontSize:              "clamp(40px, 7vw, 72px)",
-                  letterSpacing:        "-0.03em", lineHeight: 0.9,
-                  color:                 "var(--off-white)", textTransform: "uppercase",
-                  fontVariationSettings: "'opsz' 144",
+                  fontFamily:    "'Outfit', sans-serif", fontWeight: 500,
+                  fontSize:       "clamp(40px, 7vw, 72px)",
+                  letterSpacing: "-0.03em", lineHeight: 0.9,
+                  color:          "var(--off-white)", textTransform: "uppercase",
                   margin:                "0 0 24px",
                 }}>
                   It's happening.
                 </h2>
                 <p style={{
-                  fontFamily:           "var(--font-display)", fontStyle: "italic", fontWeight: 300,
+                  fontFamily:           "'Fraunces', serif", fontStyle: "italic", fontWeight: 700,
                   fontSize:              "clamp(16px, 2vw, 21px)",
                   fontVariationSettings: "'opsz' 36",
-                  color:                 "rgba(240,235,224,0.5)", lineHeight: 1.6, margin: 0,
+                  color:                 "rgba(255,252,242,0.5)", lineHeight: 1.6, margin: 0,
                 }}>
                   Inquiry received. Expect a reply to{" "}
                   <span style={{ color: "var(--off-white)" }}>{submittedEmail}</span> within 24 hours.
@@ -836,18 +860,17 @@ function StepHeader({ num, total, title, note }) {
   return (
     <div style={{ marginBottom: "clamp(20px, 3vh, 32px)" }}>
       <p style={{
-        fontFamily:    "var(--font-body)", fontSize: "10px",
-        letterSpacing:  "2px", textTransform: "uppercase",
+        fontFamily:    "var(--font-body)", fontSize: "12px",
+        letterSpacing:  "1.5px", textTransform: "uppercase",
         color:          "var(--ink-muted)", margin: "0 0 8px",
       }}>
         Step {num} of {total}
       </p>
       <h3 style={{
-        fontFamily:            "var(--font-display)", fontWeight: 700,
-        fontSize:               "clamp(24px, 3.5vw, 36px)",
-        letterSpacing:         "-0.025em", lineHeight: 0.92,
-        color:                  "var(--ink)", textTransform: "uppercase",
-        fontVariationSettings:  "'opsz' 48",
+        fontFamily:    "'Outfit', sans-serif", fontWeight: 500,
+        fontSize:       "clamp(24px, 3.5vw, 36px)",
+        letterSpacing: "-0.025em", lineHeight: 0.92,
+        color:          "var(--ink)", textTransform: "uppercase",
         margin:                  note ? "0 0 6px" : 0,
       }}>
         {title}

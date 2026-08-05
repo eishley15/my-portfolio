@@ -42,9 +42,9 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
         top: "50%",
         [side === "prev" ? "left" : "right"]: "clamp(12px, 3vw, 32px)",
         transform: "translateY(-50%)",
-        background: "rgba(240,235,224,0.06)",
-        border: "0.5px solid rgba(240,235,224,0.12)",
-        color: "rgba(240,235,224,0.7)",
+        background: "rgba(255,252,242,0.06)",
+        border: "0.5px solid rgba(255,252,242,0.12)",
+        color: "rgba(255,252,242,0.7)",
         width: 44,
         height: 44,
         display: "flex",
@@ -55,12 +55,12 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
         transition: "background 0.2s, color 0.2s",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(240,235,224,0.12)";
-        e.currentTarget.style.color = "rgba(240,235,224,1)";
+        e.currentTarget.style.background = "rgba(255,252,242,0.12)";
+        e.currentTarget.style.color = "rgba(255,252,242,1)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = "rgba(240,235,224,0.06)";
-        e.currentTarget.style.color = "rgba(240,235,224,0.7)";
+        e.currentTarget.style.background = "rgba(255,252,242,0.06)";
+        e.currentTarget.style.color = "rgba(255,252,242,0.7)";
       }}
     >
       {children}
@@ -111,9 +111,9 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
             position: "absolute",
             top: 20,
             right: 20,
-            background: "rgba(240,235,224,0.06)",
-            border: "0.5px solid rgba(240,235,224,0.12)",
-            color: "rgba(240,235,224,0.7)",
+            background: "rgba(255,252,242,0.06)",
+            border: "0.5px solid rgba(255,252,242,0.12)",
+            color: "rgba(255,252,242,0.7)",
             width: 40,
             height: 40,
             display: "flex",
@@ -124,8 +124,8 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
             pointerEvents: "auto",
             transition: "background 0.2s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(240,235,224,0.12)")}
-          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(240,235,224,0.06)")}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,252,242,0.12)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,252,242,0.06)")}
         >
           <X size={14} strokeWidth={1.5} />
         </button>
@@ -196,7 +196,7 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
                 fontStyle: "italic",
                 fontWeight: 300,
                 fontSize: 14,
-                color: "rgba(240,235,224,0.55)",
+                color: "rgba(255,252,242,0.55)",
                 letterSpacing: "-0.01em",
               }}
             >
@@ -209,7 +209,7 @@ function Lightbox({ item, items, onClose, onPrev, onNext, hasPrev, hasNext }) {
               fontSize: "9px",
               letterSpacing: "2px",
               textTransform: "uppercase",
-              color: "rgba(240,235,224,0.28)",
+              color: "rgba(255,252,242,0.28)",
             }}
           >
             {idx + 1} / {items.length}
@@ -345,7 +345,7 @@ function MasonryGrid({ items, onSelect, loading }) {
                     fontSize: "9px",
                     letterSpacing: "2.5px",
                     textTransform: "uppercase",
-                    color: "rgba(240,235,224,0.55)",
+                    color: "rgba(255,252,242,0.55)",
                   }}
                 >
                   {item.category}
@@ -385,7 +385,7 @@ function MasonryGrid({ items, onSelect, loading }) {
 export default function Work() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState(null);
-  const [viewMode, setViewMode] = useState("strip"); // "strip" | "grid"
+  const [viewMode, setViewMode] = useState("grid"); // "grid" | "strip"
   const [lightboxItem, setLightboxItem] = useState(null);
 
   const { items, categories, loading } = usePortfolio(activeCategory);
@@ -460,7 +460,7 @@ export default function Work() {
             transition={{ duration: 0.6, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
             style={{
               fontFamily: "var(--font-display)",
-              fontWeight: 900,
+              fontWeight: 500,
               fontSize: "clamp(64px, 10vw, 140px)",
               letterSpacing: "-0.04em",
               lineHeight: 0.88,
@@ -567,11 +567,29 @@ export default function Work() {
               paddingLeft: 24,
             }}
           >
-            {/* Strip toggle */}
+            {/* Grid / masonry toggle (default) */}
+            <button
+              onClick={() => setViewMode("grid")}
+              aria-label="Grid view"
+              title="Masonry grid"
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "6px",
+                color: viewMode === "grid" ? "var(--ink)" : "var(--ink-faint)",
+                display: "flex",
+                transition: "color 0.2s",
+              }}
+            >
+              <LayoutGrid size={14} strokeWidth={1.5} />
+            </button>
+
+            {/* Strip / draggable toggle */}
             <button
               onClick={() => setViewMode("strip")}
               aria-label="Strip view"
-              title="Strip"
+              title="Draggable strip"
               style={{
                 background: "none",
                 border: "none",
@@ -589,23 +607,6 @@ export default function Work() {
               </svg>
             </button>
 
-            <button
-              onClick={() => setViewMode("grid")}
-              aria-label="Grid view"
-              title="Grid"
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: "6px",
-                color: viewMode === "grid" ? "var(--ink)" : "var(--ink-faint)",
-                display: "flex",
-                transition: "color 0.2s",
-              }}
-            >
-              <LayoutGrid size={14} strokeWidth={1.5} />
-            </button>
-
           </div>
         </div>
       </div>
@@ -617,7 +618,7 @@ export default function Work() {
           padding: viewMode === "strip"
             ? "0"
             : "clamp(24px, 4vw, 48px) clamp(24px, 6vw, 80px) clamp(64px, 8vw, 120px)",
-          background: viewMode === "strip" ? "#0E0C0B" : "var(--bg)",
+          background: viewMode === "strip" ? "#252422" : "var(--bg)",
           minHeight: viewMode === "strip" ? 0 : "60vh",
         }}
       >

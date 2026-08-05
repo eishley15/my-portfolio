@@ -123,7 +123,7 @@ export default function Contact() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
             className="eyebrow section-dark mb-6"
-            style={{ color: "rgba(240,235,224,0.4)", letterSpacing: "3px", fontSize: "10px" }}
+            style={{ color: "rgba(255,252,242,0.4)", letterSpacing: "3px", fontSize: "10px" }}
           >
             GET IN TOUCH
           </motion.div>
@@ -305,7 +305,7 @@ export default function Contact() {
               >
                 <button
                   onClick={() => { setSubmitted(false); setShowConfetti(false); }}
-                  style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", color: "rgba(240,235,224,0.4)", cursor: "pointer" }}
+                  style={{ position: "absolute", top: "16px", right: "16px", background: "none", border: "none", color: "rgba(255,252,242,0.4)", cursor: "pointer" }}
                   aria-label="Dismiss"
                 >
                   <X size={16} />
