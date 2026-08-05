@@ -32,7 +32,7 @@ export default function BackToTop() {
           onClick={scrollToTop}
           className="fixed bottom-8 left-8 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
           style={{
-            background: "var(--red)",
+            background: "var(--red-action)",
             border: "0.5px solid rgba(0,0,0,0.1)",
           }}
           initial={{ opacity: 0, scale: 0 }}

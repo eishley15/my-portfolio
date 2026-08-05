@@ -1,191 +1,162 @@
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Mail } from "lucide-react";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+
+const NAV_LINKS = [
+  { to: "/",        label: "Home"          },
+  { to: "/work",    label: "Work"          },
+  { to: "/about",   label: "About"         },
+  { to: "/inquire", label: "Inquire"       },
+  { to: "/gallery", label: "Client Gallery"},
+];
+
+const SOCIAL = [
+  { href: "mailto:payawalkyle@gmail.com",           Icon: Mail,      label: "Email"     },
+  { href: "https://instagram.com/payawalkyle/",     Icon: Instagram, label: "Instagram" },
+  { href: "https://facebook.com/kyle.payawal",      Icon: Facebook,  label: "Facebook"  },
+];
+
+const px = "clamp(24px, 6vw, 80px)";
 
 export default function Footer() {
   const year = new Date().getFullYear();
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (email.trim()) {
-      setSubscribed(true);
-      setEmail("");
-      setTimeout(() => setSubscribed(false), 3000);
-    }
-  };
 
   return (
-    <footer
-      style={{
-        background: "var(--black-pure)",
-        borderTop: "0.5px solid rgba(240,235,224,0.06)",
-        padding: "60px clamp(24px, 6vw, 80px) 36px",
-      }}
-    >
+    <footer style={{ background: "var(--ink)", color: "var(--off-white)" }}>
+
+      {/* ── Middle — columns ── */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "start",
-          gap: !isMobile ? "40px" : "48px",
-          marginBottom: "48px",
-          textAlign: !isMobile ? "left" : "center",
-          flexDirection: !isMobile ? "row" : "column",
+          display:               "grid",
+          gridTemplateColumns:   "1fr auto auto",
+          gap:                   "clamp(40px, 6vw, 96px)",
+          padding:               `clamp(40px, 5vh, 64px) ${px}`,
+          borderBottom:          "0.5px solid rgba(255,252,242,0.08)",
         }}
       >
-        {/* Left */}
-        <div
-          style={{
-            textAlign: !isMobile ? "left" : "center",
-            width: !isMobile ? "auto" : "100%",
-          }}
-        >
+        {/* Brand */}
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          <div>
+            <p
+              style={{
+                fontFamily:    "var(--font-display)",
+                fontWeight:     700,
+                fontSize:       "clamp(16px, 1.8vw, 22px)",
+                letterSpacing:  "3px",
+                textTransform:  "uppercase",
+                color:          "var(--off-white)",
+                margin:         "0 0 8px",
+              }}
+            >
+              Kyle Payawal
+            </p>
+            <p
+              style={{
+                fontFamily:    "var(--font-body)",
+                fontSize:       "11px",
+                letterSpacing:  "2px",
+                textTransform:  "uppercase",
+                color:          "rgba(255,252,242,0.25)",
+                margin:         0,
+              }}
+            >
+              Photo &amp; Video · Philippines
+            </p>
+          </div>
           <p
             style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "18px",
-              letterSpacing: "3px",
-              color: "var(--off-white)",
-              marginBottom: "8px",
+              fontFamily:    "var(--font-body)",
+              fontSize:       "10px",
+              letterSpacing:  "1.5px",
+              color:          "rgba(255,252,242,0.15)",
+              marginTop:      32,
             }}
           >
-            KYLE PAYAWAL
-          </p>
-          <p
-            className="font-serif"
-            style={{
-              fontStyle: "italic",
-              fontSize: "13px",
-              color: "var(--text-muted)",
-              lineHeight: 1.6,
-            }}
-          >
-            It's gonna look a little different.
-            <br />
-            That's the point.
+            Tarlac · Angeles City, Pampanga
           </p>
         </div>
 
-        {/* Right — socials */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: !isMobile ? "flex-end" : "center",
-            gap: "16px",
-            width: !isMobile ? "auto" : "100%",
-          }}
-        >
-          <a
-            href="https://instagram.com/payawalkyle/"
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: "rgba(240,235,224,0.35)",
-              textDecoration: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: "10px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "var(--off-white)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "rgba(240,235,224,0.35)")
-            }
-          >
-            <Instagram size={14} /> Instagram
-          </a>
-          <a
-            href="https://facebook.com/kyle.payawal"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              color: "rgba(240,235,224,0.35)",
-              textDecoration: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: "10px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              transition: "color 0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "var(--off-white)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "rgba(240,235,224,0.35)")
-            }
-          >
-            <Facebook size={14} /> Facebook
-          </a>
-          <p
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: "9px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              color: "rgba(240,235,224,0.18)",
-              marginTop: "8px",
-            }}
-          >
-            kylepayawal.studio
-          </p>
+        {/* Pages */}
+        <div>
+          <p style={colHeading}>Pages</p>
+          <nav style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {NAV_LINKS.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                style={navLink}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.32)")}
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        {/* Connect */}
+        <div>
+          <p style={colHeading}>Connect</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {SOCIAL.map(({ href, Icon, label }) => (
+              <a
+                key={label}
+                href={href}
+                target={href.startsWith("mailto") ? undefined : "_blank"}
+                rel="noreferrer"
+                style={{ ...navLink, display: "flex", alignItems: "center", gap: 8 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.32)")}
+              >
+                <Icon size={12} strokeWidth={1.5} />
+                {label}
+              </a>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* Bottom bar */}
+      {/* ── Bottom bar ── */}
       <div
         style={{
-          borderTop: "0.5px solid rgba(240,235,224,0.06)",
-          paddingTop: "24px",
-          display: "flex",
-          justifyContent: !isMobile ? "space-between" : "center",
-          alignItems: "center",
-          flexDirection: !isMobile ? "row" : "column",
-          flexWrap: "wrap",
-          gap: "12px",
-          textAlign: "center",
+          padding:        `20px ${px}`,
+          display:        "flex",
+          justifyContent: "space-between",
+          alignItems:     "center",
+          gap:             16,
         }}
       >
-        <p
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "10px",
-            letterSpacing: "1px",
-            color: "rgba(240,235,224,0.18)",
-          }}
-        >
-          © {year} Kyle Payawal · Tarlac · Angeles City, Pampanga
-        </p>
-        <p
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: "10px",
-            letterSpacing: "1px",
-            color: "rgba(240,235,224,0.12)",
-          }}
-        >
-          Photo & Video · Philippines
-        </p>
+        <p style={bottomText}>© {year} Kyle Payawal</p>
+        <p style={bottomText}>All rights reserved</p>
       </div>
     </footer>
   );
 }
+
+// ─── Shared style tokens ───────────────────────────────────────────────────────
+
+const colHeading = {
+  fontFamily:    "var(--font-body)",
+  fontSize:       "10px",
+  letterSpacing:  "2.5px",
+  textTransform:  "uppercase",
+  color:          "rgba(255,252,242,0.20)",
+  margin:         "0 0 16px",
+};
+
+const navLink = {
+  fontFamily:    "var(--font-body)",
+  fontSize:       "11px",
+  letterSpacing:  "1.5px",
+  textTransform:  "uppercase",
+  color:          "rgba(255,252,242,0.32)",
+  textDecoration: "none",
+  transition:     "color 0.2s",
+};
+
+const bottomText = {
+  fontFamily:    "var(--font-body)",
+  fontSize:       "10px",
+  letterSpacing:  "1px",
+  color:          "rgba(255,252,242,0.15)",
+  margin:         0,
+};

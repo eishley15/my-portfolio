@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 // Client-side cache
@@ -133,10 +133,14 @@ export function useFeaturedPortfolio(limit = 8) {
         .order('sort_order', { ascending: true })
 
       if (!error && data) {
-        // Group by category and take first item from each
+        // Group by category — prefer is_category_cover item, fallback to first by sort_order
         const categoryMap = {}
         data.forEach(item => {
           if (!categoryMap[item.category]) {
+            // First item for this category — use as initial fallback
+            categoryMap[item.category] = item
+          } else if (item.is_category_cover) {
+            // Explicit cover overrides the sort_order fallback
             categoryMap[item.category] = item
           }
         })
@@ -152,4 +156,82 @@ export function useFeaturedPortfolio(limit = 8) {
   }, [limit])
 
   return { items, loading }
+}
+
+// ─── Categories with cover thumbnail ─────────────────────────────────────────
+// Used by the Work page and StudioAdmin thumbnail manager.
+// Prefers is_category_cover item per category; falls back to first by sort_order.
+export function useCategories() {
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading]       = useState(true)
+
+  const refresh = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('portfolio')
+      .select('id, category, url, is_category_cover, sort_order')
+      .order('sort_order', { ascending: true })
+
+    if (!error && data) {
+      const categoryMap = {}
+
+      data.forEach(item => {
+        if (!categoryMap[item.category]) {
+          categoryMap[item.category] = {
+            name:         item.category,
+            count:        0,
+            thumbnailUrl: null,
+            coverId:      null,
+          }
+        }
+        const cat = categoryMap[item.category]
+        cat.count += 1
+
+        if (item.is_category_cover) {
+          // Explicit cover wins regardless of sort_order
+          cat.thumbnailUrl = item.url
+          cat.coverId      = item.id
+        } else if (!cat.thumbnailUrl) {
+          // Fallback: first item by sort_order
+          cat.thumbnailUrl = item.url
+        }
+      })
+
+      setCategories(Object.values(categoryMap))
+    }
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { refresh() }, [refresh])
+
+  return { categories, loading, refresh }
+}
+
+// ─── Clear featured cache (call after any cover change) ──────────────────────
+export function clearFeaturedCache() {
+  Object.keys(portfolioCache).forEach(key => {
+    if (key.startsWith('featured_')) delete portfolioCache[key]
+  })
+}
+
+// ─── Set category cover (StudioAdmin) ────────────────────────────────────────
+// Routes through /api/admin-galleries (action=set-cover) so the service role key bypasses RLS.
+export async function setCategoryThumbnail(category, itemId) {
+  const token = sessionStorage.getItem('studio_token')
+
+  const res = await fetch('/api/admin-galleries', {
+    method:  'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify({ action: 'set-cover', category, itemId }),
+  })
+
+  const json = await res.json()
+
+  // Bust the featured cache so the Home page reflects the change on next mount
+  clearFeaturedCache()
+
+  return { error: res.ok ? null : new Error(json.error || 'Failed to set cover') }
 }

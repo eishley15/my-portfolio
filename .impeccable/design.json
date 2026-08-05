@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-05T00:00:00.000Z",
+  "title": "Design System: Kyle Payawal Studio",
+  "extensions": {
+    "colorMeta": {
+      "bg": {
+        "role": "neutral",
+        "displayName": "Aged Cream",
+        "canonical": "oklch(89% 0.012 85)",
+        "tonalRamp": [
+          "oklch(15% 0.012 85)",
+          "oklch(25% 0.012 85)",
+          "oklch(36% 0.012 85)",
+          "oklch(48% 0.012 85)",
+          "oklch(60% 0.012 85)",
+          "oklch(73% 0.012 85)",
+          "oklch(83% 0.012 85)",
+          "oklch(94% 0.012 85)"
+        ]
+      },
+      "bg-dim": {
+        "role": "neutral",
+        "displayName": "Linen Dim",
+        "canonical": "oklch(85% 0.015 85)",
+        "tonalRamp": [
+          "oklch(15% 0.015 85)",
+          "oklch(25% 0.015 85)",
+          "oklch(35% 0.015 85)",
+          "oklch(47% 0.015 85)",
+          "oklch(59% 0.015 85)",
+          "oklch(71% 0.015 85)",
+          "oklch(80% 0.015 85)",
+          "oklch(91% 0.015 85)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Pale Surface",
+        "canonical": "oklch(95% 0.01 85)",
+        "tonalRamp": [
+          "oklch(15% 0.01 85)",
+          "oklch(26% 0.01 85)",
+          "oklch(38% 0.01 85)",
+          "oklch(50% 0.01 85)",
+          "oklch(63% 0.01 85)",
+          "oklch(76% 0.01 85)",
+          "oklch(88% 0.01 85)",
+          "oklch(96% 0.01 85)"
+        ]
+      },
+      "ink": {
+        "role": "primary",
+        "displayName": "Near-Black Ink",
+        "canonical": "oklch(6% 0.005 85)",
+        "tonalRamp": [
+          "oklch(6% 0.005 85)",
+          "oklch(14% 0.005 85)",
+          "oklch(24% 0.005 85)",
+          "oklch(35% 0.005 85)",
+          "oklch(48% 0.005 85)",
+          "oklch(62% 0.005 85)",
+          "oklch(76% 0.005 85)",
+          "oklch(90% 0.005 85)"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "rgba(14,12,11,0.45)",
+        "note": "Opacity variant of Near-Black Ink — no independent tonal ramp; use ink ramp with alpha."
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Ink Faint",
+        "canonical": "rgba(14,12,11,0.14)",
+        "note": "Opacity variant of Near-Black Ink — no independent tonal ramp; use ink ramp with alpha."
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline Border",
+        "canonical": "rgba(14,12,11,0.09)",
+        "note": "Opacity variant of Near-Black Ink — hairline separators only."
+      },
+      "black": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink (alias)",
+        "canonical": "oklch(6% 0.005 85)",
+        "note": "Alias for ink — prefer the ink token in new work."
+      },
+      "black-pure": {
+        "role": "neutral",
+        "displayName": "Absolute Black",
+        "canonical": "oklch(4% 0.003 85)",
+        "tonalRamp": [
+          "oklch(4% 0.003 85)",
+          "oklch(11% 0.003 85)",
+          "oklch(20% 0.003 85)",
+          "oklch(31% 0.003 85)",
+          "oklch(44% 0.003 85)",
+          "oklch(58% 0.003 85)",
+          "oklch(73% 0.003 85)",
+          "oklch(89% 0.003 85)"
+        ]
+      },
+      "off-white": {
+        "role": "neutral",
+        "displayName": "Antique White",
+        "canonical": "oklch(93% 0.01 85)",
+        "tonalRamp": [
+          "oklch(15% 0.01 85)",
+          "oklch(25% 0.01 85)",
+          "oklch(38% 0.01 85)",
+          "oklch(52% 0.01 85)",
+          "oklch(65% 0.01 85)",
+          "oklch(77% 0.01 85)",
+          "oklch(87% 0.01 85)",
+          "oklch(95% 0.01 85)"
+        ]
+      },
+      "gray-dark": {
+        "role": "neutral",
+        "displayName": "Charcoal Dark",
+        "canonical": "oklch(12% 0.005 85)",
+        "tonalRamp": [
+          "oklch(6% 0.005 85)",
+          "oklch(13% 0.005 85)",
+          "oklch(22% 0.005 85)",
+          "oklch(33% 0.005 85)",
+          "oklch(46% 0.005 85)",
+          "oklch(60% 0.005 85)",
+          "oklch(75% 0.005 85)",
+          "oklch(90% 0.005 85)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display — Fraunces Upright",
+        "purpose": "Hero headlines, section titles, CTA headings. Primary structural voice. Use font-variation-settings: 'opsz' 144 above 60px."
+      },
+      "display-italic": {
+        "displayName": "Display Italic — Fraunces Italic",
+        "purpose": "Editorial contrast line within Display headlines only. One italic line alongside an upright line — never standalone."
+      },
+      "body": {
+        "displayName": "Body — Outfit Light",
+        "purpose": "All paragraph text, FAQ answers, about copy, descriptions. Max ~65ch line length."
+      },
+      "label": {
+        "displayName": "Label — Outfit Regular",
+        "purpose": "Navigation, buttons, eyebrows, metadata, form labels. Universal interactive chrome."
+      }
+    },
+    "shadows": [
+      {
+        "name": "dark-overlay",
+        "value": "background: rgba(14,12,11,0.85)",
+        "purpose": "Full-screen dark scrim behind CardNav menu and modal overlays."
+      },
+      {
+        "name": "card-gradient",
+        "value": "linear-gradient(to top, rgba(14,12,11,0.85) 0%, rgba(14,12,11,0.12) 55%, transparent 100%)",
+        "purpose": "Always-on directional depth layer on category cards — directional, not ambient."
+      },
+      {
+        "name": "navbar-blur",
+        "value": "backdrop-filter: blur(18px); background: rgba(237,232,220,0.88)",
+        "purpose": "Navbar elevation signal past 20px scroll. Functional, not decorative."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-spring",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Card hover transforms, CardNav entrance animations, element lifts."
+      },
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for color transitions, opacity fades, border state changes."
+      },
+      {
+        "name": "duration-fast",
+        "value": "200ms",
+        "purpose": "Button hover states, link color transitions."
+      },
+      {
+        "name": "duration-medium",
+        "value": "300ms",
+        "purpose": "Card label lifts, CTA fade-in on hover, overlay transitions."
+      },
+      {
+        "name": "duration-slow",
+        "value": "600ms",
+        "purpose": "Category card photo scale on hover, page entrance stagger sequences."
+      },
+      {
+        "name": "stagger-delay",
+        "value": "50ms",
+        "purpose": "Per-item delay in CardNav entrance stagger."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "768px",
+        "purpose": "Single breakpoint — below 768px switches to mobile layout."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Specular)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Near-black button with uppercase label type. Mouse-tracked specular sheen approximated via ::after pseudo-element.",
+      "html": "<button class=\"ds-btn-primary\">INQUIRE NOW</button>",
+      "css": ".ds-btn-primary { background: #0E0C0B; color: #F0EBE0; padding: 14px 36px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; border: none; border-radius: 0; cursor: pointer; position: relative; overflow: hidden; transition: background 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.13) 0%, transparent 55%); opacity: 0; transition: opacity 0.2s; } .ds-btn-primary:hover::after { opacity: 1; } .ds-btn-primary:hover { background: #1C1A18; } .ds-btn-primary:focus-visible { outline: 2px solid #F0EBE0; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Transparent button with hairline border and uppercase label type. For light-surface contexts.",
+      "html": "<button class=\"ds-btn-ghost\">VIEW WORK</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #0E0C0B; padding: 14px 36px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; border: 0.5px solid rgba(14,12,11,0.5); border-radius: 0; cursor: pointer; transition: border-color 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-btn-ghost:hover { border-color: rgba(14,12,11,0.9); } .ds-btn-ghost:focus-visible { outline: 2px solid #0E0C0B; outline-offset: 3px; }"
+    },
+    {
+      "name": "Ghost Button (dark surface)",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Ghost variant for dark-surface contexts — CTA sections, CardNav overlay.",
+      "html": "<div style=\"background:#0E0C0B;padding:32px;display:inline-block;\"><button class=\"ds-btn-ghost-dark\">CONTACT US</button></div>",
+      "css": ".ds-btn-ghost-dark { background: transparent; color: #F0EBE0; padding: 14px 36px; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; border: 0.5px solid rgba(240,235,224,0.5); border-radius: 0; cursor: pointer; transition: border-color 0.2s; } .ds-btn-ghost-dark:hover { border-color: rgba(240,235,224,0.9); } .ds-btn-ghost-dark:focus-visible { outline: 2px solid #F0EBE0; outline-offset: 3px; }"
+    },
+    {
+      "name": "Category Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "3:4 portrait card with full-bleed image, always-on directional gradient, and hover reveal of CTA. Signature component.",
+      "html": "<div class=\"ds-card-cat\"><div class=\"ds-card-cat__overlay\"></div><span class=\"ds-card-cat__label\">WEDDINGS</span><span class=\"ds-card-cat__cta\">View Work →</span></div>",
+      "css": ".ds-card-cat { position: relative; aspect-ratio: 3/4; background: #1C1A18; overflow: hidden; cursor: pointer; } .ds-card-cat__overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(14,12,11,0.85) 0%, rgba(14,12,11,0.12) 55%, transparent 100%); z-index: 1; } .ds-card-cat__label { position: absolute; bottom: 24px; left: 24px; font-family: 'Fraunces', serif; font-weight: 700; font-size: 32px; font-variation-settings: 'opsz' 72; color: #F0EBE0; z-index: 2; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); display: block; } .ds-card-cat:hover .ds-card-cat__label { transform: translateY(-6px); } .ds-card-cat__cta { position: absolute; bottom: 8px; left: 24px; font-family: 'Outfit', sans-serif; font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase; color: #F0EBE0; opacity: 0; z-index: 2; transition: opacity 0.3s; display: block; } .ds-card-cat:hover .ds-card-cat__cta { opacity: 1; }"
+    },
+    {
+      "name": "Navbar",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Horizontal nav at 11px uppercase Outfit. Links default to ink-muted (45% opacity); active/hover shifts to full ink.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav__link ds-nav__link--active\" href=\"#\">HOME</a><a class=\"ds-nav__link\" href=\"#\">WORK</a><a class=\"ds-nav__link\" href=\"#\">ABOUT</a><a class=\"ds-nav__link\" href=\"#\">CONTACT</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 32px; align-items: center; font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; } .ds-nav__link { color: rgba(14,12,11,0.45); text-decoration: none; transition: color 0.2s; } .ds-nav__link:hover, .ds-nav__link--active { color: #0E0C0B; } .ds-nav__link:focus-visible { outline: 2px solid #0E0C0B; outline-offset: 3px; }"
+    },
+    {
+      "name": "Surface Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Elevated Pale Surface panel used for testimonials and highlighted content blocks.",
+      "html": "<div class=\"ds-card-surface\"><p class=\"ds-card-surface__quote\">“Absolutely exceptional work — Kyle captured everything perfectly.”</p><span class=\"ds-card-surface__author\">MARIA S. — WEDDING CLIENT</span></div>",
+      "css": ".ds-card-surface { background: #F4EFE5; padding: 32px; border-radius: 0; } .ds-card-surface__quote { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 300; line-height: 1.65; color: #0E0C0B; margin: 0 0 16px; } .ds-card-surface__author { font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(14,12,11,0.45); }"
+    },
+    {
+      "name": "Display Headline",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Fraunces 900 upright with optional italic counterpoint line. Primary typographic voice.",
+      "html": "<h2 class=\"ds-display\">MOMENTS<br><em class=\"ds-display-italic\">that last</em></h2>",
+      "css": ".ds-display { font-family: 'Fraunces', serif; font-weight: 900; font-size: clamp(44px, 5.5vw, 96px); font-variation-settings: 'opsz' 144; line-height: 0.92; letter-spacing: -0.03em; color: #0E0C0B; margin: 0; text-transform: uppercase; } .ds-display-italic { font-family: 'Fraunces', serif; font-weight: 400; font-style: italic; font-size: 0.85em; font-variation-settings: 'opsz' 120; line-height: 1.05; letter-spacing: -0.03em; color: #0E0C0B; }"
+    },
+    {
+      "name": "Eyebrow Label",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Uppercase metadata line preceding section headings or acting as category tags.",
+      "html": "<span class=\"ds-eyebrow\">FEATURED WORK</span>",
+      "css": ".ds-eyebrow { font-family: 'Outfit', sans-serif; font-size: 11px; font-weight: 400; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(14,12,11,0.45); display: block; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Analog Print",
+    "overview": "This is a photographer's portfolio that trusts the work. The design does not compete with the images — it recedes into an aged-paper silence and lets the photographs announce themselves. The cream ground, the Fraunces serif, and the film grain skin are not decorative; they are a thesis: the work is primary, the interface is the frame.\n\nThe palette is a single warm monochrome stepped from raw linen to near-black ink. There is no accent color. No red, no blue, no brand hue. Color discipline is what keeps the photography on screen primary. Every interaction uses opacity, scale, and tonal shift — never hue.\n\nMotion is present but imperceptible at first glance — category cards that breathe on hover, stagger reveals on entrance, headline text cycling through service words mid-sentence. The effect should feel editorial, not technological. If you notice the interface before you notice the work, something is wrong.",
+    "keyCharacteristics": [
+      "Light-first: aged cream is the canvas, not a light-mode toggle",
+      "Sharp everywhere: zero border radius throughout the system",
+      "Two-font system: Fraunces (variable serif, optical size axis) + Outfit (geometric sans)",
+      "Fraunces italic as the sole editorial accent — never used for standalone body copy",
+      "Film grain skin (SVG noise, mix-blend-mode: multiply, ~3% opacity) applied globally",
+      "Depth through tonal steps only — no shadows at rest"
+    ],
+    "rules": [
+      {
+        "name": "The No-Accent Rule",
+        "body": "There is no accent color. Ink on cream is the entirety of the palette on light surfaces. Depart from this and the work stops being primary.",
+        "section": "colors"
+      },
+      {
+        "name": "The Warm Ink Rule",
+        "body": "Never substitute Near-Black Ink with a neutral or cool black. #0E0C0B is warm-toned by design — it reads against the cream ground correctly.",
+        "section": "colors"
+      },
+      {
+        "name": "The Italic Counterpoint Rule",
+        "body": "Fraunces italic appears only in the direct company of Fraunces upright — one italic line within a Display headline, never a standalone heading.",
+        "section": "typography"
+      },
+      {
+        "name": "The 11px Floor",
+        "body": "No UI text set below 11px. Use ink-muted opacity for de-emphasis, never a smaller size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "If you reach for a box-shadow at rest, step the background color instead. Shadows appear only as interaction response, never as structural hierarchy.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Zero-Radius Rule",
+        "body": "No border radius anywhere. Not 2px, not rounded-sm. The sharp corner is the brand.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do use Label typography (Outfit 400, 11px / 2.5px / uppercase) for all interactive chrome — buttons, nav, eyebrows, form labels.",
+      "Do pair Fraunces upright 900 with Fraunces italic 300 in headlines — the weight contrast is the editorial move.",
+      "Do use font-variation-settings: 'opsz' 144 on any Fraunces text above 60px.",
+      "Do apply the film grain skin to every page — it is the material signature.",
+      "Do step through the cream ramp for section alternation (Pale Surface → Aged Cream → Linen Dim).",
+      "Do use clamp() for all font sizes and padding — the system is entirely fluid."
+    ],
+    "donts": [
+      "Don't add border radius anywhere. Zero radius is the brand.",
+      "Don't introduce an accent color. Ink on cream is the entire palette on light surfaces.",
+      "Don't use spinners for loading states — cream/linen toned skeletons only.",
+      "Don't let Fraunces italic stand alone as the primary typographic voice on any section.",
+      "Don't use box-shadow at rest on any element — depth is earned through tonal steps or interaction transforms.",
+      "Don't hardcode colors as Tailwind utilities (bg-white, text-gray-900) — always use CSS custom properties (var(--bg), var(--ink))."
+    ]
+  }
+}

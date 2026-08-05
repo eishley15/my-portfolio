@@ -8,26 +8,32 @@ export default function Confetti({ active, onComplete }) {
     if (!active) return;
 
     const colors = ["#8b1f30", "#f0ebe0", "#e8e0d0", "#d4cab8"];
-    const newParticles = Array.from({ length: 50 }, (_, i) => ({
-      id: i,
-      x: Math.random() * window.innerWidth,
-      y: -20,
-      color: colors[Math.floor(Math.random() * colors.length)],
-      rotation: Math.random() * 360,
-      size: Math.random() * 8 + 4,
-      velocityX: (Math.random() - 0.5) * 4,
-      velocityY: Math.random() * 3 + 2,
-      rotationSpeed: (Math.random() - 0.5) * 10,
-    }));
 
-    setParticles(newParticles);
+    const spawnDelay = setTimeout(() => {
+      setParticles(
+        Array.from({ length: 50 }, (_, i) => ({
+          id: i,
+          x: Math.random() * window.innerWidth,
+          y: -20,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          rotation: Math.random() * 360,
+          size: Math.random() * 8 + 4,
+          velocityX: (Math.random() - 0.5) * 4,
+          velocityY: Math.random() * 3 + 2,
+          rotationSpeed: (Math.random() - 0.5) * 10,
+        }))
+      );
+    }, 300);
 
     const timer = setTimeout(() => {
       setParticles([]);
       if (onComplete) onComplete();
-    }, 4000);
+    }, 4300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(spawnDelay);
+      clearTimeout(timer);
+    };
   }, [active, onComplete]);
 
   return (

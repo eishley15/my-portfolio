@@ -1,31 +1,83 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --black: #0e0c0b;
-  --black-pure: #080706;
-  --off-white: #f0ebe0;
-  --cream: #e8e0d0;
-  --cream-dim: #d4cab8;
-  --red: #8b1f30;
-  --red-hover: #6e1826;
-  --gray-dark: #1c1a18;
-  --gray-mid: #3a3530;
-  --gray-light: #7a7268;
-  --text-muted: rgba(240,235,224,0.42);
-  --text-muted-dark: rgba(240,235,224,0.22);
+@font-face {
+  font-family: 'KiyaHandwrite';
+  src: url('/fonts/KiyaHandwrite.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
-  --font-display: 'Bebas Neue', sans-serif;
-  --font-serif: 'Instrument Serif', serif;
-  --font-body: 'DM Sans', sans-serif;
+@font-face {
+  font-family: 'MontaguSlab';
+  src: url('/fonts/MontaguSlab-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'MontaguSlab';
+  src: url('/fonts/MontaguSlab-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ── Palette: #FFFCF2 · #CCC5B9 · #403D39 · #252422 · #EB5E28 ── */
+
+  /* Light surfaces */
+  --bg:          #FFFCF2;
+  --bg-dim:      var(--accent);
+  --surface:     #FFFCF2;
+
+  /* Ink scale — derived from #252422 */
+  --ink:         #252422;
+  --ink-muted:   rgba(37,36,34,0.50);
+  --ink-faint:   rgba(37,36,34,0.10);
+  --border:      rgba(64,61,57,0.14);
+
+  /* Dark sections — #252422 base, #403D39 mid */
+  --black:      #252422;
+  --black-pure: #252422;
+  --gray-dark:  #403D39;
+  --off-white:  #FFFCF2;
+
+  /* Accent — burnt orange, one live color, used sparingly */
+  --accent:      #EB5E28;
+  --accent-dim:  rgba(235,94,40,0.12);
+
+  /* Status */
+  --green-available:      #4caf72;
+  --green-available-glow: rgba(76,175,114,0.2);
+
+  /* Legacy aliases */
+  --red:        var(--accent);
+  --red-action: var(--accent);
+  --red-hover:  rgba(235,94,40,0.80);
+  --text-muted: var(--ink-muted);
+
+  /* Typography — Outfit (display + body sans) */
+  --font-display: 'Outfit', sans-serif;
+  --font-body:    'Outfit', sans-serif;
 }
 
 @layer utilities {
+  /* Display accent — Fraunces italic serif for script contrast */
   .font-serif {
-    font-family: var(--font-serif);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 144;
+  }
+  /* Optical size for very large display use */
+  .font-display-xl {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 144;
     letter-spacing: -0.04em;
   }
 }
@@ -44,94 +96,62 @@ html {
 }
 
 body {
-  background: var(--black);
-  color: var(--off-white);
+  background: var(--bg);
+  color: var(--ink);
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-
-/* Film grain overlay */
+/* Film grain — works on light and dark */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.032;
+  opacity: 0.028;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='grain'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23grain)'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
+  mix-blend-mode: multiply;
 }
 
-/* Marquee strip */
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+/* Keyboard focus ring — accent signals interaction */
+:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 3px;
 }
 
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 28s linear infinite;
-}
-
-.marquee-track:hover {
-  animation-play-state: paused;
-}
-
-/* Section reveal animation */
+/* Section reveal */
 .reveal {
   opacity: 0;
-  transform: translateY(28px);
+  transform: translateY(24px);
   transition: opacity 0.7s ease-out, transform 0.7s ease-out;
 }
-
 .reveal.visible {
   opacity: 1;
   transform: translateY(0);
 }
 
-/* Masonry grid layout */
-.masonry-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 4px;
-  grid-auto-rows: 200px;
-  grid-auto-flow: dense;
-}
-
-@media (min-width: 768px) {
-  .masonry-grid {
-    grid-template-columns: repeat(3, 1fr);
-    grid-auto-rows: 280px;
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: opacity 0.3s ease-out;
+    transform: none !important;
   }
+  .reveal.visible { opacity: 1; }
 }
 
-@media (min-width: 1024px) {
-  .masonry-grid {
-    grid-template-columns: repeat(4, 1fr);
-    grid-auto-rows: 250px;
-  }
-}
-
-.masonry-grid > div:hover {
-  z-index: 10;
-}
-
-/* Nav underline hover */
+/* Nav link — dark text on cream */
 .nav-link {
   position: relative;
   font-family: var(--font-body);
   font-size: 11px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: rgba(240,235,224,0.5);
+  color: var(--ink-muted);
   text-decoration: none;
   transition: color 0.2s;
 }
-
 .nav-link::after {
   content: '';
   position: absolute;
@@ -139,39 +159,72 @@ body::before {
   left: 0;
   width: 100%;
   height: 0.5px;
-  background: var(--off-white);
+  background: var(--ink);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.25s ease-out;
 }
+.nav-link:hover { color: var(--ink); }
+.nav-link:hover::after { transform: scaleX(1); }
 
-.nav-link:hover {
+/* Active nav indicator — accent marks the current location */
+.nav-link-active {
+  color: var(--accent) !important;
+  font-weight: 500;
+}
+.nav-link-active::after {
+  background: var(--accent) !important;
+  transform: scaleX(1) !important;
+}
+
+/* Shared typographic utilities */
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.italic-accent {
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+/* Dark surface (CardNav, overlays) */
+.surface-dark {
+  background: var(--black);
   color: var(--off-white);
 }
 
-.nav-link:hover::after {
-  transform: scaleX(1);
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
-/* Transparent navbar color inversion */
-.navbar-transparent .nav-link {
-  color: rgba(14,12,11,0.5);
+/* Marquee */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+  will-change: transform;
+  transform: translateZ(0);
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* Mobile chrome */
+@media (max-width: 767px) {
+  .hero-stats { display: none !important; }
+  .hero-scroll-indicator { display: none !important; }
 }
 
-.navbar-transparent .nav-link:hover {
-  color: var(--black);
+/* FAQ accordion */
+.faq-item {
+  border-top: 0.5px solid var(--border);
 }
-
-.navbar-transparent .nav-link::after {
-  background: var(--black);
-}
-
-/* Light section overrides */
-.section-light {
-  background: var(--off-white);
-  color: var(--black);
-}
-
-.section-light .text-muted {
-  color: rgba(14,12,11,0.45);
+.faq-item:last-child {
+  border-bottom: 0.5px solid var(--border);
 }

@@ -28,12 +28,25 @@ dist-ssr
 .env.local
 .env.production
 
+# Local-only folders
+supabase/
+lightroom-plugin/
+
 # Claude Code - Session files (do not commit)
 memory/sessions/*.jsonl
 memory/.temp/
 *.claude-session
 .claude/
 memory/
+
+# Claude Code - Harness internals
+.agents/
+.codex/
+skills-lock.json
+
+# Claude Code - Planning / session docs (not app code)
+*-PLAN.yaml
+*-STATUS.yaml
 
 # Claude Code - Documentation files (reference material)
 AUTO-SETUP.md
@@ -56,3 +69,10 @@ WCAG-MODERN-STYLING-SUMMARY.md
 CLAUDE.md
 SOUL.md
 YAML-MEMORY-MIGRATION-COMPLETE.md
+.vercel
+.env*
+
+e2e/
+playwright-report/
+
+*.mjs

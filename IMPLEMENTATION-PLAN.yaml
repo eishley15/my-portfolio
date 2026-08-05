@@ -1,0 +1,932 @@
+implementation_plan:
+  project: "kylepayawal.studio"
+  created: "2026-07-30"
+  source_audits:
+    - AUDIT.yaml
+    - DESIGN-SUGGESTIONS.yaml
+  total_items: 53
+  estimated_sessions: 6
+  approach: >
+    Items are grouped into 6 phases ordered by: (1) impact on real users,
+    (2) difficulty relative to value, (3) dependency — later phases build
+    on earlier ones. Bug fixes come first because they affect functionality.
+    SEO and performance are second because they affect discoverability and
+    retention before design polish is even seen. New features and design
+    upgrades come last because they require a solid, bug-free foundation.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 1 — CRITICAL BUG FIXES
+# Target: 1 session | Risk: High if unaddressed
+# These are functional breakages affecting real users right now.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_1:
+  label: "Critical Bug Fixes"
+  goal: >
+    Eliminate all broken behavior, invalid HTML, and unhandled errors that
+    are silently failing in production today. None of these require design
+    decisions — they are pure correctness fixes.
+  estimated_time: "2–3 hours"
+
+  tasks:
+    - task_id: "P1-T1"
+      source: "BUG-01"
+      priority: 1
+      title: "Fix nested <a><button> on About page"
+      files:
+        - src/pages/About.jsx
+      what_to_do: >
+        Remove the <Link> wrapper around both MagneticButton instances on the
+        About page. Convert MagneticButton in About.jsx to accept a 'to' prop
+        and use useNavigate() internally for programmatic navigation, matching
+        the Home.jsx version of the component. This eliminates the invalid
+        <a><button> nesting.
+      acceptance_criteria:
+        - "Both 'Get in Touch' and 'View Works' buttons navigate correctly"
+        - "HTML validates with no nested interactive element errors"
+        - "Clicking either button works on iOS Safari"
+
+    - task_id: "P1-T2"
+      source: "BUG-02"
+      priority: 2
+      title: "Add .catch() to video.play() in Work.jsx VideoWithAutoplay"
+      files:
+        - src/pages/Work.jsx
+      what_to_do: >
+        Line 121: change videoRef.current.play() to
+        videoRef.current.play().catch(() => {}). This matches the existing
+        correct implementation in Home.jsx and silences unhandled promise
+        rejections when autoplay is blocked by the browser.
+      acceptance_criteria:
+        - "No unhandled promise rejection in browser console when visiting /work"
+        - "Videos still autoplay when browser policy allows"
+
+    - task_id: "P1-T3"
+      source: "BUG-05"
+      priority: 3
+      title: "Replace <a href> with <Link to> in Work empty state"
+      files:
+        - src/pages/Work.jsx
+      what_to_do: >
+        Line 343: replace the <a href="/contact"> anchor tag with React Router's
+        <Link to="/contact"> component. The import is already present in the file.
+      acceptance_criteria:
+        - "Clicking empty state CTA does SPA navigation (no full page reload)"
+
+    - task_id: "P1-T4"
+      source: "BUG-06"
+      priority: 4
+      title: "Remove HTML 'required' attribute from Contact form to stop double validation"
+      files:
+        - src/pages/Contact.jsx
+      what_to_do: >
+        Remove the 'required' attribute from all <input> and <select> elements
+        in Contact.jsx. The React-side validateForm() function already covers
+        all validation. The duplicate native browser validation causes a shake
+        animation + browser tooltip to fire simultaneously on submit.
+      acceptance_criteria:
+        - "Submitting empty form shows only the React shake animation"
+        - "No native browser tooltip appears on submit"
+
+    - task_id: "P1-T5"
+      source: "BUG-04"
+      priority: 5
+      title: "Fix window.innerWidth synchronous access in useState initializers"
+      files:
+        - src/components/Navbar.jsx
+        - src/components/Footer.jsx
+        - src/pages/Gallery.jsx
+      what_to_do: >
+        Replace all three instances of useState(window.innerWidth < 768) with a
+        lazy initializer:
+          useState(() => typeof window !== 'undefined' ? window.innerWidth < 768 : false)
+        This prevents ReferenceError in non-browser environments and is the
+        correct pattern for SSR-safe responsive state.
+      acceptance_criteria:
+        - "No ReferenceError thrown during initial render"
+        - "isMobile state correctly initializes on all three components"
+
+    - task_id: "P1-T6"
+      source: "BUG-07"
+      priority: 6
+      title: "Fix About page border accent disappearing (zIndex: -1 → 0)"
+      files:
+        - src/pages/About.jsx
+      what_to_do: >
+        Change the decorative border offset div from zIndex: -1 to zIndex: 0
+        and keep pointer-events: none. The parent's overflow: hidden already
+        handles visual containment.
+      acceptance_criteria:
+        - "The offset border accent is visible behind the profile image"
+        - "Clicking the image area works normally"
+
+    - task_id: "P1-T7"
+      source: "BUG-08"
+      priority: 7
+      title: "Add 5-second timeout fallback to Home loading screen"
+      files:
+        - src/pages/Home.jsx
+      what_to_do: >
+        Wrap the setIsLoading(false) logic in a combined approach: a max 5-second
+        timeout that dismisses the loading screen regardless of API state, plus
+        the existing 400ms delay when data loads successfully. This prevents
+        permanent loading screen on Supabase fetch failure.
+      acceptance_criteria:
+        - "Loading screen always dismisses within 5 seconds even if API fails"
+        - "Loading screen still dismisses at 400ms when data loads normally"
+
+    - task_id: "P1-T8"
+      source: "BUG-03"
+      priority: 8
+      title: "Fix Home intro section two-column grid on mobile"
+      files:
+        - src/pages/Home.jsx
+      what_to_do: >
+        The 'FLASH. grain. TRUTH.' intro section uses inline gridTemplateColumns
+        '1fr 1fr' with no mobile override. Replace with Tailwind responsive
+        classes: 'grid grid-cols-1 md:grid-cols-2' and adjust the gap
+        accordingly (gap-12 md:gap-20). Remove the inline style for the grid.
+      acceptance_criteria:
+        - "On screens < 768px the two columns stack vertically"
+        - "Layout is readable on 375px iPhone SE"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 2 — SEO & TECHNICAL FOUNDATION
+# Target: 1 session | Risk: Invisible to users, but high business impact
+# These changes affect how the site is discovered and shared.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_2:
+  label: "SEO & Technical Foundation"
+  goal: >
+    Make the site indexable, shareable, and crawlable. None of these are
+    visible to users on the page, but they directly affect whether new
+    clients can find Kyle through Google or social sharing.
+  estimated_time: "2–3 hours"
+
+  tasks:
+    - task_id: "P2-T1"
+      source: "SEO-01, SEO-02, SEO-03"
+      priority: 1
+      title: "Add per-page meta tags, description, and Open Graph tags"
+      files:
+        - index.html
+        - src/pages/Home.jsx
+        - src/pages/Work.jsx
+        - src/pages/About.jsx
+        - src/pages/Contact.jsx
+        - src/pages/Inquire.jsx
+      what_to_do: >
+        Install react-helmet-async. Wrap the app in <HelmetProvider> in main.jsx.
+        Add a <Helmet> block to each page with:
+          - <title> unique to each page
+          - <meta name="description"> (150–160 chars, keyword-rich)
+          - <meta property="og:title">
+          - <meta property="og:description">
+          - <meta property="og:image"> (use a strong portfolio image URL from CDN)
+          - <meta property="og:url">
+          - <meta name="twitter:card" content="summary_large_image">
+        Suggested page titles:
+          Home:    "Kyle Payawal — Photographer & Videographer | Tarlac, Philippines"
+          Work:    "Portfolio | Kyle Payawal Photography & Video"
+          About:   "About Kyle Payawal | Flash. Grain. Truth."
+          Contact: "Book Kyle Payawal | Photography & Videography Inquiry"
+          Inquire: "Inquire Now | Kyle Payawal Photography & Videography"
+      acceptance_criteria:
+        - "Each page shows a unique <title> in the browser tab"
+        - "Pasting a URL into Facebook Debugger shows correct OG image and title"
+        - "Google Search Console Preview shows correct description per page"
+
+    - task_id: "P2-T2"
+      source: "SEO-06, PERF-04, PERF-05"
+      priority: 2
+      title: "Add sitemap.xml and robots.txt to public/"
+      files:
+        - public/sitemap.xml (new)
+        - public/robots.txt (new)
+      what_to_do: >
+        Create public/sitemap.xml listing:
+          https://kylepayawal.studio/
+          https://kylepayawal.studio/work
+          https://kylepayawal.studio/about
+          https://kylepayawal.studio/contact
+          https://kylepayawal.studio/inquire
+        with lastmod and changefreq tags.
+
+        Create public/robots.txt:
+          User-agent: *
+          Disallow: /gallery
+          Allow: /
+          Sitemap: https://kylepayawal.studio/sitemap.xml
+      acceptance_criteria:
+        - "https://kylepayawal.studio/sitemap.xml returns valid XML"
+        - "https://kylepayawal.studio/robots.txt disallows /gallery"
+
+    - task_id: "P2-T3"
+      source: "SEO-04, SEO-05"
+      priority: 3
+      title: "Fix heading hierarchy on Home and Contact pages"
+      files:
+        - src/pages/Home.jsx
+        - src/pages/Contact.jsx
+      what_to_do: >
+        Home.jsx hero: combine the three lines into a single <h1> block (using
+        spans for individual line styling). Remove the duplicate <h1> on 'THAT'S
+        THE POINT.' — make it a <span> or <p> inside the single <h1>.
+
+        Contact.jsx: the heading structure is h1 → h2 → h1. Change the layout
+        to: one <h1> wrapping all three lines (using span for the serif 'something'
+        line), matching the Inquire.jsx hero treatment which uses the same layout
+        and gets it right.
+      acceptance_criteria:
+        - "Each page has exactly one <h1>"
+        - "Heading order flows h1 → h2 → h3 with no jumps back"
+
+    - task_id: "P2-T4"
+      source: "PERF-01"
+      priority: 4
+      title: "Move Google Fonts from CSS @import to HTML <link> preload"
+      files:
+        - index.html
+        - src/index.css
+      what_to_do: >
+        Remove the @import url() from the top of index.css.
+        Add to index.html <head>:
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link rel="preload" as="style" href="[google-fonts-url]">
+          <link rel="stylesheet" href="[google-fonts-url]">
+        The same three families (Bebas Neue, Instrument Serif, DM Sans) but now
+        discovered by the browser before CSS parsing begins.
+      acceptance_criteria:
+        - "Lighthouse no longer flags render-blocking font resources"
+        - "Fonts load at the same visual time or faster"
+
+    - task_id: "P2-T5"
+      source: "SEO-07"
+      priority: 5
+      title: "Add canonical URL meta tag per page"
+      files:
+        - src/pages/*.jsx (via Helmet blocks added in P2-T1)
+      what_to_do: >
+        Inside each page's <Helmet> block (from P2-T1), add:
+          <link rel="canonical" href="https://kylepayawal.studio/[page-path]" />
+        This consolidates link equity if the site is ever accessible at multiple
+        URLs (http vs https, www vs non-www).
+      acceptance_criteria:
+        - "Each page's canonical tag points to its own absolute HTTPS URL"
+
+    - task_id: "P2-T6"
+      source: "SEO-08"
+      priority: 6
+      title: "Add JSON-LD structured data for Person and LocalBusiness"
+      files:
+        - index.html or src/pages/Home.jsx (via Helmet)
+      what_to_do: >
+        Add a <script type="application/ld+json"> block on the Home page with:
+          {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            "name": "Kyle Payawal Photography & Videography",
+            "description": "Photographer and videographer based in Tarlac and Angeles City, Pampanga, Philippines.",
+            "url": "https://kylepayawal.studio",
+            "image": "https://cdn.kylepayawal.studio/[best-portfolio-image]",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": "Tarlac City",
+              "addressRegion": "Tarlac",
+              "addressCountry": "PH"
+            },
+            "sameAs": [
+              "https://www.instagram.com/payawalkyle/",
+              "https://www.facebook.com/kyle.payawal"
+            ]
+          }
+      acceptance_criteria:
+        - "Google Rich Results Test shows no errors for the structured data"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 3 — UX & NAVIGATION FIXES
+# Target: 1 session | Risk: Medium — users hitting dead ends
+# Structural UX improvements that change how users move through the site.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_3:
+  label: "UX & Navigation Fixes"
+  goal: >
+    Eliminate dead ends, clarify the booking journey, add missing navigation
+    infrastructure, and make key content visible on all screen sizes.
+  estimated_time: "3–4 hours"
+
+  tasks:
+    - task_id: "P3-T1"
+      source: "UX-01"
+      priority: 1
+      title: "Add 404 Not Found page and catch-all route"
+      files:
+        - src/App.jsx
+        - src/pages/NotFound.jsx (new)
+      what_to_do: >
+        Create a new NotFound.jsx page consistent with the site's dark aesthetic:
+          - Large display heading: 'LOST.'
+          - Italic serif subtext: 'This page doesn't exist.'
+          - A single MagneticButton CTA: 'Back to Home' → /
+          - Optional: faint film grain background matching the site's texture
+        Add a catch-all route in App.jsx:
+          <Route path="*" element={<NotFound />} />
+      acceptance_criteria:
+        - "Visiting /anything-random shows the 404 page"
+        - "Clicking 'Back to Home' returns to /"
+        - "Page title updates to '404 — Page Not Found | Kyle Payawal'"
+
+    - task_id: "P3-T2"
+      source: "UI-02, LAY-01"
+      priority: 2
+      title: "Rebuild Footer with navigation column and email link"
+      files:
+        - src/components/Footer.jsx
+      what_to_do: >
+        Redesign footer layout to three columns on desktop, stacked on mobile:
+          Column 1 (Left): Brand name + tagline (existing content)
+          Column 2 (Center): Quick Links — Home, Work, About, Contact, Inquire
+            (using <Link> components, styled as nav-link style)
+          Column 3 (Right): Connect — email link (payawalkyle@gmail.com or
+            business email), Instagram, Facebook, location string
+        Keep the bottom bar copyright row. The email in the footer should be
+        an <a href="mailto:..."> link.
+      acceptance_criteria:
+        - "Footer renders in 3 columns on desktop, stacked on mobile"
+        - "All footer links navigate correctly via SPA routing"
+        - "Email link opens the user's mail client"
+        - "Footer is visually consistent with the dark brand"
+
+    - task_id: "P3-T3"
+      source: "UX-02, BRAND-01"
+      priority: 3
+      title: "Clarify the Contact vs Inquire page relationship"
+      files:
+        - src/pages/Contact.jsx
+        - src/components/Navbar.jsx
+      decision_note: >
+        Two options — choose one before implementing:
+        OPTION A (Recommended): Remove /contact entirely. Redirect it to /inquire.
+          Update all internal links (Home CTA, About page, Footer) to point to
+          /inquire. The Inquire wizard is the better product.
+        OPTION B: Keep both but differentiate them explicitly.
+          /contact = quick drop-a-line form (no booking, just a message)
+          /inquire = full booking wizard
+          Add a header label on each: 'Quick Message' vs 'Book a Session'
+          and add a cross-link on each page pointing to the other.
+      what_to_do_if_option_a: >
+        - Add a redirect in App.jsx: <Route path="/contact" element={<Navigate to="/inquire" replace />} />
+        - Update Home.jsx 'Start a Project' CTA: to="/inquire"
+        - Update About.jsx 'Get in Touch': to="/inquire"
+        - Update Footer quick links to point to /inquire
+        - Keep /contact route alive for any external links already shared
+      acceptance_criteria:
+        - "There is one clear booking entry point (or two clearly differentiated ones)"
+        - "A first-time visitor never sees two forms doing the same job"
+
+    - task_id: "P3-T4"
+      source: "UX-03, BUG-03"
+      priority: 4
+      title: "Make selected work hover labels visible on mobile"
+      files:
+        - src/pages/Home.jsx
+      what_to_do: >
+        The 2×2 selected work grid relies on onMouseEnter/Leave to show the
+        category label overlay. On mobile, always show the label as a permanent
+        bottom-pinned element (not an overlay that requires hover). Replace the
+        hover-only opacity:0 overlay with:
+          - On desktop: keep existing hover fade-in behavior
+          - On mobile (< 768px): use a persistent bottom bar with the category
+            name always visible (opacity: 1, no transition dependency on hover)
+        A Tailwind approach: 'group-hover:opacity-100 md:opacity-0 opacity-100 md:group-hover:opacity-100'
+      acceptance_criteria:
+        - "Category labels are visible on mobile without hovering"
+        - "Hover fade-in still works on desktop"
+
+    - task_id: "P3-T5"
+      source: "UX-05"
+      priority: 5
+      title: "Update page titles dynamically on route change (via react-helmet-async)"
+      files:
+        - All page files (covered in P2-T1)
+      dependency: "P2-T1 must be completed first"
+      what_to_do: >
+        This task is fulfilled by P2-T1. Ensure every page's <Helmet> block
+        updates the <title> correctly. Verify by navigating between pages and
+        watching the browser tab update.
+      acceptance_criteria:
+        - "Each route change updates the browser tab title"
+
+    - task_id: "P3-T6"
+      source: "UX-06"
+      priority: 6
+      title: "Make hero stats visible on mobile (or redesign for mobile)"
+      files:
+        - src/pages/Home.jsx
+        - src/index.css
+      what_to_do: >
+        The hero stats (200+ Projects, 10 Categories, 5+ Years) are hidden on
+        mobile via '.hero-stats { display: none !important }' in index.css.
+        Redesign the stats for mobile: instead of the absolute-positioned
+        bottom-right layout, add a horizontally-centered row of 3 stats below
+        the CTA button, visible only on mobile. The desktop absolute layout stays.
+        This way all users see the social proof.
+      acceptance_criteria:
+        - "Stats are visible on 375px mobile viewport"
+        - "Desktop layout is unchanged"
+
+    - task_id: "P3-T7"
+      source: "UX-12"
+      priority: 7
+      title: "Handle Supabase fetch errors gracefully on all data-dependent pages"
+      files:
+        - src/hooks/usePortfolio.js
+      what_to_do: >
+        Ensure the usePortfolio and useFeaturedPortfolio hooks always resolve
+        their loading state to false even on error. Check that the hook's catch
+        block (if present) sets loading: false. If the hook returns loading: true
+        indefinitely on error, add a catch handler that sets loading: false and
+        returns an empty array so the UI can render a proper empty/error state.
+      acceptance_criteria:
+        - "Simulating a Supabase network failure shows an empty state, not a spinner"
+        - "Loading screen on Home page always dismisses"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 4 — PERFORMANCE & CODE QUALITY
+# Target: 1 session | Risk: Low immediate risk, high long-term debt
+# Shared components, GPU hints, and dead code removal.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_4:
+  label: "Performance & Code Quality"
+  goal: >
+    Reduce code duplication, improve animation performance, and clean up
+    technical debt introduced by copy-pasted components across pages.
+  estimated_time: "3–4 hours"
+
+  tasks:
+    - task_id: "P4-T1"
+      source: "PERF-02, PERF-03"
+      priority: 1
+      title: "Extract shared LazyImage, VideoWithAutoplay, and isVideo() to shared components"
+      files:
+        - src/components/LazyImage.jsx (new)
+        - src/components/VideoWithAutoplay.jsx (new)
+        - src/lib/isVideo.js (new)
+        - src/pages/Home.jsx
+        - src/pages/About.jsx
+        - src/pages/Work.jsx
+        - src/pages/Gallery.jsx
+      what_to_do: >
+        Create three shared files:
+          1. src/components/LazyImage.jsx — single implementation of the
+             IntersectionObserver-based lazy image loader (use the Work.jsx
+             version with data-src as the base — it's the most correct).
+          2. src/components/VideoWithAutoplay.jsx — single implementation
+             with the .catch() from Home.jsx (task P1-T2 fixes this).
+          3. src/lib/isVideo.js — a pure utility function:
+             export function isVideo(item) {
+               if (item.type === 'video') return true;
+               if (!item.url) return false;
+               return ['.mp4','.webm','.ogg','.mov','.avi','.mkv']
+                 .some(ext => item.url.toLowerCase().includes(ext));
+             }
+        Then update all pages to import from these shared files instead of
+        using inline definitions.
+      acceptance_criteria:
+        - "LazyImage defined in exactly one file, imported everywhere else"
+        - "VideoWithAutoplay defined in exactly one file"
+        - "isVideo logic defined in exactly one function"
+        - "No duplicate implementations remain in page files"
+
+    - task_id: "P4-T2"
+      source: "BUG-09"
+      priority: 2
+      title: "Move Inquire section components outside component scope"
+      files:
+        - src/pages/Inquire.jsx
+      what_to_do: >
+        SectionAboutYou, SectionYourSession, SectionLocation, SectionVision are
+        defined inside the Inquire component. Move them outside and convert them
+        to proper React components that accept { formData, setField, fieldErrors }
+        as props. Render them as <SectionAboutYou formData={formData} ... />
+        instead of {SectionAboutYou()}. This enables correct React reconciliation
+        and proper AnimatePresence exit animations.
+      acceptance_criteria:
+        - "All four section components are defined outside the Inquire function"
+        - "Step transition exit animations fire correctly"
+        - "Form state is preserved correctly between step changes"
+
+    - task_id: "P4-T3"
+      source: "PERF-06, MOT-01"
+      priority: 3
+      title: "Add GPU compositing hints to marquee and hero parallax"
+      files:
+        - src/index.css
+        - src/pages/Home.jsx
+      what_to_do: >
+        index.css — Add to .marquee-track:
+          will-change: transform;
+          transform: translateZ(0);
+
+        Home.jsx hero — Wrap the <motion.video> in a regular div and apply
+        the heroY / heroOpacity transforms to the wrapper div instead of
+        directly to the video element. This reduces GPU pressure on mobile
+        by keeping the video compositor layer separate from the motion layer.
+      acceptance_criteria:
+        - "Chrome DevTools Layers panel shows marquee-track on its own composited layer"
+        - "Marquee animation is smooth (60fps) on mid-range mobile device"
+
+    - task_id: "P4-T4"
+      source: "PERF-07"
+      priority: 4
+      title: "Remove dead enableAutoplay timeout from Home.jsx hero"
+      files:
+        - src/pages/Home.jsx
+      what_to_do: >
+        The enableAutoplay state and its 1500ms setTimeout are dead code — the
+        video already has autoPlay={true} on the element. Remove the state,
+        the useEffect that sets it, and any JSX that references enableAutoplay.
+      acceptance_criteria:
+        - "Hero video still autoplays on page load"
+        - "enableAutoplay state and its useEffect are removed"
+
+    - task_id: "P4-T5"
+      source: "UI-07"
+      priority: 5
+      title: "Add focus-visible styles to all interactive elements"
+      files:
+        - src/index.css
+      what_to_do: >
+        Add global focus-visible rules to index.css:
+          :focus-visible {
+            outline: 2px solid var(--red);
+            outline-offset: 3px;
+          }
+        This single rule gives all keyboard-focusable elements (buttons, links,
+        inputs) a consistent visible focus ring that matches the brand. The
+        :focus-visible pseudo-class ensures it only shows for keyboard navigation,
+        not mouse clicks.
+      acceptance_criteria:
+        - "Tabbing through the site shows a clear red outline on every focused element"
+        - "Mouse clicking does not show the outline"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 5 — UI POLISH & DESIGN SYSTEM
+# Target: 1–2 sessions | Risk: Low — visual improvements only
+# Addresses typography, color semantics, layout improvements.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_5:
+  label: "UI Polish & Design System"
+  goal: >
+    Improve visual quality, fix color semantics, improve typography readability,
+    and add missing design system touches. These changes make the site feel
+    more intentional and more professional.
+  estimated_time: "4–6 hours"
+
+  tasks:
+    - task_id: "P5-T1"
+      source: "COL-01, UI-09, BRAND-02"
+      priority: 1
+      title: "Split red into two semantic tokens: action red and error red"
+      files:
+        - src/index.css
+        - src/pages/Contact.jsx
+        - src/pages/Inquire.jsx
+        - src/components/Navbar.jsx
+        - src/pages/Work.jsx
+      what_to_do: >
+        In index.css :root, add:
+          --red-action: #9e2537;   /* slightly warmer — for CTAs and active states */
+          --red-error: #8b1f30;    /* existing deep red — for error states only */
+        Then update usages:
+          - CTA buttons (Inquire, hero MagneticButton): use --red-action
+          - Active nav indicator: use --red-action
+          - Category card hover bottom bar: use --red-action
+          - Field error borders, error text, error backgrounds: use --red-error
+        The visual difference is subtle but the semantic separation is important.
+      acceptance_criteria:
+        - "CTA buttons and error states use visually distinct red tokens"
+        - "No single element uses --red (the old token) — all references updated"
+
+    - task_id: "P5-T2"
+      source: "COL-02, TYP-02"
+      priority: 2
+      title: "Increase contrast of muted text on both dark and light sections"
+      files:
+        - src/index.css
+        - src/pages/Home.jsx (intro paragraph)
+        - src/components/Footer.jsx
+      what_to_do: >
+        index.css: raise --text-muted-dark from rgba(240,235,224,0.22) to
+        rgba(240,235,224,0.38). The footer copyright text at 0.18 is nearly
+        invisible — raise to 0.30.
+
+        Home.jsx intro paragraph: change color from rgba(14,12,11,0.7) to
+        rgba(14,12,11,0.88) and font-size from 15px to 16px. This brings it
+        above 4.5:1 contrast on the cream background.
+      acceptance_criteria:
+        - "All body text passes WCAG AA 4.5:1 contrast on both dark and light backgrounds"
+        - "Footer copyright is legible without straining"
+
+    - task_id: "P5-T3"
+      source: "TYP-01"
+      priority: 3
+      title: "Lock up the hero title as a unified typographic block"
+      files:
+        - src/pages/Home.jsx
+      what_to_do: >
+        Wrap all three hero title lines in a single <h1> element (see P3-T3
+        for SEO reasons too). Adjust lineHeights so the three lines read as a
+        locked typographic unit:
+          Display line 1 ('IT'S GONNA LOOK'): lineHeight 0.88
+          Serif italic line ('a little different.'): lineHeight 0.82
+          Display line 2 ('THAT'S THE POINT.'): lineHeight 0.88
+        The marginBottom on the middle line can be removed — the lineHeight
+        controls all spacing.
+      acceptance_criteria:
+        - "Three title lines form a cohesive visual block at all viewport sizes"
+        - "No awkward gaps between lines on 768px–1024px screens"
+
+    - task_id: "P5-T4"
+      source: "TYP-03"
+      priority: 4
+      title: "Add tabular-nums to animated stat counters"
+      files:
+        - src/pages/Home.jsx (AnimatedCounter component)
+      what_to_do: >
+        In the AnimatedCounter <span>, add:
+          style={{ fontVariantNumeric: 'tabular-nums' }}
+        This ensures all digit glyphs occupy the same horizontal space during
+        animation, eliminating the left-right jitter as the count ticks up.
+      acceptance_criteria:
+        - "Counter animation is stable — no horizontal shifting during count"
+
+    - task_id: "P5-T5"
+      source: "LAY-02"
+      priority: 5
+      title: "Constrain About page text column width on large screens"
+      files:
+        - src/pages/About.jsx
+      what_to_do: >
+        The right column in the About page 2-column grid currently stretches
+        to fill all available space at wide viewports. Add maxWidth: '540px'
+        to the motion.div containing the bio, services, and CTA section.
+        This keeps line length in the readable 55–75 character range.
+      acceptance_criteria:
+        - "About page text column does not exceed 540px at 1400px+ viewport"
+        - "Layout still fills the grid correctly at 768px–1200px"
+
+    - task_id: "P5-T6"
+      source: "TYP-04"
+      priority: 6
+      title: "Improve service tag visibility on About page"
+      files:
+        - src/pages/About.jsx
+      what_to_do: >
+        Increase the service tag border from 0.5px solid rgba(240,235,224,0.15)
+        to 1px solid rgba(240,235,224,0.3). Add a very subtle background fill:
+        background: rgba(240,235,224,0.04). Keep the same padding and typography.
+      acceptance_criteria:
+        - "Service tags are clearly readable against the dark background"
+        - "Tags do not look heavy or block-like — the subtle treatment is preserved"
+
+    - task_id: "P5-T7"
+      source: "MOT-02"
+      priority: 7
+      title: "Add Y-axis entrance to page transitions"
+      files:
+        - src/App.jsx (AnimatedRoutes)
+      what_to_do: >
+        Currently AnimatePresence uses opacity only for page transitions (set
+        inside each page's motion.div). Add a subtle Y entrance:
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+        with transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } for
+        enter and duration: 0.2 for exit. The fast exit and slower entrance
+        creates a natural feeling of pages 'arriving'.
+      acceptance_criteria:
+        - "Route changes have a subtle upward slide in, quick fade out"
+        - "No janky jump — the movement is barely perceptible but feels physical"
+
+    - task_id: "P5-T8"
+      source: "MOT-03"
+      priority: 8
+      title: "Add rootMargin to Selected Work curtain reveals on Home"
+      files:
+        - src/pages/Home.jsx
+      what_to_do: >
+        The curtain reveal divs in the 2×2 selected work grid use
+        viewport={{ once: true }} with no rootMargin. Add rootMargin:
+        '0px 0px -15% 0px' to all four cards so the reveal only fires when
+        the card is 15% into the viewport, not when it loads above the fold.
+      acceptance_criteria:
+        - "On large desktop monitors, curtain reveals still animate when scrolled to"
+        - "Cards that are fully above the fold on load still animate in"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PHASE 6 — NEW FEATURES & CONTENT
+# Target: 2 sessions | Risk: Requires content from Kyle
+# New sections and features that drive conversion and brand depth.
+# ─────────────────────────────────────────────────────────────────────────────
+phase_6:
+  label: "New Features & Content"
+  goal: >
+    Add missing content sections that convert visitors to inquiries: testimonials,
+    a process section, availability signal, and gallery experience polish. These
+    require the most design effort but have the highest business impact.
+  estimated_time: "6–10 hours"
+  content_required_from_kyle:
+    - "2–4 client testimonials (quote, client name, event type, date)"
+    - "Business email address for footer and contact page"
+    - "Current booking availability status / open dates for 2026"
+    - "Process steps (how Kyle works from inquiry to delivery)"
+    - "Optional: Behance or 500px profile URL for additional social link"
+
+  tasks:
+    - task_id: "P6-T1"
+      source: "FEEL-02"
+      priority: 1
+      title: "Add Testimonials section to Home page"
+      files:
+        - src/pages/Home.jsx
+        - src/components/Testimonials.jsx (new)
+      what_to_do: >
+        Create a Testimonials.jsx component with a minimal, editorial design:
+          - Section background: var(--black-pure) to differentiate from other sections
+          - Eyebrow: 'CLIENT WORDS'
+          - Each testimonial: large italic serif quote (Instrument Serif), client
+            name in Bebas Neue below, event type + year in eyebrow style
+          - Layout: horizontal scroll on mobile, 2-column grid on desktop
+          - Entry animation: fadeUp stagger on scroll (whileInView)
+        Insert the section between the 'SELECTED WORK' grid and the footer CTA
+        on the Home page.
+        Content is hardcoded initially — can be moved to Supabase later.
+      acceptance_criteria:
+        - "Section is visible on Home page between work grid and footer CTA"
+        - "Quotes render in Instrument Serif italic"
+        - "Section is responsive on 375px mobile"
+
+    - task_id: "P6-T2"
+      source: "FEEL-01"
+      priority: 2
+      title: "Add 'How It Works' process section to Inquire page"
+      files:
+        - src/pages/Inquire.jsx
+        - src/pages/Contact.jsx (if kept)
+      what_to_do: >
+        Add a 3-step process section above the inquiry form on the Inquire page:
+          Step 01: 'Submit an Inquiry' — fill out the form below
+          Step 02: 'Planning Call' — 20-min call to align on vision and coverage
+          Step 03: 'Shoot Day & Delivery' — Kyle shoots, edits, delivers in [X] weeks
+        Design: horizontal 3-step row on desktop, vertical timeline on mobile.
+        Each step uses a numbered eyebrow, display font heading, and short body copy.
+        Background: var(--black) to contrast with the form area below (off-white).
+      acceptance_criteria:
+        - "3-step process is visible above the form on /inquire"
+        - "Process steps are accurate to Kyle's actual workflow (verify with Kyle)"
+
+    - task_id: "P6-T3"
+      source: "FEEL-07, FEEL-06"
+      priority: 3
+      title: "Add availability signal near booking CTAs"
+      files:
+        - src/pages/Home.jsx (footer CTA section)
+        - src/pages/Inquire.jsx (hero section)
+      what_to_do: >
+        Add a one-line availability note near the primary booking CTAs.
+        Design: a small pill or inline text element with:
+          - A warm amber dot (not red — avoid error color association)
+          - Text: 'Taking bookings for Q3 & Q4 2026 · Inquire early'
+        This can be a hardcoded string updated manually each quarter, or a
+        Supabase config value for easy editing without deployment.
+        Place it: above the 'Start a Project' MagneticButton on Home, and
+        below the hero headline on Inquire.
+      acceptance_criteria:
+        - "Availability text is visible and scannable near the primary CTA"
+        - "Color does not conflict with error red"
+
+    - task_id: "P6-T4"
+      source: "BRAND-03, UI-08"
+      priority: 4
+      title: "Add direct email link throughout the site"
+      files:
+        - src/components/Footer.jsx (P3-T2 covers this)
+        - src/pages/Contact.jsx
+        - src/pages/About.jsx
+      what_to_do: >
+        Once Kyle confirms the preferred business email address, add it as a
+        mailto: link on:
+          1. Footer right column (covered by P3-T2)
+          2. Below the Contact/Inquire form's social links section
+          3. The About page Connect section (alongside Instagram and Facebook)
+        Use the Mail icon from lucide-react (already imported in Footer.jsx).
+      dependency: "Requires business email address from Kyle"
+      acceptance_criteria:
+        - "Clicking the email link opens the user's mail client with the correct address pre-filled"
+
+    - task_id: "P6-T5"
+      source: "FEEL-04"
+      priority: 5
+      title: "Add brand copy to Gallery login screen"
+      files:
+        - src/pages/Gallery.jsx
+      what_to_do: >
+        The client gallery login gate is purely functional. Find the login/access
+        form section in Gallery.jsx and add above the access input:
+          - A small eyebrow: 'YOUR GALLERY IS READY'
+          - An italic serif line: 'Your memories are waiting.'
+          - Keep the existing access code input and submit button unchanged
+        This transforms a transactional screen into a brand moment.
+      acceptance_criteria:
+        - "Login screen shows warm brand copy above the access form"
+        - "Existing login functionality is unchanged"
+
+    - task_id: "P6-T6"
+      source: "FEEL-05, LAY-04"
+      priority: 6
+      title: "Give Wedding category a featured/hero card in Work page grid"
+      files:
+        - src/pages/Work.jsx
+      what_to_do: >
+        If Wedding is Kyle's primary service, give it a 2-column spanning card
+        at the top of the Work category grid. The implementation:
+          - If the first category returned is 'Wedding' (or hardcode its position),
+            apply col-span-2 on that single card with a taller aspect ratio (16/9)
+          - All remaining categories use the standard aspect-[4/3] tile
+          - On mobile: all cards are full-width regardless
+        This creates editorial hierarchy — one category is clearly the hero.
+      dependency: >
+        Kyle should confirm which category should be the featured/hero tile.
+      acceptance_criteria:
+        - "One category spans 2 columns with a larger aspect ratio on desktop"
+        - "Grid layout is not broken by the spanning card"
+        - "Mobile view shows all cards at full width"
+
+    - task_id: "P6-T7"
+      source: "MOT-04, MOT-05"
+      priority: 7
+      title: "Polish mobile menu exit stagger and Inquire form progress bar"
+      files:
+        - src/components/Navbar.jsx
+        - src/pages/Inquire.jsx
+      what_to_do: >
+        Navbar mobile menu: add reverse stagger on exit. Currently all items
+        exit with delay: 0. Add exit transition with delay: (3 - i) * 0.05 to
+        create a bottom-to-top exit cascade matching the top-to-bottom entry.
+
+        Inquire form: add a thin animated progress bar across the top of the
+        form card. Width: (step / 4) * 100%. Animate with Framer Motion layout
+        animation. Color: var(--red-action). Height: 2px.
+      acceptance_criteria:
+        - "Mobile menu items stagger out from bottom to top"
+        - "Inquire form shows progress bar at top of the card that grows each step"
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  SUMMARY TABLE
+# ─────────────────────────────────────────────────────────────────────────────
+summary:
+  total_tasks: 37
+  by_phase:
+    phase_1_critical_bugs: 8
+    phase_2_seo_technical: 6
+    phase_3_ux_navigation: 7
+    phase_4_performance: 5
+    phase_5_ui_polish: 8
+    phase_6_new_features: 7
+
+  items_deferred_or_skipped:
+    - id: "BRAND-05"
+      reason: >
+        Adding Behance/LinkedIn — requires Kyle to have active accounts on those
+        platforms. Add only if accounts exist or are created.
+    - id: "COL-03"
+      reason: >
+        Warm texture on light sections — subtle and decorative. Low priority
+        relative to functional improvements. Revisit after Phase 5.
+    - id: "COL-04"
+      reason: >
+        Nav indicator color context switching — very subtle visual change with
+        high implementation risk (context-dependent color logic already complex
+        in Navbar.jsx). Not worth the complexity for a minor visual improvement.
+
+  items_requiring_kyle_input:
+    - "Business email address (for P6-T4, P3-T2)"
+    - "2–4 client testimonials (for P6-T1)"
+    - "Process / workflow steps in Kyle's own words (for P6-T2)"
+    - "Current and upcoming availability for booking (for P6-T3)"
+    - "Which Work category should be the featured hero tile (for P6-T6)"
+    - "Decision on Contact vs Inquire consolidation — Option A or B (for P3-T3)"
+
+  recommended_session_order:
+    session_1: "Phase 1 — All 8 bug fixes (2–3 hours)"
+    session_2: "Phase 2 — SEO foundation (2–3 hours)"
+    session_3: "Phase 3 — UX and navigation (3–4 hours)"
+    session_4: "Phase 4 — Performance and code cleanup (3–4 hours)"
+    session_5: "Phase 5 — UI polish and design system (4–6 hours)"
+    session_6: "Phase 6 — New features and content (requires Kyle's content first)"

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { authHeaders } from '../lib/galleryAuth';
 
 export function useDownloadZip() {
   const [isZipping, setIsZipping] = useState(false);
@@ -21,7 +22,7 @@ export function useDownloadZip() {
 
       const response = await fetch('/api/download-zip', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(payload),
       });
 

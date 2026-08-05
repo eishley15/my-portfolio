@@ -9,10 +9,21 @@ import Work from "./pages/Work";
 import Gallery from "./pages/Gallery";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Inquire from "./pages/Inquire";
+import NotFound from "./pages/NotFound";
+import ClientPicks from "./pages/ClientPicks";
+import StudioAdmin from "./pages/StudioAdmin";
+import Slideshow from "./pages/Slideshow";
+
+// Routes that render their own nav/footer — skip the shared shell
+const STANDALONE_ROUTES = ["/studio"];
+const startsWithStandalone = (path) =>
+  path === "/studio" ||
+  path.startsWith("/picks/") ||
+  path.startsWith("/slideshow/");
 
 function AnimatedRoutes() {
   const location = useLocation();
-
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
@@ -21,12 +32,32 @@ function AnimatedRoutes() {
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/inquire" element={<Inquire />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
   );
 }
 
 function AppContent() {
+  const location = useLocation();
+  const standalone = startsWithStandalone(location.pathname);
+
+  // Standalone pages render without shared Navbar/Footer
+  if (standalone) {
+    return (
+      <>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/picks/:galleryId" element={<ClientPicks />} />
+          <Route path="/studio" element={<StudioAdmin />} />
+          <Route path="/slideshow/:accessCode" element={<Slideshow />} />
+        </Routes>
+      </>
+    );
+  }
+
   return (
     <>
       <BackToTop />

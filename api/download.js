@@ -7,48 +7,66 @@ const downloadTokenSecret = process.env.DOWNLOAD_TOKEN_SECRET;
 const trueNasBaseUrl      = process.env.TRUENAS_DOWNLOAD_BASE;
 const corsOrigin          = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
 
+function verifyGalleryToken(req) {
+  const auth  = req.headers['authorization'] || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
+  if (!token) return null;
+  try {
+    return jwt.verify(token, downloadTokenSecret);
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', corsOrigin);
+  res.setHeader('Access-Control-Allow-Origin',  corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET')    return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { accessCode, galleryId, fileName } = req.query;
+    const { fileName, galleryId, accessCode: qAccessCode } = req.query;
 
-    if (!accessCode || !galleryId || !fileName) {
-      return res.status(400).json({ error: 'Missing accessCode, galleryId, or fileName' });
+    if (!fileName || !galleryId) {
+      return res.status(400).json({ error: 'Missing fileName or galleryId' });
     }
 
-    // Verify accessCode exists in Supabase
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    let accessCode;
+    const tokenPayload = verifyGalleryToken(req);
 
-    const { data: clientData, error: clientError } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('access_code', accessCode)
-      .single();
+    if (tokenPayload) {
+      // New path: gallery JWT in Authorization header
+      accessCode = tokenPayload.accessCode;
+    } else if (qAccessCode) {
+      // Legacy path: accessCode in query param — verify against DB
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { data, error } = await supabase
+        .from('clients')
+        .select('access_code')
+        .eq('access_code', qAccessCode)
+        .single();
 
-    if (clientError || !clientData) {
-      return res.status(403).json({ error: 'Invalid access code' });
+      if (error || !data) return res.status(403).json({ error: 'Invalid access code' });
+      accessCode = qAccessCode;
+    } else {
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Sign JWT (15 min expiry)
-    const token = jwt.sign(
+    // Sign a short-lived download token for TrueNAS
+    const dlToken = jwt.sign(
       { galleryId, fileName, accessCode },
       downloadTokenSecret,
       { expiresIn: '15m' }
     );
 
-    // Return the signed download URL pointing to TrueNAS via dl subdomain
     return res.status(200).json({
-      url: `${trueNasBaseUrl}/dl/${galleryId}/${fileName}?token=${token}`,
+      url: `${trueNasBaseUrl}/dl/${galleryId}/${fileName}?token=${dlToken}`,
     });
 
-  } catch (error) {
-    console.error('Download endpoint error:', error);
+  } catch (err) {
+    console.error('download error:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
