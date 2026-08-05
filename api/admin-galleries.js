@@ -21,10 +21,32 @@ const ALLOWED_FIELDS = new Set([
 const ALLOWED_SCENE_FIELDS = new Set(["name", "banner_image_url"]);
 
 export default async function handler(req, res) {
-  applyCors(req, res, { methods: "GET, PUT, PATCH, DELETE, OPTIONS" });
+  applyCors(req, res, { methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS" });
   if (req.method === "OPTIONS") return res.status(200).end();
 
   if (!requireStudio(req, res)) return;
+
+  // ── POST — set-cover: swap category cover on portfolio table ─────────────────
+  if (req.method === "POST") {
+    const { action, category, itemId } = req.body ?? {};
+    if (action !== "set-cover") return res.status(400).json({ error: "Unknown action" });
+    if (!category || !itemId) return res.status(400).json({ error: "category and itemId are required" });
+
+    const { error: clearError } = await sb
+      .from("portfolio")
+      .update({ is_category_cover: false })
+      .eq("category", category)
+      .eq("is_category_cover", true);
+    if (clearError) { logError("admin-galleries:post:set-cover:clear", clearError); return res.status(500).json({ error: "Failed to clear existing cover" }); }
+
+    const { error: setError } = await sb
+      .from("portfolio")
+      .update({ is_category_cover: true })
+      .eq("id", itemId);
+    if (setError) { logError("admin-galleries:post:set-cover:set", setError); return res.status(500).json({ error: "Failed to set new cover" }); }
+
+    return res.status(200).json({ ok: true });
+  }
 
   // ── GET ───────────────────────────────────────────────────────────────────
   if (req.method === "GET") {

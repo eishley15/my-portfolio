@@ -215,17 +215,17 @@ export function clearFeaturedCache() {
 }
 
 // ─── Set category cover (StudioAdmin) ────────────────────────────────────────
-// Routes through /api/set-category-cover so the service role key bypasses RLS.
+// Routes through /api/admin-galleries (action=set-cover) so the service role key bypasses RLS.
 export async function setCategoryThumbnail(category, itemId) {
   const token = sessionStorage.getItem('studio_token')
 
-  const res = await fetch('/api/set-category-cover', {
+  const res = await fetch('/api/admin-galleries', {
     method:  'POST',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ category, itemId }),
+    body: JSON.stringify({ action: 'set-cover', category, itemId }),
   })
 
   const json = await res.json()
