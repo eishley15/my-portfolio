@@ -21,7 +21,7 @@ const SERVICES = ["Weddings", "Debuts", "Pageants", "Portraits", "Campaigns"];
 const STATS = [
   { end: 200, suffix: "+", label: "Projects Delivered" },
   { end: 5,   suffix: "+", label: "Years of Experience" },
-  { end: 10,  suffix: "",  label: "Disciplines Covered" },
+  { end: 10,  suffix: "",  label: "Services Offered" },
 ];
 
 const TESTIMONIALS = [
@@ -354,7 +354,7 @@ export default function Home() {
               transition={{ duration: 0.6, delay: 0.25 }}
               style={{ marginBottom: "clamp(20px, 3vw, 32px)" }}
             >
-              Photographer · Videographer
+              Photographer · Videographer · Editor
             </motion.p>
           )}
 
@@ -493,29 +493,6 @@ export default function Home() {
             </SpecularButton>
           </motion.div>
 
-          {/* Desktop scroll indicator */}
-          {!isMobile && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.3, duration: 0.6 }}
-              style={{
-                position: "absolute",
-                bottom: 32,
-                left: "clamp(40px, 6vw, 80px)",
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <motion.div
-                animate={{ y: [0, 6, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                style={{ width: "0.5px", height: 36, background: "var(--ink-faint)" }}
-              />
-              <span className="eyebrow">Scroll</span>
-            </motion.div>
-          )}
         </div>
 
         {/* Desktop: photo on right */}

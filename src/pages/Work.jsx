@@ -385,10 +385,18 @@ function MasonryGrid({ items, onSelect, loading }) {
 export default function Work() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeCategory, setActiveCategory] = useState(null);
+  const [mediaType, setMediaType] = useState("all"); // "all" | "photos" | "videos"
   const [viewMode, setViewMode] = useState("grid"); // "grid" | "strip"
   const [lightboxItem, setLightboxItem] = useState(null);
 
-  const { items, categories, loading } = usePortfolio(activeCategory);
+  const { items: rawItems, categories, loading } = usePortfolio(activeCategory);
+
+  // Filter by media type
+  const items = mediaType === "all"
+    ? rawItems
+    : mediaType === "videos"
+      ? rawItems.filter((i) => isVideo(i))
+      : rawItems.filter((i) => !isVideo(i));
 
   // Seed category from URL param on first render
   useEffect(() => {
@@ -502,6 +510,53 @@ export default function Work() {
           borderBottom: "0.5px solid var(--border)",
         }}
       >
+        {/* Media-type pills row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            paddingLeft: "clamp(24px, 6vw, 80px)",
+            paddingRight: "clamp(24px, 6vw, 80px)",
+            paddingTop: 10,
+            paddingBottom: 10,
+            borderBottom: "0.5px solid var(--border)",
+          }}
+        >
+          {["all", "photos", "videos"].map((type) => {
+            const active = mediaType === type;
+            return (
+              <motion.button
+                key={type}
+                onClick={() => setMediaType(type)}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  background:    active ? "var(--ink)" : "transparent",
+                  color:         active ? "var(--off-white)" : "var(--ink-muted)",
+                  border:        `0.5px solid ${active ? "var(--ink)" : "var(--border)"}`,
+                  borderRadius:  "100px",
+                  padding:       "5px 14px",
+                  fontFamily:    "var(--font-body)",
+                  fontSize:      "10px",
+                  letterSpacing: "2px",
+                  textTransform: "uppercase",
+                  cursor:        "pointer",
+                  transition:    "all 0.2s",
+                  whiteSpace:    "nowrap",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) e.currentTarget.style.borderColor = "var(--ink-muted)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.borderColor = "var(--border)";
+                }}
+              >
+                {type === "all" ? "All" : type === "photos" ? "Photos" : "Videos"}
+              </motion.button>
+            );
+          })}
+        </div>
+
         <div
           style={{
             display: "flex",

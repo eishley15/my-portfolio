@@ -338,36 +338,36 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
         style={{
           borderTop:   "0.5px solid rgba(255,252,242,0.08)",
           padding:     "16px 24px",
-          display:     "flex",
-          gap:          16,
-          alignItems:  "flex-end",
           background:  "rgba(14,12,11,0.6)",
           flexShrink:   0,
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Comment */}
-        <div style={{ flex: 1 }}>
-          <label
-            style={{
-              display:       "block",
-              fontFamily:    "var(--font-body)",
-              fontSize:       "9px",
-              letterSpacing:  "2px",
-              textTransform:  "uppercase",
-              color:          "rgba(255,252,242,0.25)",
-              marginBottom:   7,
-            }}
-          >
-            Add a comment (optional)
-          </label>
+        {/* Label sits above the row so it doesn't affect flex alignment */}
+        <label
+          style={{
+            display:       "block",
+            fontFamily:    "var(--font-body)",
+            fontSize:       "9px",
+            letterSpacing:  "2px",
+            textTransform:  "uppercase",
+            color:          "rgba(255,252,242,0.25)",
+            marginBottom:   7,
+          }}
+        >
+          Add a comment (optional)
+        </label>
+
+        {/* Flex row: textarea + button, same height */}
+        <div style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
           <textarea
             value={comment}
             onChange={(e) => onCommentChange(photoId, e.target.value)}
             placeholder="Notes for the photographer…"
             rows={2}
             style={{
-              width:       "100%",
+              flex:        1,
+              height:      "54px",
               background:  "rgba(255,252,242,0.05)",
               border:      "0.5px solid rgba(255,252,242,0.15)",
               padding:     "10px 14px",
@@ -382,13 +382,13 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             onFocus={(e)  => (e.target.style.borderColor = "rgba(255,252,242,0.4)")}
             onBlur={(e)   => (e.target.style.borderColor = "rgba(255,252,242,0.15)")}
           />
-        </div>
 
         {/* Select / Deselect */}
         <button
           onClick={onToggle}
           style={{
-            padding:       "12px 24px",
+            height:        "54px",
+            padding:       "0 24px",
             background:    isSelected ? "var(--off-white)" : "transparent",
             color:         isSelected ? "var(--ink)" : "rgba(255,252,242,0.7)",
             border:        `0.5px solid ${isSelected ? "var(--off-white)" : "rgba(255,252,242,0.3)"}`,
@@ -404,13 +404,15 @@ function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onComme
             flexShrink:     0,
             minWidth:       140,
             justifyContent: "center",
+            boxSizing:     "border-box",
           }}
           onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(255,252,242,0.7)"; e.currentTarget.style.color = "var(--off-white)"; }}}
           onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(255,252,242,0.3)"; e.currentTarget.style.color = "rgba(255,252,242,0.7)"; }}}
         >
           {isSelected ? <><Check size={12} strokeWidth={2.5} /> Selected</> : "Select Photo"}
         </button>
-      </div>
+        </div>{/* end inner flex row */}
+      </div>{/* end bottom panel */}
     </motion.div>
   );
 }
