@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, ExternalLink, Trash2, Eye, Plus, X, Check, Settings, ToggleLeft, ToggleRight, RefreshCw, ChevronUp, ChevronDown, Heart, Download, Music2 } from "lucide-react";
+import { Copy, ExternalLink, Trash2, Eye, Plus, X, Check, Settings, ToggleLeft, ToggleRight, RefreshCw, ChevronUp, ChevronDown, Heart, Download, Music2, MessageSquare, Home, CheckCircle, XCircle } from "lucide-react";
 import {
   useAllPickGalleries,
   createPickGallery,
@@ -2056,6 +2056,129 @@ function ThumbnailsTab() {
   );
 }
 
+// ─── Testimonials tab ─────────────────────────────────────────────────────────
+function TestimonialsTab() {
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch("/api/admin-galleries?action=testimonials", { headers: studioAuthHeaders() });
+      if (!res.ok) throw new Error("Failed to load");
+      const { data } = await res.json();
+      setTestimonials(data || []);
+    } catch {
+      setError("Could not load testimonials.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function patch(id, fields) {
+    await fetch("/api/admin-galleries", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", ...studioAuthHeaders() },
+      body: JSON.stringify({ action: "testimonial", id, fields }),
+    });
+    load();
+  }
+
+  async function remove(id) {
+    if (!confirm("Delete this testimonial?")) return;
+    await fetch("/api/admin-galleries", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json", ...studioAuthHeaders() },
+      body: JSON.stringify({ action: "testimonial", id }),
+    });
+    load();
+  }
+
+  const statusColor = { pending: "#c09a3a", approved: "#4a9a6a", rejected: "#c05a4a" };
+  const statusLabel = { pending: "Pending", approved: "Approved", rejected: "Rejected" };
+
+  if (loading) return <p style={{ fontFamily: "var(--font-body)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--ink-muted)", padding: "40px 0" }}>Loading…</p>;
+  if (error)   return <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "#c05a4a" }}>{error}</p>;
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
+        <div>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "2.5px", textTransform: "uppercase", color: "var(--ink-muted)", marginBottom: 4 }}>Testimonials</p>
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "clamp(22px, 3vw, 32px)", letterSpacing: "-0.02em", color: "var(--ink)" }}>Client Reviews</h2>
+        </div>
+        <button onClick={load} style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-body)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--ink-muted)", background: "none", border: "0.5px solid var(--border)", padding: "8px 14px", cursor: "pointer" }}>
+          <RefreshCw size={12} /> Refresh
+        </button>
+      </div>
+
+      {testimonials.length === 0 ? (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: 280, gap: 12, opacity: 0.4 }}>
+          <MessageSquare size={40} strokeWidth={1} style={{ color: "var(--ink)" }} />
+          <p style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--ink)" }}>No reviews yet.</p>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--ink-muted)" }}>Reviews submitted from client galleries will appear here.</p>
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {testimonials.map((t) => (
+            <motion.div key={t.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              style={{ background: "var(--surface)", border: "0.5px solid var(--border)", padding: "24px 28px" }}>
+              {/* Header row */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
+                <div>
+                  <p style={{ fontFamily: "var(--font-body)", fontWeight: 500, fontSize: 14, color: "var(--ink)", marginBottom: 3 }}>{t.client_name}</p>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "var(--ink-muted)" }}>
+                    {t.event_type || "—"} · {new Date(t.created_at).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}
+                  </p>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "4px 10px", border: `0.5px solid ${statusColor[t.status]}40`, color: statusColor[t.status], background: `${statusColor[t.status]}10` }}>
+                    {statusLabel[t.status]}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quote */}
+              <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "clamp(15px, 1.6vw, 18px)", lineHeight: 1.5, color: "var(--ink)", letterSpacing: "-0.01em", marginBottom: 20 }}>
+                &ldquo;{t.quote}&rdquo;
+              </p>
+
+              {/* Actions */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, borderTop: "0.5px solid var(--border)", paddingTop: 16 }}>
+                {t.status !== "approved" && (
+                  <button onClick={() => patch(t.id, { status: "approved" })}
+                    style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "7px 14px", background: "none", border: "0.5px solid #4a9a6a60", color: "#4a9a6a", cursor: "pointer" }}>
+                    <CheckCircle size={12} /> Approve
+                  </button>
+                )}
+                {t.status !== "rejected" && (
+                  <button onClick={() => patch(t.id, { status: "rejected" })}
+                    style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "7px 14px", background: "none", border: "0.5px solid #c05a4a60", color: "#c05a4a", cursor: "pointer" }}>
+                    <XCircle size={12} /> Reject
+                  </button>
+                )}
+                {t.status === "approved" && (
+                  <button onClick={() => patch(t.id, { show_on_home: !t.show_on_home })}
+                    style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "7px 14px", background: t.show_on_home ? "var(--ink)" : "none", border: "0.5px solid var(--border)", color: t.show_on_home ? "var(--bg)" : "var(--ink-muted)", cursor: "pointer" }}>
+                    <Home size={12} /> {t.show_on_home ? "On Home Page" : "Add to Home"}
+                  </button>
+                )}
+                <button onClick={() => remove(t.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2, textTransform: "uppercase", padding: "7px 14px", background: "none", border: "0.5px solid var(--border)", color: "var(--ink-muted)", cursor: "pointer", marginLeft: "auto" }}>
+                  <Trash2 size={12} /> Delete
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main admin page ──────────────────────────────────────────────────────────
 export default function StudioAdmin() {
   const [unlocked, setUnlocked] = useState(() => isStudioLoggedIn());
@@ -2076,7 +2199,7 @@ export default function StudioAdmin() {
           <span style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", color: "var(--ink-muted)" }}>/ Studio</span>
         </div>
         <div style={{ display: "flex", padding: "0 clamp(20px, 5vw, 48px)", borderTop: "0.5px solid var(--border)" }}>
-          {[{ id: "client", label: "Client Galleries" }, { id: "pick", label: "Pick Galleries" }, { id: "thumbnails", label: "Thumbnails" }].map((t) => (
+          {[{ id: "client", label: "Client Galleries" }, { id: "pick", label: "Pick Galleries" }, { id: "thumbnails", label: "Thumbnails" }, { id: "testimonials", label: "Testimonials" }].map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
               style={{ fontFamily: "var(--font-body)", fontSize: "10px", letterSpacing: "2px", textTransform: "uppercase", background: "none", border: "none", borderBottom: `2px solid ${tab === t.id ? "var(--ink)" : "transparent"}`, padding: "12px 20px 12px 0", marginRight: 8, color: tab === t.id ? "var(--ink)" : "var(--ink-muted)", cursor: "pointer", transition: "color 0.15s" }}>
               {t.label}
@@ -2092,6 +2215,7 @@ export default function StudioAdmin() {
             {tab === "client" && <ClientGalleriesTab />}
             {tab === "pick" && <PickGalleriesTab />}
             {tab === "thumbnails" && <ThumbnailsTab />}
+            {tab === "testimonials" && <TestimonialsTab />}
           </motion.div>
         </AnimatePresence>
       </div>

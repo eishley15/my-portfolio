@@ -34,7 +34,7 @@ const cardVariants = {
 };
 
 // ─── Single nav card ──────────────────────────────────────────────────────────
-function NavCard({ card, i, isActive, thumbItem }) {
+function NavCard({ card, i, isActive, thumbItem, onClose }) {
   const [hovered, setHovered] = useState(false);
   const thumb = thumbItem?.url || null;
 
@@ -49,6 +49,7 @@ function NavCard({ card, i, isActive, thumbItem }) {
     >
       <Link
         to={card.to}
+        onClick={onClose}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         style={{
@@ -339,6 +340,7 @@ export default function CardNav({ isOpen, onClose, thumbnails = [] }) {
                   i={i}
                   isActive={location.pathname === card.to}
                   thumbItem={thumbnails[i] || null}
+                  onClose={onClose}
                 />
               ))}
             </div>
