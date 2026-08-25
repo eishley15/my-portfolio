@@ -28,11 +28,24 @@ function checkRateLimit(ip) {
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  corsOrigin);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Token');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
+
+  // GET: validate an existing gallery JWT (previously /api/validate)
+  if (req.method === 'GET') {
+    try {
+      const token = req.headers['x-token'];
+      if (!token) return res.status(401).json({ error: 'Missing token' });
+      jwt.verify(token, jwtSecret);
+      return res.status(200).json({ ok: true });
+    } catch {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+  }
+
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const ip      = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
   const isLocal = ip === '::1' || ip === '127.0.0.1' || ip === 'unknown';
