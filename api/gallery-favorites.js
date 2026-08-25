@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   if (!payload) return res.status(401).json({ error: 'Unauthorized' });
 
   // accessCode always from JWT — never trust request body for this
-  const { accessCode, clientName } = payload;
+  const { accessCode } = payload;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
