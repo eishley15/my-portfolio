@@ -28,11 +28,27 @@ export default async function handler(req, res) {
   if (!payload) return res.status(401).json({ error: 'Unauthorized' });
 
   // accessCode always from JWT — never trust request body for this
-  const { accessCode } = payload;
+  const { accessCode, clientName } = payload;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
     if (req.method === 'GET') {
+      const { type } = req.query;
+
+      // GET ?type=testimonial — check if client already submitted a testimonial
+      if (type === 'testimonial') {
+        const { data: rows, error } = await supabase
+          .from('testimonials')
+          .select('id, quote, status, created_at')
+          .eq('client_code', accessCode)
+          .limit(1);
+        if (error) {
+          console.error('testimonials:get error:', error);
+          return res.status(500).json({ error: 'Internal server error', detail: error.message });
+        }
+        return res.status(200).json({ testimonial: rows?.[0] ?? null });
+      }
+
       const { data, error } = await supabase
         .from('gallery_favorites')
         .select('file_id, created_at')
@@ -44,7 +60,48 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { fileId } = req.body;
+      const { fileId, type, quote, eventType } = req.body || {};
+
+      // POST { type: 'testimonial' } — submit a testimonial
+      if (type === 'testimonial') {
+        if (!quote || typeof quote !== 'string' || !quote.trim()) {
+          return res.status(400).json({ error: 'Missing quote' });
+        }
+        // One testimonial per client — check for existing
+        const { data: existingRows, error: existErr } = await supabase
+          .from('testimonials')
+          .select('id')
+          .eq('client_code', accessCode)
+          .limit(1);
+        if (existErr) {
+          console.error('testimonials:post:check error:', existErr);
+          return res.status(500).json({ error: 'Internal server error', detail: existErr.message });
+        }
+        if (existingRows?.length > 0) {
+          return res.status(409).json({ error: 'Testimonial already submitted' });
+        }
+        // Resolve client name from clients table (JWT only has accessCode)
+        const { data: clientRows } = await supabase
+          .from('clients')
+          .select('client_name')
+          .eq('access_code', accessCode)
+          .limit(1);
+        const resolvedName = clientRows?.[0]?.client_name || accessCode;
+        const { error: insErr } = await supabase.from('testimonials').insert({
+          client_code:  accessCode,
+          client_name:  resolvedName,
+          event_type:   typeof eventType === 'string' ? eventType.slice(0, 80) : null,
+          quote:        quote.trim().slice(0, 1000),
+          status:       'pending',
+          show_on_home: false,
+        });
+        if (insErr) {
+          console.error('testimonials:post:insert error:', insErr);
+          return res.status(500).json({ error: 'Internal server error', detail: insErr.message });
+        }
+        return res.status(200).json({ ok: true });
+      }
+
       if (!fileId) return res.status(400).json({ error: 'Missing fileId' });
 
       // Verify the file belongs to this gallery before inserting

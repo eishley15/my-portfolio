@@ -94,6 +94,16 @@ export default async function handler(req, res) {
       return res.json({ data: rows });
     }
 
+    // GET ?action=testimonials → list all testimonials for admin review
+    if (action === "testimonials") {
+      const { data, error } = await sb
+        .from("testimonials")
+        .select("id, client_code, client_name, event_type, quote, status, show_on_home, created_at")
+        .order("created_at", { ascending: false });
+      if (error) { logError("admin-galleries:testimonials:get", error); return res.status(500).json({ error: "Failed to load testimonials" }); }
+      return res.json({ data: data || [] });
+    }
+
     // Default GET — list all client galleries
     const { data, error } = await sb
       .from("clients")
@@ -154,6 +164,19 @@ export default async function handler(req, res) {
       return res.json({ ok: true });
     }
 
+    // PATCH { action: "testimonial", id, status } → approve/reject
+    // PATCH { action: "testimonial", id, show_on_home } → toggle home visibility
+    if (action === "testimonial") {
+      if (!id) return res.status(400).json({ error: "id required" });
+      const allowed = {};
+      if (fields?.status !== undefined)       allowed.status       = fields.status;
+      if (fields?.show_on_home !== undefined)  allowed.show_on_home = fields.show_on_home;
+      if (!Object.keys(allowed).length) return res.status(400).json({ error: "No valid fields" });
+      const { error } = await sb.from("testimonials").update(allowed).eq("id", id);
+      if (error) { logError("admin-galleries:patch:testimonial", error); return res.status(500).json({ error: "Failed to update testimonial" }); }
+      return res.json({ ok: true });
+    }
+
     if (action === "scene-reorder") {
       if (!code || !Array.isArray(ids)) return res.status(400).json({ error: "code and ids array required" });
       const results = await Promise.all(
@@ -169,13 +192,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Unknown action" });
   }
 
-  // ── DELETE — remove a scene ───────────────────────────────────────────────
+  // ── DELETE — remove a scene or testimonial ───────────────────────────────
   if (req.method === "DELETE") {
     const { action, id } = req.body ?? {};
     if (action === "scene") {
       if (!id) return res.status(400).json({ error: "id required" });
       const { error } = await sb.from("gallery_scenes").delete().eq("id", id);
       if (error) { logError("admin-galleries:delete:scene", error); return res.status(500).json({ error: "Failed to delete scene" }); }
+      return res.json({ ok: true });
+    }
+    if (action === "testimonial") {
+      if (!id) return res.status(400).json({ error: "id required" });
+      const { error } = await sb.from("testimonials").delete().eq("id", id);
+      if (error) { logError("admin-galleries:delete:testimonial", error); return res.status(500).json({ error: "Failed to delete testimonial" }); }
       return res.json({ ok: true });
     }
     return res.status(400).json({ error: "Unknown action" });

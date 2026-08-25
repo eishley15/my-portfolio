@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertCircle, CheckCircle, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { forwardRef, useState } from "react";
 
 export function useToast() {
   const [toasts, setToasts] = useState([]);
@@ -41,9 +41,10 @@ export function ToastContainer({ toasts, removeToast }) {
   );
 }
 
-function Toast({ toast, onClose }) {
+const Toast = forwardRef(function Toast({ toast, onClose }, ref) {
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 20, x: 400 }}
       animate={{ opacity: 1, y: 0, x: 0 }}
       exit={{ opacity: 0, y: 20, x: 400 }}
@@ -72,4 +73,4 @@ function Toast({ toast, onClose }) {
       </button>
     </motion.div>
   );
-}
+});

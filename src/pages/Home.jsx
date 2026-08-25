@@ -24,29 +24,7 @@ const STATS = [
   { end: 10,  suffix: "",  label: "Services Offered" },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "Kyle captured every emotion from our wedding day. The photos are beyond anything we imagined — we'll cherish them forever.",
-    name: "Maria & Jared Santos",
-    event: "Wedding",
-    year: "2024",
-  },
-  {
-    quote:
-      "Every shot was intentional and beautiful. Kyle has a gift for making you feel at ease and the results speak for themselves.",
-    name: "Anne Claire Reyes",
-    event: "Portrait Session",
-    year: "2025",
-  },
-  {
-    quote:
-      "My debut photos were absolutely stunning. Kyle knows how to tell a story through images in a way that feels completely natural.",
-    name: "Sofia Dela Cruz",
-    event: "Debut",
-    year: "2024",
-  },
-];
+// Testimonials are loaded dynamically from the API (approved + show_on_home only)
 
 const FAQ = [
   {
@@ -83,7 +61,7 @@ const FAQ = [
   },
 ];
 
-const HOME_SECTIONS = [
+const BASE_SECTIONS = [
   { id: "hero",         label: "Intro"   },
   { id: "work-preview", label: "Work"    },
   { id: "stats",        label: "Stats"   },
@@ -265,11 +243,19 @@ export default function Home() {
     .map((it) => it.url);
   const [openFaq, setOpenFaq] = useState(null);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [testimonials, setTestimonials] = useState([]);
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handler, { passive: true });
     return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/picks?action=testimonials")
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then(({ testimonials: data }) => setTestimonials(data || []))
+      .catch(() => {}); // Silently fail — section hides when empty
   }, []);
 
   const heroPhoto = "/kylepayawalprofile.webp";
@@ -290,7 +276,7 @@ export default function Home() {
         {isLoading && <LoadingScreen key="loading" isVisible={isLoading} />}
       </AnimatePresence>
 
-      <LineSidebar sections={HOME_SECTIONS} />
+      <LineSidebar sections={BASE_SECTIONS.filter((s) => s.id !== "testimonials" || testimonials.length > 0)} />
 
       {/* ══ HERO ════════════════════════════════════════════════════════════════ */}
       <section
@@ -632,92 +618,81 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ══ TESTIMONIALS ════════════════════════════════════════════════════════ */}
-      <section
-        id="testimonials"
-        style={{
-          padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
-          background: "var(--surface)",
-        }}
-      >
-        <ScrollReveal>
-          <p className="eyebrow" style={{ marginBottom: 12 }}>Client Words</p>
-          <h2
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 500,
-              fontSize: "clamp(32px, 4.5vw, 64px)",
-              letterSpacing: "-0.03em",
-              lineHeight: 0.95,
-              marginBottom: "clamp(40px, 6vw, 72px)",
-              fontVariationSettings: "'opsz' 144",
-              color: "var(--ink)",
-            }}
-          >
-            What they{" "}
-            <span className="font-serif">say.</span>
-          </h2>
-        </ScrollReveal>
-
-        <div
+      {/* ══ TESTIMONIALS — only renders when approved reviews exist ════════════ */}
+      {testimonials.length > 0 && (
+        <section
+          id="testimonials"
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))",
-            gap: "clamp(16px, 2vw, 24px)",
+            padding: "clamp(64px, 8vw, 120px) clamp(24px, 6vw, 80px)",
+            background: "var(--surface)",
           }}
         >
-          {TESTIMONIALS.map((t, i) => (
-            <motion.div
-              key={t.name}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.55, delay: i * 0.1 }}
+          <ScrollReveal>
+            <p className="eyebrow" style={{ marginBottom: 12 }}>Client Words</p>
+            <h2
               style={{
-                padding: "clamp(24px, 3vw, 36px)",
-                border: "0.5px solid var(--border)",
-                background: "var(--bg)",
+                fontFamily: "var(--font-display)",
+                fontWeight: 500,
+                fontSize: "clamp(32px, 4.5vw, 64px)",
+                letterSpacing: "-0.03em",
+                lineHeight: 0.95,
+                marginBottom: "clamp(40px, 6vw, 72px)",
+                fontVariationSettings: "'opsz' 144",
+                color: "var(--ink)",
               }}
             >
-              <p
+              What they{" "}
+              <span className="font-serif">say.</span>
+            </h2>
+          </ScrollReveal>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))",
+              gap: "clamp(16px, 2vw, 24px)",
+            }}
+          >
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{ duration: 0.55, delay: i * 0.1 }}
                 style={{
-                  fontFamily: "var(--font-display)",
-                  fontStyle: "italic",
-                  fontWeight: 500,
-                  fontSize: "clamp(16px, 1.8vw, 21px)",
-                  lineHeight: 1.5,
-                  color: "var(--ink)",
-                  letterSpacing: "-0.01em",
-                  marginBottom: 24,
-                }}
-              >
-                &ldquo;{t.quote}&rdquo;
-              </p>
-              <div
-                style={{
-                  borderTop: "0.5px solid var(--border)",
-                  paddingTop: 16,
+                  padding: "clamp(24px, 3vw, 36px)",
+                  border: "0.5px solid var(--border)",
+                  background: "var(--bg)",
                 }}
               >
                 <p
                   style={{
-                    fontFamily: "var(--font-body)",
-                    fontWeight: 400,
-                    fontSize: 13,
+                    fontFamily: "var(--font-display)",
+                    fontStyle: "italic",
+                    fontWeight: 500,
+                    fontSize: "clamp(16px, 1.8vw, 21px)",
+                    lineHeight: 1.5,
                     color: "var(--ink)",
-                    marginBottom: 3,
+                    letterSpacing: "-0.01em",
+                    marginBottom: 24,
                   }}
                 >
-                  {t.name}
+                  &ldquo;{t.quote}&rdquo;
                 </p>
-                <p className="eyebrow">
-                  {t.event} · {t.year}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+                <div style={{ borderTop: "0.5px solid var(--border)", paddingTop: 16 }}>
+                  <p style={{ fontFamily: "var(--font-body)", fontWeight: 400, fontSize: 13, color: "var(--ink)", marginBottom: 3 }}>
+                    {t.client_name}
+                  </p>
+                  <p className="eyebrow">
+                    {t.event_type || "Client"} · {new Date(t.created_at).getFullYear()}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ══ FAQ ═════════════════════════════════════════════════════════════════ */}
       <section

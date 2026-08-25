@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Download, Play, Heart } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Download, Play, Heart, MessageSquare, Send, CheckCircle } from "lucide-react";
 
 import { isLoggedIn, clearToken, getAccessCodeFromToken } from "../lib/galleryAuth";
 import { useGalleryConfig } from "../hooks/useGalleryConfig";
@@ -23,6 +23,12 @@ export default function Gallery() {
   const [viewTab,       setViewTab]   = useState("photos");
   const galleryRef = useRef(null);
 
+  // Testimonial state
+  const [testimonialStatus, setTestimonialStatus] = useState("loading"); // loading | none | submitted
+  const [testimonialQuote,  setTestimonialQuote]  = useState("");
+  const [testimonialEvent,  setTestimonialEvent]  = useState("");
+  const [testimonialSending, setTestimonialSending] = useState(false);
+
   const { toasts, addToast, removeToast } = useToast();
   const { downloadZip, isZipping, error: zipError, clearError } = useDownloadZip();
   const { config, scenes, photos, videos, files, loading, expired, error: configError, refetch } = useGalleryConfig();
@@ -35,6 +41,24 @@ export default function Gallery() {
   function handleLoginSuccess() { setLoggedIn(true); }
 
   useEffect(() => { if (loggedIn) refetch(); }, [loggedIn]); // eslint-disable-line
+
+  // Check if client already submitted a testimonial
+  const checkTestimonial = useCallback(async () => {
+    if (!loggedIn) return;
+    try {
+      const token = localStorage.getItem("gallery_token");
+      const res = await fetch("/api/gallery-favorites?type=testimonial", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) { setTestimonialStatus("none"); return; }
+      const { testimonial } = await res.json();
+      setTestimonialStatus(testimonial ? "submitted" : "none");
+    } catch {
+      setTestimonialStatus("none");
+    }
+  }, [loggedIn]);
+
+  useEffect(() => { checkTestimonial(); }, [checkTestimonial]);
 
   function openLightbox(file) { setLightbox(file); }
   function closeLightbox()    { setLightbox(null); }
@@ -58,6 +82,32 @@ export default function Gallery() {
 
   function toggleSelect(id) {
     setSelected((prev) => prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]);
+  }
+
+  async function handleSubmitTestimonial(e) {
+    e.preventDefault();
+    if (!testimonialQuote.trim() || testimonialSending) return;
+    setTestimonialSending(true);
+    try {
+      const token = localStorage.getItem("gallery_token");
+      const res = await fetch("/api/gallery-favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ type: "testimonial", quote: testimonialQuote, eventType: testimonialEvent }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({}));
+        addToast(error || "Failed to submit. Please try again.", "error");
+        return;
+      }
+      setTestimonialStatus("submitted");
+      // Switch back to photos tab — the review tab disappears
+      setViewTab("photos");
+    } catch {
+      addToast("Something went wrong. Please try again.", "error");
+    } finally {
+      setTestimonialSending(false);
+    }
   }
 
   async function handleDownloadAll() {
@@ -131,6 +181,8 @@ export default function Gallery() {
               { id: "photos",    label: "Photos" },
               { id: "favorites", label: "Favorites", icon: <Heart size={11} style={{ marginRight: 5 }} /> },
               ...(videos.length > 0 ? [{ id: "videos", label: "Videos", icon: <Play size={11} style={{ marginRight: 5 }} /> }] : []),
+              // Review tab only shows if client hasn't submitted yet (and check is complete)
+              ...(testimonialStatus === "none" ? [{ id: "review", label: "Review", icon: <MessageSquare size={11} style={{ marginRight: 5 }} /> }] : []),
             ].map(({ id, label, icon }) => {
               const active = viewTab === id;
               return (
@@ -232,6 +284,63 @@ export default function Gallery() {
             </div>
           );
         })()}
+
+        {/* ── REVIEW view ────────────────────────────────────────────────── */}
+        {viewTab === "review" && (
+          <div style={{ padding: "clamp(40px, 6vw, 80px) clamp(24px, 6vw, 80px) 80px", display: "flex", justifyContent: "center" }}>
+            <div style={{ maxWidth: 560, width: "100%" }}>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 10, letterSpacing: 3, textTransform: "uppercase", color: text, opacity: 0.4, marginBottom: 12 }}>Share Your Experience</p>
+              <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: "clamp(28px, 4vw, 48px)", letterSpacing: "-0.03em", lineHeight: 1, color: text, marginBottom: 32 }}>
+                How was<br /><span style={{ fontStyle: "italic", fontWeight: 300 }}>your session?</span>
+              </h2>
+              <form onSubmit={handleSubmitTestimonial} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div>
+                  <label style={{ display: "block", fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2.5, textTransform: "uppercase", color: text, opacity: 0.5, marginBottom: 8 }}>
+                    Event type <span style={{ opacity: 0.4 }}>(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={testimonialEvent}
+                    onChange={(e) => setTestimonialEvent(e.target.value)}
+                    placeholder="e.g. Wedding, Debut, Portrait…"
+                    maxLength={80}
+                    style={{ width: "100%", padding: "12px 14px", background: "transparent", border: `0.5px solid ${text}30`, color: text, fontFamily: "var(--font-body)", fontSize: 13, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = `${text}80`)}
+                    onBlur={(e)  => (e.currentTarget.style.borderColor = `${text}30`)}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 2.5, textTransform: "uppercase", color: text, opacity: 0.5, marginBottom: 8 }}>
+                    Your words <span style={{ opacity: 0.6 }}>*</span>
+                  </label>
+                  <textarea
+                    value={testimonialQuote}
+                    onChange={(e) => setTestimonialQuote(e.target.value)}
+                    placeholder="Tell us about your experience…"
+                    required
+                    maxLength={1000}
+                    rows={5}
+                    style={{ width: "100%", padding: "12px 14px", background: "transparent", border: `0.5px solid ${text}30`, color: text, fontFamily: "var(--font-body)", fontSize: 13, outline: "none", resize: "vertical", boxSizing: "border-box", lineHeight: 1.6, transition: "border-color 0.2s" }}
+                    onFocus={(e) => (e.currentTarget.style.borderColor = `${text}80`)}
+                    onBlur={(e)  => (e.currentTarget.style.borderColor = `${text}30`)}
+                  />
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 9, letterSpacing: 1, color: text, opacity: 0.3, marginTop: 6, textAlign: "right" }}>{testimonialQuote.length}/1000</p>
+                </div>
+                <button
+                  type="submit"
+                  disabled={!testimonialQuote.trim() || testimonialSending}
+                  style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: 8, padding: "12px 24px", background: text, color: bg, fontFamily: "var(--font-body)", fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase", border: "none", cursor: (!testimonialQuote.trim() || testimonialSending) ? "not-allowed" : "pointer", opacity: (!testimonialQuote.trim() || testimonialSending) ? 0.4 : 1, transition: "opacity 0.2s" }}
+                >
+                  <Send size={13} />
+                  {testimonialSending ? "Sending…" : "Submit Review"}
+                </button>
+              </form>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 10, letterSpacing: 1, color: text, opacity: 0.3, marginTop: 20, lineHeight: 1.6 }}>
+                Reviews are privately reviewed before appearing publicly. Thank you for taking the time.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* ── VIDEOS view ────────────────────────────────────────────────── */}
         {viewTab === "videos" && (

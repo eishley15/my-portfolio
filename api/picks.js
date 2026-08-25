@@ -13,12 +13,29 @@ export default async function handler(req, res) {
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  // ── GET — fetch gallery config + photos ──────────────────────────────────────
+  // ── GET — fetch gallery config + photos (or public testimonials) ─────────────
   if (req.method === "GET") {
     const rl = rateLimit(req, { max: 30, windowMs: 60_000 });
     if (!rl.ok) {
       res.setHeader("Retry-After", rl.retryAfter);
       return res.status(429).json({ error: "Too many requests" });
+    }
+
+    // GET ?action=testimonials — public fetch of approved + show_on_home testimonials
+    if (req.query.action === "testimonials") {
+      try {
+        const { data, error } = await supabase
+          .from("testimonials")
+          .select("id, client_name, event_type, quote, created_at")
+          .eq("status", "approved")
+          .eq("show_on_home", true)
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return res.status(200).json({ testimonials: data || [] });
+      } catch (err) {
+        const id = logError("picks:testimonials:get", err);
+        return res.status(500).json({ error: "An error occurred", ref: id });
+      }
     }
 
     const { galleryId } = req.query;
