@@ -14,13 +14,17 @@ import NotFound from "./pages/NotFound";
 import ClientPicks from "./pages/ClientPicks";
 import StudioAdmin from "./pages/StudioAdmin";
 import Slideshow from "./pages/Slideshow";
+import ShareLanding from "./pages/ShareLanding";
 
 // Routes that render their own nav/footer — skip the shared shell
 const STANDALONE_ROUTES = ["/studio"];
 const startsWithStandalone = (path) =>
   path === "/studio" ||
   path.startsWith("/picks/") ||
-  path.startsWith("/slideshow/");
+  path === "/slideshow" ||
+  path.startsWith("/slideshow/") ||
+  path === "/g" ||
+  path.startsWith("/g/");
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -52,7 +56,10 @@ function AppContent() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/picks/:galleryId" element={<ClientPicks />} />
           <Route path="/studio" element={<StudioAdmin />} />
-          <Route path="/slideshow/:accessCode" element={<Slideshow />} />
+          <Route path="/slideshow" element={<Slideshow />} />
+          <Route path="/slideshow/:legacyCode" element={<Slideshow />} />
+          <Route path="/g" element={<ShareLanding />} />
+          <Route path="/g/:token" element={<ShareLanding />} />
         </Routes>
       </>
     );

@@ -112,7 +112,7 @@ export default function AccessGate({ onSuccess }) {
               onChange={(e) => setCode(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               placeholder="Enter your access code"
-              style={{ width: "100%", padding: "14px 16px", background: "var(--surface)", border: error ? "1px solid var(--ink)" : "1px solid rgba(14,12,11,0.15)", color: "var(--ink)", fontFamily: "var(--font-body)", fontSize: 15, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s", letterSpacing: "0.5px" }}
+              style={{ width: "100%", padding: "14px 16px", background: "var(--surface)", border: error ? "1px solid var(--ink)" : "1px solid rgba(14,12,11,0.15)", color: "var(--ink)", fontFamily: "var(--font-body)", fontSize: 16, outline: "none", boxSizing: "border-box", transition: "border-color 0.2s", letterSpacing: "0.5px" }}
               onFocus={(e) => { e.target.style.borderColor = "var(--ink)"; }}
               onBlur={(e)  => { e.target.style.borderColor = error ? "var(--ink)" : "rgba(14,12,11,0.15)"; }}
             />

@@ -116,6 +116,17 @@ body::before {
   mix-blend-mode: multiply;
 }
 
+/* Client gallery & picks pages: no film grain over client photos (it also adds a
+   full-screen blend layer the compositor redraws on every scroll frame), and no
+   site navbar / back-to-top — these pages bring their own chrome. */
+body.client-view::before { display: none; }
+/* `overflow-x: hidden` turns <body> into a scroll container, which silently
+   disables position: sticky for everything inside; `clip` crops the same way
+   without that side effect, so the gallery's sticky tabs can pin. */
+body.client-view { overflow-x: clip; }
+body.client-view .site-nav,
+body.client-view .site-back-to-top { display: none !important; }
+
 /* Keyboard focus ring — accent signals interaction */
 :focus-visible {
   outline: 1.5px solid var(--accent);

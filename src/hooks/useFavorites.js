@@ -1,8 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { authHeaders } from '../lib/galleryAuth';
 
 export function useFavorites(addToast) {
   const [favorites, setFavorites] = useState(new Set());
+
+  // Latest values for the stable `toggle` below (lets memoised photo tiles skip re-renders)
+  const favoritesRef = useRef(favorites);
+  const toastRef     = useRef(addToast);
+  useEffect(() => {
+    favoritesRef.current = favorites;
+    toastRef.current     = addToast;
+  });
 
   useEffect(() => {
     async function hydrate() {
@@ -12,21 +20,21 @@ export function useFavorites(addToast) {
         const data = await res.json();
         setFavorites(new Set((data.favorites || []).map((f) => f.file_id)));
       } catch {
-        // Non-critical — silently fail
+        // Non-critical — the gallery still works without saved favorites
       }
     }
     hydrate();
   }, []);
 
   const toggle = useCallback(async (fileId) => {
-    const wasFavorited = favorites.has(fileId);
-
-    // Optimistic update
-    setFavorites((prev) => {
+    const wasFavorited = favoritesRef.current.has(fileId);
+    const apply = (add) => setFavorites((prev) => {
       const next = new Set(prev);
-      wasFavorited ? next.delete(fileId) : next.add(fileId);
+      if (add) next.add(fileId); else next.delete(fileId);
       return next;
     });
+
+    apply(!wasFavorited); // optimistic
 
     try {
       const res = await fetch('/api/gallery-favorites', {
@@ -34,17 +42,12 @@ export function useFavorites(addToast) {
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body:    JSON.stringify({ fileId }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) throw new Error(`Favorite request failed (${res.status})`);
     } catch {
-      // Revert on failure
-      setFavorites((prev) => {
-        const next = new Set(prev);
-        wasFavorited ? next.add(fileId) : next.delete(fileId);
-        return next;
-      });
-      addToast?.('Could not save favorite. Try again.', 'error');
+      apply(wasFavorited); // revert
+      toastRef.current?.('Could not save favorite. Try again.', 'error');
     }
-  }, [favorites, addToast]);
+  }, []);
 
   return { favorites, toggle };
 }

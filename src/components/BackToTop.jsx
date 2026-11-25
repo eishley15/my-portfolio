@@ -30,7 +30,7 @@ export default function BackToTop() {
       {isVisible && (
         <motion.button
           onClick={scrollToTop}
-          className="fixed bottom-8 left-8 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+          className="site-back-to-top fixed bottom-8 left-8 z-50 w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
           style={{
             background: "var(--red-action)",
             border: "0.5px solid rgba(0,0,0,0.1)",

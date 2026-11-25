@@ -53,3 +53,45 @@ export function getAccessCodeFromToken() {
     return null;
   }
 }
+
+// ── Share links ───────────────────────────────────────────────────────────────
+// Exchange a /g/<token> share link for a gallery session JWT.
+export async function loginWithShareToken(shareToken) {
+  const res = await fetch('/api/gallery-auth', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ shareToken }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'This link is no longer active.');
+
+  setToken(data.token);
+  return data;
+}
+
+// Verify a share link's download PIN. On success the session is upgraded in place.
+// Resolves to { ok: true } or { ok: false, error, attemptsLeft?, retryAfter? }.
+export async function verifySharePin(pin) {
+  const res = await fetch('/api/gallery-auth', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body:    JSON.stringify({ action: 'verify-pin', pin }),
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: data.error || 'Could not verify PIN.', attemptsLeft: data.attemptsLeft, retryAfter: data.retryAfter };
+
+  setToken(data.token);
+  return { ok: true };
+}
+
+export function isShareSession() {
+  const token = getToken();
+  if (!token) return false;
+  try {
+    return Boolean(JSON.parse(atob(token.split('.')[1])).sid);
+  } catch {
+    return false;
+  }
+}

@@ -1,15 +1,21 @@
-import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import { getSupabase } from './_lib/supabase.js';
+import { resolveGallerySession, signShareSession } from './_lib/gallerySession.js';
+import {
+  SHARE_TABLE, PIN_MAX_ATTEMPTS, PIN_LOCK_MS,
+  hashShareToken, isValidTokenShape, isLinkUsable, isPinLocked, isValidPin,
+} from './_lib/shareLinks.js';
 
-const supabaseUrl        = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const jwtSecret          = process.env.DOWNLOAD_TOKEN_SECRET;
-const corsOrigin         = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
+const corsOrigin = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
 
 // In-memory rate limiter: 10 attempts per IP per 60s window
 const rateLimitMap = new Map();
 const RATE_LIMIT   = 10;
 const WINDOW_MS    = 60 * 1000;
+
+const GENERIC_CODE_ERROR = 'Access code not found.';
+const GENERIC_LINK_ERROR = 'This link is no longer active.';
 
 function checkRateLimit(ip) {
   const now   = Date.now();
@@ -26,19 +32,118 @@ function checkRateLimit(ip) {
   return entry.count > RATE_LIMIT;
 }
 
+export function resetRateLimitForTests() {
+  rateLimitMap.clear();
+}
+
+function isClientOpen(client) {
+  if (!client || !client.is_active) return false;
+  if (client.expires_at && new Date(client.expires_at) < new Date()) return false;
+  return true;
+}
+
+// POST { accessCode } — existing access-code login
+async function handleAccessCode(sb, accessCode, res) {
+  if (!accessCode || typeof accessCode !== 'string') {
+    return res.status(401).json({ error: GENERIC_CODE_ERROR });
+  }
+
+  const { data, error } = await sb
+    .from('clients')
+    .select('access_code, is_active, expires_at')
+    .eq('access_code', accessCode.trim().toLowerCase())
+    .single();
+
+  // Generic error on all failure modes — do not reveal which check failed
+  if (error || !isClientOpen(data)) return res.status(401).json({ error: GENERIC_CODE_ERROR });
+
+  const token = jwt.sign({ accessCode: data.access_code }, process.env.DOWNLOAD_TOKEN_SECRET, { expiresIn: '7d' });
+  return res.status(200).json({ token });
+}
+
+// POST { shareToken } — exchange a /g/<token> share link for a gallery session
+async function handleShareToken(sb, shareToken, res) {
+  if (!isValidTokenShape(shareToken)) return res.status(401).json({ error: GENERIC_LINK_ERROR });
+
+  const { data: link, error } = await sb
+    .from(SHARE_TABLE)
+    .select('id, client_code, role, pin_hash, expires_at, revoked_at, use_count')
+    .eq('token_hash', hashShareToken(shareToken))
+    .maybeSingle();
+
+  if (error || !isLinkUsable(link)) return res.status(401).json({ error: GENERIC_LINK_ERROR });
+
+  const { data: client } = await sb
+    .from('clients')
+    .select('is_active, expires_at')
+    .eq('access_code', link.client_code)
+    .maybeSingle();
+
+  if (!isClientOpen(client)) return res.status(401).json({ error: GENERIC_LINK_ERROR });
+
+  await sb.from(SHARE_TABLE)
+    .update({ use_count: (link.use_count ?? 0) + 1, last_used_at: new Date().toISOString() })
+    .eq('id', link.id);
+
+  return res.status(200).json({
+    token:       signShareSession(link),
+    role:        link.role,
+    pinRequired: Boolean(link.pin_hash),
+  });
+}
+
+// POST { action: 'verify-pin', pin } + share-session bearer — unlock downloads
+async function handleVerifyPin(sb, req, res) {
+  const session = await resolveGallerySession(req, sb);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  if (!session.isShare || !session.hasPin) return res.status(400).json({ error: 'No PIN on this link.' });
+
+  const { link } = session;
+  const now = new Date();
+
+  if (isPinLocked(link, now)) {
+    const retryAfter = Math.ceil((new Date(link.pin_locked_until) - now) / 1000);
+    return res.status(429).json({ error: 'Too many wrong PINs. Try again later.', retryAfter });
+  }
+
+  const { pin } = req.body || {};
+  const correct = isValidPin(pin) && await bcrypt.compare(pin, link.pin_hash);
+
+  if (!correct) {
+    const failed = (link.failed_pins ?? 0) + 1;
+    if (failed >= PIN_MAX_ATTEMPTS) {
+      const lockedUntil = new Date(now.getTime() + PIN_LOCK_MS);
+      await sb.from(SHARE_TABLE)
+        .update({ failed_pins: 0, pin_locked_until: lockedUntil.toISOString() })
+        .eq('id', link.id);
+      return res.status(429).json({ error: 'Too many wrong PINs. Try again later.', retryAfter: PIN_LOCK_MS / 1000 });
+    }
+    await sb.from(SHARE_TABLE).update({ failed_pins: failed }).eq('id', link.id);
+    return res.status(401).json({ error: 'Incorrect PIN.', attemptsLeft: PIN_MAX_ATTEMPTS - failed });
+  }
+
+  await sb.from(SHARE_TABLE).update({ failed_pins: 0, pin_locked_until: null }).eq('id', link.id);
+  return res.status(200).json({ token: signShareSession(link, { pinVerified: true }) });
+}
+
+function clientIp(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  corsOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Token');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Token');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  // GET: validate an existing gallery JWT (previously /api/validate)
+  const sb = getSupabase();
+
+  // GET: validate an existing gallery JWT (also honours share-link revocation)
   if (req.method === 'GET') {
     try {
-      const token = req.headers['x-token'];
-      if (!token) return res.status(401).json({ error: 'Missing token' });
-      jwt.verify(token, jwtSecret);
+      const session = await resolveGallerySession(req, sb);
+      if (!session) return res.status(401).json({ error: 'Invalid or expired token' });
       return res.status(200).json({ ok: true });
     } catch {
       return res.status(401).json({ error: 'Invalid or expired token' });
@@ -47,7 +152,7 @@ export default async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const ip      = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket?.remoteAddress || 'unknown';
+  const ip      = clientIp(req);
   const isLocal = ip === '::1' || ip === '127.0.0.1' || ip === 'unknown';
 
   if (!isLocal && checkRateLimit(ip)) {
@@ -55,37 +160,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { accessCode } = req.body;
-
-    if (!accessCode || typeof accessCode !== 'string') {
-      return res.status(401).json({ error: 'Access code not found.' });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const { data, error } = await supabase
-      .from('clients')
-      .select('access_code, is_active, expires_at')
-      .eq('access_code', accessCode.trim().toLowerCase())
-      .single();
-
-    // Generic error on all failure modes — do not reveal which check failed
-    if (error || !data || !data.is_active) {
-      return res.status(401).json({ error: 'Access code not found.' });
-    }
-
-    if (data.expires_at && new Date(data.expires_at) < new Date()) {
-      return res.status(401).json({ error: 'Access code not found.' });
-    }
-
-    const token = jwt.sign(
-      { accessCode: data.access_code },
-      jwtSecret,
-      { expiresIn: '7d' }
-    );
-
-    return res.status(200).json({ token });
-
+    const body = req.body || {};
+    if (body.action === 'verify-pin') return await handleVerifyPin(sb, req, res);
+    if (body.shareToken !== undefined) return await handleShareToken(sb, body.shareToken, res);
+    return await handleAccessCode(sb, body.accessCode, res);
   } catch (err) {
     console.error('gallery-auth error:', err);
     return res.status(500).json({ error: 'Internal server error' });

@@ -1,8 +1,21 @@
+import { useEffect, useRef } from "react";
 import { useScrollSpy } from "../../hooks/useScrollSpy";
+import { stickyHeaderOffset } from "../../lib/galleryLayout";
 
-export default function SectionTabs({ scenes, bgColor = "#faf9f7", textColor = "#3d2b2b" }) {
+// Scene jump links — rendered inside the gallery's sticky header (not sticky itself)
+export default function SectionTabs({ scenes, textColor = "#3d2b2b" }) {
+  const stripRef = useRef(null);
   const ids      = ["highlights", ...scenes.map((s) => s.slug)];
-  const activeId = useScrollSpy(ids, 80);
+  const activeId = useScrollSpy(ids, 150);
+
+  // Keep the active scene visible in the horizontally scrolling strip
+  useEffect(() => {
+    const strip = stripRef.current;
+    const btn   = strip?.querySelector(`[data-scene="${activeId}"]`);
+    if (!strip || !btn || strip.scrollWidth <= strip.clientWidth) return;
+    const left = btn.offsetLeft - (strip.clientWidth - btn.offsetWidth) / 2;
+    strip.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+  }, [activeId]);
 
   if (scenes.length === 0) return null;
 
@@ -14,31 +27,28 @@ export default function SectionTabs({ scenes, bgColor = "#faf9f7", textColor = "
   function scrollTo(id) {
     const el = document.getElementById(id);
     if (!el) return;
-    window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 80, behavior: "smooth" });
+    const top = el.getBoundingClientRect().top + window.scrollY - stickyHeaderOffset() + 1;
+    window.scrollTo({ top, behavior: "smooth" });
   }
 
   return (
-    <div style={{ position: "sticky", top: 0, zIndex: 50, background: `${bgColor}eb`, backdropFilter: "blur(18px)", borderBottom: `0.5px solid ${textColor}18` }}>
-      <div style={{ display: "flex", overflowX: "auto", justifyContent: "center", scrollbarWidth: "none", padding: "0 24px" }}>
-        {tabs.map(({ id, label }) => {
-          const active = activeId === id;
-          return (
+    <nav aria-label="Gallery sections" className="g-scenes" style={{ borderTop: `0.5px solid ${textColor}14` }}>
+      <div ref={stripRef} className="g-tabs">
+        <div className="g-tabs-inner">
+          {tabs.map(({ id, label }) => (
             <button
               key={id}
+              type="button"
+              data-scene={id}
+              className="g-tab"
+              aria-current={activeId === id ? "true" : undefined}
               onClick={() => scrollTo(id)}
-              style={{
-                fontFamily:  "var(--font-body)", fontSize: 10, letterSpacing: 2.5, textTransform: "uppercase",
-                color:       textColor, opacity: active ? 1 : 0.4, background: "none", border: "none",
-                borderBottom: active ? `1px solid ${textColor}` : "1px solid transparent",
-                padding:     "18px 20px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0,
-                transition:  "all 0.2s ease",
-              }}
             >
               {label}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
-    </div>
+    </nav>
   );
 }

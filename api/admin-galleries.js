@@ -1,12 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import { getSupabase } from "./_lib/supabase.js";
 import { requireStudio } from "./_lib/requireStudio.js";
+import { listShareLinks, createShareLink, updateShareLink, deleteShareLink } from "./_lib/shareLinkAdmin.js";
 import { applyCors } from "./_lib/cors.js";
 import { logError } from "./_lib/logger.js";
-
-const sb = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY,
-);
 
 const ALLOWED_FIELDS = new Set([
   "client_name", "email", "gallery_title", "gallery_subtitle", "event_date",
@@ -25,10 +21,12 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   if (!requireStudio(req, res)) return;
+  const sb = getSupabase();
 
   // ── POST — set-cover: swap category cover on portfolio table ─────────────────
   if (req.method === "POST") {
     const { action, category, itemId } = req.body ?? {};
+    if (action === "share-link-create") return createShareLink(sb, req.body, res);
     if (action !== "set-cover") return res.status(400).json({ error: "Unknown action" });
     if (!category || !itemId) return res.status(400).json({ error: "category and itemId are required" });
 
@@ -51,6 +49,9 @@ export default async function handler(req, res) {
   // ── GET ───────────────────────────────────────────────────────────────────
   if (req.method === "GET") {
     const { action, code } = req.query;
+
+    // GET ?action=share-links&code=X → share links for a gallery
+    if (action === "share-links") return listShareLinks(sb, code, res);
 
     // GET ?action=scenes&code=X → list scenes for a gallery
     if (action === "scenes") {
@@ -153,6 +154,8 @@ export default async function handler(req, res) {
   if (req.method === "PATCH") {
     const { action, id, fields, code, ids } = req.body ?? {};
 
+    if (action === "share-link") return updateShareLink(sb, req.body, res);
+
     if (action === "scene") {
       if (!id || !fields) return res.status(400).json({ error: "id and fields required" });
       const safe = Object.fromEntries(
@@ -195,6 +198,7 @@ export default async function handler(req, res) {
   // ── DELETE — remove a scene or testimonial ───────────────────────────────
   if (req.method === "DELETE") {
     const { action, id } = req.body ?? {};
+    if (action === "share-link") return deleteShareLink(sb, id, res);
     if (action === "scene") {
       if (!id) return res.status(400).json({ error: "id required" });
       const { error } = await sb.from("gallery_scenes").delete().eq("id", id);

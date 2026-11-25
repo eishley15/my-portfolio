@@ -1,28 +1,48 @@
-import { useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Heart, Check, Download, Loader2 } from "lucide-react";
-import LazyImage from "../LazyImage";
-import { authHeaders } from "../../lib/galleryAuth";
+import { downloadGalleryFile } from "../../lib/galleryDownload";
+import { useGallerySession } from "../../lib/gallerySession";
 
-export default function PhotoTile({ file, index, isFavorited, onFavoriteToggle, isSelected, onSelect, onOpen, accessCode, onError }) {
-  const [hovered,     setHovered]     = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const isTouch   = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
-  const showIcons = hovered || isTouch;
+// Height/width used to reserve space when a photo has no stored dimensions yet
+const FALLBACK_RATIO = 4 / 5;
+
+function PhotoTile({
+  file, index, isFavorited, isSelected, selectMode, downloadsEnabled, favoritesEnabled = true,
+  onFavoriteToggle, onSelect, onOpen, accessCode, onError, placeholder,
+}) {
+  const [loaded,       setLoaded]       = useState(false);
+  const [errored,      setErrored]      = useState(false);
+  const [naturalRatio, setNaturalRatio] = useState(null);
+  const [downloading,  setDownloading]  = useState(false);
+  const { runDownload } = useGallerySession();
+
+  // Stored dimensions reserve the exact box before the image arrives → no layout jumps
+  const knownRatio = file.width && file.height ? file.width / file.height : null;
+  const ratio = knownRatio ?? naturalRatio ?? FALLBACK_RATIO;
+
+  const markLoaded = useCallback((img) => {
+    setLoaded(true);
+    if (!knownRatio && img.naturalWidth && img.naturalHeight) {
+      setNaturalRatio(img.naturalWidth / img.naturalHeight);
+    }
+  }, [knownRatio]);
+
+  // Cached images can finish before React attaches onLoad
+  const imgRef = useCallback((img) => {
+    if (img?.complete && img.naturalWidth > 0) markLoaded(img);
+  }, [markLoaded]);
+
+  function activate() {
+    if (selectMode) onSelect(file.id);
+    else onOpen(file);
+  }
 
   async function handleDownload(e) {
     e.stopPropagation();
     if (downloading || !file.filename) return;
     setDownloading(true);
     try {
-      const res = await fetch(
-        `/api/download?accessCode=${encodeURIComponent(accessCode)}&galleryId=${encodeURIComponent(accessCode)}&fileName=${encodeURIComponent(file.filename)}`,
-        { headers: authHeaders() },
-      );
-      if (!res.ok) throw new Error();
-      const { url } = await res.json();
-      const a = document.createElement("a");
-      a.href = url; a.download = file.filename;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      await runDownload(() => downloadGalleryFile({ accessCode, filename: file.filename }));
     } catch {
       onError?.("Could not download photo. Try again.");
     } finally {
@@ -30,73 +50,87 @@ export default function PhotoTile({ file, index, isFavorited, onFavoriteToggle, 
     }
   }
 
-  const circleBtn = (active) => ({
-    width: 36, height: 36, borderRadius: "50%",
-    background: active ? "rgba(30,30,30,0.9)" : "rgba(255,255,255,0.85)",
-    border: "none", display: "flex", alignItems: "center", justifyContent: "center",
-    cursor: "pointer", backdropFilter: "blur(4px)", transition: "all 0.15s ease",
-  });
+  const label = `photo ${index + 1}`;
 
   return (
     <div
-      style={{ breakInside: "avoid", marginBottom: "var(--g-gap, 4px)", position: "relative", cursor: "pointer" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onClick={() => onOpen(file, index)}
+      className="g-tile"
+      data-file-id={file.id}
+      data-selected={isSelected ? "true" : undefined}
+      data-select-mode={selectMode ? "true" : undefined}
+      role="button"
+      tabIndex={0}
+      aria-label={selectMode ? `${isSelected ? "Deselect" : "Select"} ${label}` : `View ${label}`}
+      aria-pressed={selectMode ? Boolean(isSelected) : undefined}
+      style={{ aspectRatio: ratio, background: placeholder }}
+      onClick={activate}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); }
+      }}
     >
-      <LazyImage
-        src={file.url}
-        alt={file.filename || `Photo ${index + 1}`}
-        loading={index < 6 ? "eager" : "lazy"}
-        style={{ width: "100%", height: "auto", display: "block" }}
-        onLoad={() => {}}
-      />
+      {errored ? (
+        <span className="g-tile-error">Photo unavailable</span>
+      ) : (
+        <img
+          ref={imgRef}
+          src={file.url}
+          alt={file.filename || `Photo ${index + 1}`}
+          width={file.width || undefined}
+          height={file.height || undefined}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          data-loaded={loaded ? "true" : "false"}
+          onLoad={(e) => markLoaded(e.currentTarget)}
+          onError={() => setErrored(true)}
+        />
+      )}
 
-      {/* Hover icon row */}
-      <div
-        style={{
-          position: "absolute", bottom: 8, left: 8, right: 8,
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          opacity: showIcons ? 1 : 0, transition: "opacity 0.2s ease",
-          pointerEvents: showIcons ? "auto" : "none",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Heart */}
-        <button
-          onClick={(e) => { e.stopPropagation(); onFavoriteToggle(file.id); }}
-          aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-          style={{ ...circleBtn(false), background: isFavorited ? "rgba(200,50,50,0.9)" : "rgba(255,255,255,0.85)" }}
-        >
-          <Heart size={16} fill={isFavorited ? "white" : "none"} stroke={isFavorited ? "white" : "#222"} strokeWidth={1.5} />
-        </button>
-
-        {/* Right cluster: download + select */}
-        <div style={{ display: "flex", gap: 6 }}>
+      {!selectMode && (
+        <>
+          {favoritesEnabled && (
           <button
-            onClick={handleDownload}
-            disabled={downloading}
-            aria-label="Download photo"
-            style={{ ...circleBtn(false), opacity: downloading ? 0.6 : 1 }}
+            type="button"
+            className="g-tile-btn g-tile-heart"
+            data-on={isFavorited ? "true" : undefined}
+            onClick={(e) => { e.stopPropagation(); onFavoriteToggle(file.id); }}
+            aria-label={isFavorited ? `Remove ${label} from favorites` : `Add ${label} to favorites`}
+            aria-pressed={Boolean(isFavorited)}
           >
-            {downloading
-              ? <Loader2 size={15} stroke="#222" strokeWidth={1.5} style={{ animation: "spin 1s linear infinite" }} />
-              : <Download size={15} stroke="#222" strokeWidth={1.5} />}
+            <Heart size={16} fill={isFavorited ? "white" : "none"} stroke={isFavorited ? "white" : "#222"} strokeWidth={1.5} />
           </button>
+          )}
 
-          <button
-            onClick={(e) => { e.stopPropagation(); onSelect(file.id); }}
-            aria-label={isSelected ? "Deselect" : "Select"}
-            style={circleBtn(isSelected)}
-          >
-            <Check size={16} stroke={isSelected ? "white" : "#222"} strokeWidth={2} />
-          </button>
-        </div>
-      </div>
+          {downloadsEnabled && (
+            <div className="g-tile-tools">
+              <button type="button" className="g-tile-btn" onClick={handleDownload} disabled={downloading} aria-label={`Download ${label}`}>
+                {downloading
+                  ? <Loader2 size={15} stroke="#222" strokeWidth={1.5} style={{ animation: "spin 1s linear infinite" }} />
+                  : <Download size={15} stroke="#222" strokeWidth={1.5} />}
+              </button>
+              <button
+                type="button"
+                className="g-tile-btn"
+                data-on={isSelected ? "true" : undefined}
+                onClick={(e) => { e.stopPropagation(); onSelect(file.id); }}
+                aria-label={isSelected ? `Deselect ${label}` : `Select ${label}`}
+                aria-pressed={Boolean(isSelected)}
+              >
+                <Check size={16} stroke={isSelected ? "white" : "#222"} strokeWidth={2} />
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
-      {isSelected && (
-        <div style={{ position: "absolute", inset: 0, outline: "2px solid rgba(30,30,30,0.8)", outlineOffset: "-2px", pointerEvents: "none" }} />
+      {(selectMode || isSelected) && (
+        <span className="g-tile-check" aria-hidden="true">
+          {isSelected && <Check size={14} stroke="white" strokeWidth={2.5} />}
+        </span>
       )}
     </div>
   );
 }
+
+export default memo(PhotoTile);

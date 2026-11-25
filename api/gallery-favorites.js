@@ -1,20 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { getSupabase } from './_lib/supabase.js';
+import { resolveGallerySession, can } from './_lib/gallerySession.js';
 
-const supabaseUrl        = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const jwtSecret          = process.env.DOWNLOAD_TOKEN_SECRET;
-const corsOrigin         = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
+const corsOrigin = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
 
-function verifyToken(req) {
-  const auth  = req.headers['authorization'] || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  if (!token) return null;
-  try {
-    return jwt.verify(token, jwtSecret);
-  } catch {
-    return null;
-  }
+function forbid(res, message) {
+  return res.status(403).json({ error: message, code: 'role_forbidden' });
 }
 
 export default async function handler(req, res) {
@@ -24,19 +14,20 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const payload = verifyToken(req);
-  if (!payload) return res.status(401).json({ error: 'Unauthorized' });
-
-  // accessCode always from JWT — never trust request body for this
-  const { accessCode } = payload;
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = getSupabase();
 
   try {
+    // accessCode always from the session — never trust request body for this
+    const session = await resolveGallerySession(req, supabase);
+    if (!session) return res.status(401).json({ error: 'Unauthorized' });
+    const { accessCode } = session;
+
     if (req.method === 'GET') {
       const { type } = req.query;
 
       // GET ?type=testimonial — check if client already submitted a testimonial
       if (type === 'testimonial') {
+        if (!can(session, 'testimonial')) return res.status(200).json({ testimonial: null });
         const { data: rows, error } = await supabase
           .from('testimonials')
           .select('id, quote, status, created_at')
@@ -48,6 +39,9 @@ export default async function handler(req, res) {
         }
         return res.status(200).json({ testimonial: rows?.[0] ?? null });
       }
+
+      // View-only links never see the client's picks
+      if (!can(session, 'favorite')) return res.status(200).json({ favorites: [] });
 
       const { data, error } = await supabase
         .from('gallery_favorites')
@@ -64,6 +58,7 @@ export default async function handler(req, res) {
 
       // POST { type: 'testimonial' } — submit a testimonial
       if (type === 'testimonial') {
+        if (!can(session, 'testimonial')) return forbid(res, 'Only the gallery owner can leave a review.');
         if (!quote || typeof quote !== 'string' || !quote.trim()) {
           return res.status(400).json({ error: 'Missing quote' });
         }
@@ -102,6 +97,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
+      if (!can(session, 'favorite')) return forbid(res, "This link doesn't include favorites.");
       if (!fileId) return res.status(400).json({ error: 'Missing fileId' });
 
       // Verify the file belongs to this gallery before inserting
@@ -126,7 +122,8 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      const { fileId } = req.body;
+      if (!can(session, 'favorite')) return forbid(res, "This link doesn't include favorites.");
+      const { fileId } = req.body || {};
       if (!fileId) return res.status(400).json({ error: 'Missing fileId' });
 
       const { error } = await supabase
