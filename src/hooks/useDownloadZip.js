@@ -1,24 +1,25 @@
 import { useState } from 'react';
 import { authHeaders } from '../lib/galleryAuth';
+import { GalleryDownloadError } from '../lib/gallerySession';
 
+// Requests a signed ZIP URL for the current gallery session and starts the
+// browser download. The gallery is identified by the session token, never by
+// an access code from the client.
+//
+// Throws GalleryDownloadError for `pin_required` / `role_forbidden` so the
+// caller's runDownload() can prompt for the PIN; other failures resolve to
+// { success: false, error }.
 export function useDownloadZip() {
   const [isZipping, setIsZipping] = useState(false);
   const [error, setError] = useState(null);
 
-  const downloadZip = async ({ accessCode, files, clientName = 'gallery' }) => {
-    if (!accessCode) {
-      setError('Access code is required');
-      return;
-    }
-
+  const downloadZip = async ({ files, clientName = 'gallery' } = {}) => {
     setIsZipping(true);
     setError(null);
 
     try {
-      const payload = { accessCode };
-      if (files && files.length > 0) {
-        payload.files = files;
-      }
+      const payload = {};
+      if (files && files.length > 0) payload.files = files;
 
       const response = await fetch('/api/download-zip', {
         method: 'POST',
@@ -28,16 +29,15 @@ export function useDownloadZip() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (errorData.code === 'pin_required' || errorData.code === 'role_forbidden') {
+          throw new GalleryDownloadError(errorData.error, errorData.code);
+        }
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
       const { url } = await response.json();
+      if (!url) throw new Error('No download URL returned');
 
-      if (!url) {
-        throw new Error('No download URL returned');
-      }
-
-      // Trigger client-side download
       const a = document.createElement('a');
       a.href = url;
       a.download = `${clientName}.zip`;
@@ -47,7 +47,7 @@ export function useDownloadZip() {
 
       return { success: true, url };
     } catch (err) {
-      console.error('ZIP download error:', err);
+      if (err instanceof GalleryDownloadError) throw err;
       const errorMsg = err.message || 'Failed to download ZIP file';
       setError(errorMsg);
       return { success: false, error: errorMsg };

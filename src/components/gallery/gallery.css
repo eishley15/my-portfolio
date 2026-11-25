@@ -1,0 +1,205 @@
+/* ── Client gallery (/gallery) ───────────────────────────────────────────── */
+
+:root {
+  --gnav-h: 84px;                      /* GalleryNav height — sticky tabs sit right below it */
+  --g-pad: clamp(10px, 3.2vw, 40px);   /* horizontal page padding */
+}
+@media (max-width: 640px) {
+  :root { --gnav-h: 60px; }
+}
+
+/* Nav */
+.gnav-inner {
+  height: var(--gnav-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(16px, 4vw, 40px);
+}
+.gnav-logo { height: 48px; width: auto; display: block; }
+.gnav-hamburger { display: none; }
+@media (max-width: 640px) {
+  .gnav-logo { height: 34px; }
+  .gnav-desktop { display: none !important; }
+  .gnav-hamburger { display: flex !important; }
+}
+
+/* Sticky tab header (views + scene jump links) */
+.g-sticky { position: sticky; top: var(--gnav-h); z-index: 50; }
+.g-tabs {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.g-tabs::-webkit-scrollbar { display: none; }
+/* margin:auto centres the row but, unlike justify-content:center, never clips the first tab */
+.g-tabs-inner { display: flex; margin: 0 auto; padding: 0 12px; }
+.g-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 18px 20px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: inherit;
+  background: none;
+  border: none;
+  border-bottom: 1px solid transparent;
+  opacity: 0.45;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+.g-tab[aria-selected="true"],
+.g-tab[aria-current="true"] { opacity: 1; border-bottom-color: currentColor; }
+.g-scenes .g-tab { padding: 14px 18px; }
+@media (max-width: 640px) {
+  .g-tab { padding: 15px 14px; letter-spacing: 2px; }
+  .g-scenes .g-tab { padding: 12px 12px; }
+}
+
+/* Photo tiles */
+.g-tile {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.g-tile > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.g-tile > img[data-loaded="true"] { opacity: 1; }
+.g-tile-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  opacity: 0.4;
+}
+.g-tile[data-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 2px rgba(30, 30, 30, 0.85);
+  pointer-events: none;
+}
+
+.g-tile-btn {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.15s ease, background 0.15s ease;
+}
+.g-tile-btn:active { transform: scale(0.9); }
+.g-tile-heart { position: absolute; left: 8px; bottom: 8px; }
+.g-tile-heart[data-on="true"] { background: rgba(200, 50, 50, 0.9); }
+.g-tile-tools { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 6px; }
+.g-tile-tools .g-tile-btn[data-on="true"] { background: rgba(30, 30, 30, 0.9); }
+
+/* Desktop: reveal tools on hover/focus; a favorited heart stays visible */
+.g-tile:hover .g-tile-btn,
+.g-tile:focus-within .g-tile-btn,
+.g-tile-btn[data-on="true"] { opacity: 1; pointer-events: auto; }
+
+/* Touch: just a heart (download lives in the viewer, multi-select in Select mode) */
+@media (hover: none) {
+  .g-tile-tools { display: none; }
+  .g-tile-heart {
+    width: 32px;
+    height: 32px;
+    left: 6px;
+    bottom: 6px;
+    opacity: 1;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.8);
+  }
+  .g-tile-heart::after { content: ""; position: absolute; inset: -6px; } /* 44px touch target */
+}
+
+.g-tile-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.g-tile[data-selected="true"] .g-tile-check { background: #1e1e1e; border-color: #1e1e1e; }
+
+/* Buttons in the download/select toolbar */
+.g-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 20px;
+  font-family: var(--font-body);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+.g-btn:active { transform: scale(0.97); }
+.g-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Selection action bar */
+.g-selbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px var(--g-pad) calc(env(safe-area-inset-bottom, 0px) + 12px);
+  font-family: var(--font-body);
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* iOS zooms the page when a focused field is under 16px */
+.g-input { font-size: 13px; }
+@media (pointer: coarse), (max-width: 767px) {
+  .g-input { font-size: 16px; }
+}

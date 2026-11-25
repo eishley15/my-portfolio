@@ -15,7 +15,7 @@ export default function SectionHeader({ scene, variant = "dot", textColor = "#3d
 
   if (variant === "underline") {
     return (
-      <div style={{ textAlign: "center", padding: "56px 24px 32px" }}>
+      <div style={{ textAlign: "center", padding: "clamp(36px,6vw,56px) 24px clamp(18px,3vw,32px)" }}>
         <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "clamp(18px,2.2vw,24px)", color: textColor, opacity: 0.65, margin: "0 0 12px" }}>
           {scene.name.toLowerCase()}
         </p>
@@ -26,7 +26,7 @@ export default function SectionHeader({ scene, variant = "dot", textColor = "#3d
 
   // dot (default + banner fallback)
   return (
-    <div style={{ textAlign: "center", padding: "56px 24px 32px" }}>
+    <div style={{ textAlign: "center", padding: "clamp(36px,6vw,56px) 24px clamp(18px,3vw,32px)" }}>
       <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "clamp(20px,2.5vw,28px)", color: textColor, opacity: 0.6, margin: 0 }}>
         · {scene.name} ·
       </p>

@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Gallery Share Link — 6 Concepts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDE8DC; --bg-dim:#E3D9C8; --surface:#F4EFE5; --ink:#0E0C0B;
+  --muted:rgba(14,12,11,.6); --faint:rgba(14,12,11,.14); --border:rgba(14,12,11,.1);
+  --ok:#2F6B4F; --ok-bg:#DDE8DD; --bad:#A2412F; --bad-bg:#F0DCD3; --accent:#8A5A2B; --accent-bg:#EADCC6;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:'Outfit',sans-serif;font-weight:300;font-size:16px;line-height:1.65}
+.wrap{max-width:1080px;margin:0 auto;padding:72px 28px 120px}
+.label{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:500;color:var(--muted)}
+h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(44px,7vw,80px);letter-spacing:-.03em;line-height:.95;margin:14px 0 8px}
+h1 em{font-weight:400;font-style:italic;color:var(--muted)}
+.lede{max-width:64ch;color:var(--muted);font-size:17px;margin-top:18px}
+h2{font-family:'Fraunces',serif;font-weight:700;font-size:36px;letter-spacing:-.02em;line-height:1.05;margin:0 0 6px}
+h3{font-family:'Fraunces',serif;font-weight:700;font-size:28px;letter-spacing:-.02em;line-height:1.1}
+code,.mono{font-family:'JetBrains Mono',monospace;font-size:.86em}
+code{background:var(--surface);border:1px solid var(--border);padding:1px 6px;border-radius:4px}
+section{margin-top:88px}
+.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-bottom:1px solid var(--ink);padding-bottom:14px;margin-bottom:28px;flex-wrap:wrap}
+.section-head p{color:var(--muted);max-width:52ch;font-size:15px}
+
+/* today panel */
+.today{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;margin-top:48px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px}
+.today ul{list-style:none;display:grid;gap:10px;font-size:15px}
+.today li{padding-left:18px;position:relative}
+.today li::before{content:"";position:absolute;left:0;top:.65em;width:7px;height:7px;border-radius:50%;background:var(--ink)}
+.today li.warn::before{background:var(--bad)}
+
+/* concept card */
+.concept{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:28px}
+.concept-top{display:grid;grid-template-columns:64px 1fr auto;gap:18px;align-items:start}
+.num{font-family:'Fraunces',serif;font-style:italic;font-size:48px;line-height:.9;color:var(--muted)}
+.tagline{color:var(--muted);margin-top:4px;max-width:60ch}
+.pill{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;padding:6px 10px;border-radius:999px;background:var(--ink);color:var(--surface);white-space:nowrap}
+.pill.alt{background:var(--accent-bg);color:var(--accent)}
+.diagram{margin:26px 0 22px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:18px}
+.diagram svg{width:100%;height:auto;display:block}
+.cols{display:grid;grid-template-columns:1.3fr 1fr;gap:32px}
+.cols h4{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:600;margin-bottom:10px}
+ol.steps{padding-left:18px;display:grid;gap:6px;font-size:15px}
+.pc{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;font-size:14px}
+.pc div{border-radius:10px;padding:12px 14px}
+.pc .pro{background:var(--ok-bg)} .pc .con{background:var(--bad-bg)}
+.pc b{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.pc ul{padding-left:16px}
+.meter{display:grid;grid-template-columns:110px 1fr 30px;align-items:center;gap:10px;font-size:13px;margin-bottom:9px}
+.bar{height:8px;background:var(--faint);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);border-radius:99px}
+.best{margin-top:16px;font-size:14px;border-left:2px solid var(--ink);padding-left:12px}
+.best b{font-weight:600}
+
+/* svg styles */
+.n{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+.n-dark{fill:var(--ink)}
+.n-ok{fill:var(--ok-bg);stroke:var(--ok);stroke-width:1.2}
+.n-bad{fill:var(--bad-bg);stroke:var(--bad);stroke-width:1.2}
+.n-acc{fill:var(--accent-bg);stroke:var(--accent);stroke-width:1.2}
+.t{font-family:'Outfit',sans-serif;font-size:13px;fill:var(--ink);font-weight:500}
+.ts{font-family:'Outfit',sans-serif;font-size:11px;fill:rgba(14,12,11,.6)}
+.tw{font-family:'Outfit',sans-serif;font-size:13px;fill:#F4EFE5;font-weight:500}
+.tm{font-family:'JetBrains Mono',monospace;font-size:11px;fill:var(--ink)}
+.tbad{font-family:'Outfit',sans-serif;font-size:11px;fill:var(--bad);font-weight:500}
+.tok{font-family:'Outfit',sans-serif;font-size:11px;fill:var(--ok);font-weight:500}
+.a{stroke:var(--ink);stroke-width:1.3;fill:none;marker-end:url(#arr)}
+.a-bad{stroke:var(--bad);stroke-width:1.3;fill:none;stroke-dasharray:4 3;marker-end:url(#arrbad)}
+.a-dash{stroke:var(--ink);stroke-width:1.2;fill:none;stroke-dasharray:4 3;marker-end:url(#arr)}
+
+/* comparison */
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--surface);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+th{font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:600;background:var(--bg-dim)}
+td.c{text-align:center;font-family:'JetBrains Mono',monospace}
+.dots{letter-spacing:2px}
+tr.rec td{background:var(--accent-bg)}
+
+/* recommendation */
+.rec-box{background:var(--ink);color:var(--surface);border-radius:16px;padding:40px}
+.rec-box h2{color:var(--surface)}
+.rec-box p,.rec-box li{color:rgba(244,239,229,.78)}
+.rec-box .label{color:rgba(244,239,229,.55)}
+.rec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+.rec-grid div{border:1px solid rgba(244,239,229,.15);border-radius:12px;padding:18px}
+.rec-grid h4{font-family:'Fraunces',serif;font-size:20px;color:var(--surface);margin:6px 0 8px}
+.rec-grid ul{padding-left:16px;font-size:14px;display:grid;gap:4px}
+.impl{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+pre{background:#1C1A18;color:#E8E1D2;border-radius:10px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;overflow-x:auto}
+.checklist{list-style:none;display:grid;gap:8px;font-size:14px}
+.checklist li::before{content:"✓  ";color:#9FC7A8}
+
+@media (max-width:820px){
+  .today,.cols,.impl,.rec-grid,.pc{grid-template-columns:1fr}
+  .concept-top{grid-template-columns:48px 1fr}
+  .concept-top .pill{grid-column:2;justify-self:start}
+  table{font-size:12px}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0E0C0B"/></marker>
+    <marker id="arrbad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#A2412F"/></marker>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <p class="label">Kyle Payawal Studio · Client Gallery · Proposal</p>
+  <h1>Share links, <em>without the code.</em></h1>
+  <p class="lede">Six ways to let a client open their gallery from one tap, without making it guessable or easy to leak. Three are modelled on Google Drive sharing. Three use other approaches. Each one has a diagram, how it works, the trade-offs, and scores, followed by a recommendation for this codebase.</p>
+
+  <div class="today">
+    <div>
+      <p class="label">How it works today</p>
+      <h3 style="margin:8px 0 12px">Code → JWT → gallery</h3>
+      <ul>
+        <li>Client types an access code on <code>AccessGate.jsx</code>.</li>
+        <li><code>/api/gallery-auth</code> looks it up in <code>clients</code> (checks <code>is_active</code>, <code>expires_at</code>) and returns a 7-day JWT holding <code>{ accessCode }</code>.</li>
+        <li>The JWT is stored in <code>localStorage</code> and every gallery API verifies it.</li>
+      </ul>
+    </div>
+    <div>
+      <p class="label">Things to watch</p>
+      <ul style="margin-top:12px">
+        <li class="warn">The access code <em>is</em> the password and the primary key. Putting it in a URL makes the code public. Share links need their own separate token.</li>
+        <li class="warn">The JWT only carries <code>accessCode</code>, so you can't revoke one shared link without changing the client's code.</li>
+        <li class="warn"><code>/slideshow/:accessCode</code> and the legacy <code>?accessCode=</code> path in <code>download.js</code> already put the code in URLs.</li>
+        <li class="warn">The rate limiter lives in memory, so every serverless instance starts with a fresh count.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ───────────── PART A ───────────── -->
+  <section>
+    <div class="section-head">
+      <div><p class="label">Part A</p><h2>Google Drive–style</h2></div>
+      <p>Drive's sharing panel has three settings: <b>who</b> can open the link (anyone or specific people), <b>what</b> they can do (role), and whether you can switch it off later. Each concept below takes one of those settings.</p>
+    </div>
+
+    <!-- 1 -->
+    <article class="concept">
+      <div class="concept-top">
+        <span class="num">01</span>
+        <div><h3>Anyone with the link</h3><p class="tagline">A long random link that works for whoever has it. You can turn it off, and it can expire. This is how Drive's "Anyone with the link" works.</p></div>
+        <span class="pill">Drive · Public link</span>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 900 190" role="img" aria-label="Kyle generates a link, anyone who opens it is checked by the server, then sees the gallery">
+          <rect class="n-dark" x="10" y="60" width="130" height="60" rx="10"/><text class="tw" x="75" y="86" text-anchor="middle">Kyle (Studio)</text><text x="75" y="104" text-anchor="middle" style="font:11px Outfit;fill:#bbb">“Copy share link”</text>
+          <path class="a" d="M140 90 H190"/>
+          <rect class="n" x="190" y="55" width="220" height="70" rx="10"/><text class="ts" x="300" y="78" text-anchor="middle">kylepayawal.studio/g/</text><text class="tm" x="300" y="98" text-anchor="middle">x7Kq2…f9ZbR3</text><text class="ts" x="300" y="115" text-anchor="middle">32 random bytes · unguessable</text>
+          <path class="a" d="M410 90 H460"/>
+          <rect class="n" x="460" y="60" width="120" height="60" rx="10"/><text class="t" x="520" y="86" text-anchor="middle">Anyone</text><text class="ts" x="520" y="104" text-anchor="middle">who has the link</text>
+          <path class="a" d="M580 90 H630"/>
+          <rect class="n-acc" x="630" y="40" width="150" height="100" rx="10"/><text class="t" x="705" y="64" text-anchor="middle">Server checks</text><text class="ts" x="705" y="84" text-anchor="middle">hash(token) exists?</text><text class="ts" x="705" y="100" text-anchor="middle">not revoked?</text><text class="ts" x="705" y="116" text-anchor="middle">not expired?</text>
+          <path class="a" d="M780 90 H820"/>
+          <rect class="n-ok" x="820" y="60" width="72" height="60" rx="10"/><text class="t" x="856" y="95" text-anchor="middle">Gallery</text>
+          <path class="a-bad" d="M705 140 V170 H560"/><text class="tbad" x="470" y="174">revoked / expired → “Link no longer active”</text>
+        </svg>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>How it works</h4>
+          <ol class="steps">
+            <li>In Studio, click <b>Create share link</b>. The server generates a 32-byte random token and stores only its SHA-256 hash in a new <code>gallery_share_links</code> table.</li>
+            <li>Opening <code>/g/&lt;token&gt;</code> calls <code>/api/gallery-share</code>, which checks the hash, revocation, and expiry, then issues the same gallery JWT you use now, with a new <code>shareId</code> claim added.</li>
+            <li>The token is removed from the address bar right away (<code>history.replaceState</code>), and the page sends <code>Referrer-Policy: no-referrer</code> and <code>noindex</code>.</li>
+            <li><b>Revoke</b> sets <code>revoked_at</code>. Gallery APIs reject any JWT whose <code>shareId</code> has been revoked.</li>
+          </ol>
+          <div class="pc">
+            <div class="pro"><b>Pros</b><ul><li>One tap for the client</li><li>Simplest to build on your stack</li><li>Each link can be revoked and given an expiry</li></ul></div>
+            <div class="con"><b>Cons</b><ul><li>Anyone the link is forwarded to gets in</li><li>Links can leak through chat previews and screenshots</li></ul></div>
+          </div>
+        </div>
+        <div>
+          <h4>Scores</h4>
+          <div class="meter"><span>Security</span><span class="bar"><i style="width:60%"></i></span><span>3/5</span></div>
+          <div class="meter"><span>Client ease</span><span class="bar"><i style="width:100%"></i></span><span>5/5</span></div>
+          <div class="meter"><span>Build ease</span><span class="bar"><i style="width:90%"></i></span><span>4.5</span></div>
+          <p class="best"><b>Best for:</b> most sessions, like events, couples, and brand shoots, where the client wants to forward the gallery to family anyway.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 2 -->
+    <article class="concept">
+      <div class="concept-top">
+        <span class="num">02</span>
+        <div><h3>Restricted: invited people only</h3><p class="tagline">The link only works for email addresses you've added. A visitor proves they own the email with a one-time code. This is Drive's "Restricted" setting.</p></div>
+        <span class="pill">Drive · Restricted</span>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 900 220" role="img" aria-label="Visitor opens link, enters email, if on the invite list a 6-digit code is emailed, then gallery opens; strangers are stopped">
+          <rect class="n" x="10" y="70" width="120" height="56" rx="10"/><text class="t" x="70" y="95" text-anchor="middle">Opens link</text><text class="ts" x="70" y="112" text-anchor="middle">/g/x7Kq…</text>
+          <path class="a" d="M130 98 H175"/>
+          <rect class="n" x="175" y="70" width="140" height="56" rx="10"/><text class="t" x="245" y="95" text-anchor="middle">Enter your email</text><text class="ts" x="245" y="112" text-anchor="middle">maria@…</text>
+          <path class="a" d="M315 98 H360"/>
+          <polygon class="n-acc" points="440,48 520,98 440,148 360,98"/><text class="t" x="440" y="95" text-anchor="middle">On invite</text><text class="t" x="440" y="111" text-anchor="middle">list?</text>
+          <path class="a" d="M520 98 H565"/><text class="tok" x="527" y="90">yes</text>
+          <rect class="n" x="565" y="66" width="160" height="64" rx="10"/><text class="t" x="645" y="90" text-anchor="middle">6-digit code emailed</text><text class="tm" x="645" y="112" text-anchor="middle">4 8 2 1 9 0</text>
+          <path class="a" d="M725 98 H770"/>
+          <rect class="n-ok" x="770" y="70" width="120" height="56" rx="10"/><text class="t" x="830" y="95" text-anchor="middle">Gallery</text><text class="ts" x="830" y="112" text-anchor="middle">device stays signed in</text>
+          <path class="a-bad" d="M440 148 V190 H320"/><text class="tbad" x="140" y="195">no → same “check your inbox” screen (don't reveal)</text>
+          <rect class="n" x="565" y="160" width="325" height="44" rx="8" style="stroke-dasharray:4 3"/><text class="ts" x="727" y="186" text-anchor="middle">Kyle's list: maria@… · jon@… · mom@…   [+ add]</text>
+        </svg>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>How it works</h4>
+          <ol class="steps">
+            <li>Add a <code>gallery_viewers</code> table (client_code, email). Kyle adds one or more emails per gallery.</li>
+            <li>A visitor enters their email. If it's on the list, Resend (already set up) emails a 6-digit code or one-click magic link that expires in 10 minutes.</li>
+            <li>Show the same "check your inbox" screen whether or not the email is on the list, so the page never confirms who's invited.</li>
+            <li>A verified device gets a 30-day session cookie, so the client verifies only once per device.</li>
+          </ol>
+          <div class="pc">
+            <div class="pro"><b>Pros</b><ul><li>A forwarded link does nothing on its own</li><li>You know who viewed (email audit trail)</li><li>No code to remember</li></ul></div>
+            <div class="con"><b>Cons</b><ul><li>One extra step for the client</li><li>Email deliverability becomes critical</li><li>Kyle has to collect guest emails</li></ul></div>
+          </div>
+        </div>
+        <div>
+          <h4>Scores</h4>
+          <div class="meter"><span>Security</span><span class="bar"><i style="width:100%"></i></span><span>5/5</span></div>
+          <div class="meter"><span>Client ease</span><span class="bar"><i style="width:60%"></i></span><span>3/5</span></div>
+          <div class="meter"><span>Build ease</span><span class="bar"><i style="width:45%"></i></span><span>2.5</span></div>
+          <p class="best"><b>Best for:</b> sensitive work like boudoir, maternity, family with kids, and corporate under NDA.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 3 -->
+    <article class="concept">
+      <div class="concept-top">
+        <span class="num">03</span>
+        <div><h3>Role-based links</h3><p class="tagline">One gallery, several links, each with its own permissions. This is Drive's Viewer / Commenter / Editor dropdown, mapped to what photo clients actually do.</p></div>
+        <span class="pill">Drive · Roles</span>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 900 230" role="img" aria-label="One gallery with three links: viewer, picker, owner, each with different permissions">
+          <rect class="n-dark" x="370" y="10" width="160" height="56" rx="10"/><text class="tw" x="450" y="36" text-anchor="middle">Maria &amp; Jon's Wedding</text><text x="450" y="54" text-anchor="middle" style="font:11px Outfit;fill:#bbb">one gallery</text>
+          <path class="a" d="M410 66 C 300 100, 170 100, 150 120"/>
+          <path class="a" d="M450 66 V120"/>
+          <path class="a" d="M490 66 C 600 100, 730 100, 750 120"/>
+          <rect class="n" x="40" y="120" width="230" height="96" rx="10"/><text class="t" x="155" y="144" text-anchor="middle">Guest link · Viewer</text><text class="tm" x="155" y="162" text-anchor="middle">/g/Lp3…  role=view</text><text class="tok" x="155" y="182" text-anchor="middle">✓ view web-size</text><text class="tbad" x="155" y="200" text-anchor="middle">✕ download  ✕ favorites</text>
+          <rect class="n" x="335" y="120" width="230" height="96" rx="10"/><text class="t" x="450" y="144" text-anchor="middle">Family link · Picker</text><text class="tm" x="450" y="162" text-anchor="middle">/g/Qw8…  role=pick</text><text class="tok" x="450" y="182" text-anchor="middle">✓ view  ✓ favorites</text><text class="tbad" x="450" y="200" text-anchor="middle">✕ full-res download</text>
+          <rect class="n-acc" x="630" y="120" width="230" height="96" rx="10"/><text class="t" x="745" y="144" text-anchor="middle">Client link · Owner</text><text class="tm" x="745" y="162" text-anchor="middle">/g/Zr1…  role=owner</text><text class="tok" x="745" y="182" text-anchor="middle">✓ view ✓ favorites ✓ ZIP</text><text class="ts" x="745" y="200" text-anchor="middle">expires 30d · revocable</text>
+        </svg>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>How it works</h4>
+          <ol class="steps">
+            <li>Concept 01's table gets a <code>role</code> column (<code>view | pick | owner</code>). Studio shows a "Share" panel with one row per link.</li>
+            <li>The role goes into the JWT. <code>download.js</code>, <code>download-zip.js</code>, and <code>gallery-favorites.js</code> each check it before doing anything.</li>
+            <li>If a guest link leaks, the most anyone can do is view web-size photos. Full-res files stay limited to the owner link.</li>
+          </ol>
+          <div class="pc">
+            <div class="pro"><b>Pros</b><ul><li>Each person gets only the access they need</li><li>Easy for clients to share with guests</li><li>Builds directly on 01</li></ul></div>
+            <div class="con"><b>Cons</b><ul><li>More links for Kyle to manage</li><li>The owner link still works for anyone who has it</li></ul></div>
+          </div>
+        </div>
+        <div>
+          <h4>Scores</h4>
+          <div class="meter"><span>Security</span><span class="bar"><i style="width:80%"></i></span><span>4/5</span></div>
+          <div class="meter"><span>Client ease</span><span class="bar"><i style="width:100%"></i></span><span>5/5</span></div>
+          <div class="meter"><span>Build ease</span><span class="bar"><i style="width:70%"></i></span><span>3.5</span></div>
+          <p class="best"><b>Best for:</b> weddings and events, where the couple wants guests to browse but only they should download.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ───────────── PART B ───────────── -->
+  <section>
+    <div class="section-head">
+      <div><p class="label">Part B</p><h2>Other approaches</h2></div>
+      <p>These don't follow the Drive model. Each borrows from a different field: photo delivery platforms, signed CDN links, and device pairing.</p>
+    </div>
+
+    <!-- 4 -->
+    <article class="concept">
+      <div class="concept-top">
+        <span class="num">04</span>
+        <div><h3>Link + PIN, sent separately</h3><p class="tagline">The link arrives in one message and a short 4-digit PIN in another. A leaked link alone isn't enough. Photo delivery platforms often use a similar PIN to gate downloads.</p></div>
+        <span class="pill alt">Two-part key</span>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 900 210" role="img" aria-label="Link via email and PIN via text message combine to unlock the gallery; variant where PIN only gates downloads">
+          <rect class="n" x="10" y="20" width="200" height="60" rx="10"/><text class="t" x="110" y="45" text-anchor="middle">✉ Email</text><text class="tm" x="110" y="65" text-anchor="middle">/g/x7Kq…f9Z</text>
+          <rect class="n" x="10" y="120" width="200" height="60" rx="10"/><text class="t" x="110" y="145" text-anchor="middle">💬 SMS / Messenger</text><text class="tm" x="110" y="165" text-anchor="middle">PIN 4821</text>
+          <path class="a" d="M210 50 C 260 50, 270 95, 310 98"/>
+          <path class="a" d="M210 150 C 260 150, 270 105, 310 102"/>
+          <circle class="n-acc" cx="350" cy="100" r="38"/><text class="t" x="350" y="97" text-anchor="middle">both</text><text class="t" x="350" y="113" text-anchor="middle">needed</text>
+          <path class="a" d="M388 100 H440"/>
+          <rect class="n-ok" x="440" y="70" width="120" height="60" rx="10"/><text class="t" x="500" y="105" text-anchor="middle">Gallery</text>
+          <line x1="600" y1="15" x2="600" y2="195" stroke="rgba(14,12,11,.2)" stroke-dasharray="3 4"/>
+          <text class="ts" x="620" y="30">Variant B: PIN only for downloads</text>
+          <rect class="n" x="620" y="45" width="120" height="44" rx="8"/><text class="t" x="680" y="72" text-anchor="middle">Link → view</text>
+          <path class="a" d="M740 67 H770"/>
+          <rect class="n-acc" x="770" y="45" width="120" height="44" rx="8"/><text class="t" x="830" y="72" text-anchor="middle">⬇ asks PIN</text>
+          <text class="ts" x="620" y="120">5 wrong PINs → link locks for 15 min</text>
+          <text class="ts" x="620" y="140">PIN stored hashed (bcrypt, already a dep)</text>
+          <text class="ts" x="620" y="160">rate limit per link, not just per IP</text>
+        </svg>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>How it works</h4>
+          <ol class="steps">
+            <li>Each share link gets an optional <code>pin_hash</code> (bcryptjs is already installed).</li>
+            <li><b>Variant A:</b> the PIN is required to open the gallery. <b>Variant B:</b> the link opens the gallery for viewing, and the PIN is only asked for on download. Variant B is closer to how photo delivery platforms usually work.</li>
+            <li>Count failed attempts per link in Supabase rather than memory, so the lockout survives cold starts.</li>
+          </ol>
+          <div class="pc">
+            <div class="pro"><b>Pros</b><ul><li>A forwarded link alone isn't enough</li><li>4 digits is easy to type</li><li>Small change on top of 01</li></ul></div>
+            <div class="con"><b>Cons</b><ul><li>Only protects if the PIN goes through a different channel</li><li>4 digits needs strict lockout to be safe</li></ul></div>
+          </div>
+        </div>
+        <div>
+          <h4>Scores</h4>
+          <div class="meter"><span>Security</span><span class="bar"><i style="width:80%"></i></span><span>4/5</span></div>
+          <div class="meter"><span>Client ease</span><span class="bar"><i style="width:80%"></i></span><span>4/5</span></div>
+          <div class="meter"><span>Build ease</span><span class="bar"><i style="width:80%"></i></span><span>4/5</span></div>
+          <p class="best"><b>Best for:</b> protecting full-res downloads while keeping viewing to one tap.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 5 -->
+    <article class="concept">
+      <div class="concept-top">
+        <span class="num">05</span>
+        <div><h3>Signed, self-expiring URL</h3><p class="tagline">The link carries its own expiry date and a cryptographic signature, so there's nothing to look up in the database. It works the same way as S3 presigned URLs and signed CDN links.</p></div>
+        <span class="pill alt">Stateless</span>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 900 200" role="img" aria-label="URL contains gallery id, expiry and signature; server recomputes signature; timeline shows link valid until day 30">
+          <rect class="n" x="10" y="20" width="560" height="54" rx="10"/>
+          <text class="tm" x="24" y="52">/g/</text>
+          <rect class="n-acc" x="52" y="32" width="120" height="30" rx="5"/><text class="tm" x="112" y="52" text-anchor="middle">gallery=mj24</text>
+          <rect class="n-acc" x="180" y="32" width="150" height="30" rx="5"/><text class="tm" x="255" y="52" text-anchor="middle">exp=2026-12-25</text>
+          <rect class="n-dark" x="338" y="32" width="222" height="30" rx="5"/><text x="449" y="52" text-anchor="middle" style="font:11px 'JetBrains Mono';fill:#F4EFE5">sig=HMAC(secret, …)</text>
+          <path class="a" d="M570 47 H620"/>
+          <rect class="n-acc" x="620" y="14" width="270" height="66" rx="10"/><text class="t" x="755" y="40" text-anchor="middle">Server recomputes signature</text><text class="ts" x="755" y="60" text-anchor="middle">match + not past exp → open · no DB hit</text>
+          <text class="ts" x="10" y="118">Lifetime</text>
+          <line x1="10" y1="140" x2="890" y2="140" stroke="rgba(14,12,11,.2)" stroke-width="8" stroke-linecap="round"/>
+          <line x1="10" y1="140" x2="620" y2="140" stroke="#2F6B4F" stroke-width="8" stroke-linecap="round"/>
+          <text class="tok" x="10" y="166">Day 0 · sent</text><text class="tok" x="560" y="166">Day 30 · expires itself</text>
+          <text class="tbad" x="660" y="166">after: dead link</text>
+          <text class="tbad" x="10" y="192">⚠ Can't kill one link early. Only option: rotate the secret, which kills every link.</text>
+        </svg>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>How it works</h4>
+          <ol class="steps">
+            <li>The link is a short-form JWT/HMAC signed with <code>DOWNLOAD_TOKEN_SECRET</code>, the same mechanism your download tokens already use.</li>
+            <li>The server only verifies the signature and checks the expiry. There's no new table.</li>
+            <li>To revoke a link early, you'd need a deny-list, which brings back a database table, so it ends up like concept 01.</li>
+          </ol>
+          <div class="pc">
+            <div class="pro"><b>Pros</b><ul><li>Least code of any option, no migration</li><li>Expiry is built into the link</li></ul></div>
+            <div class="con"><b>Cons</b><ul><li>Can't revoke a single link</li><li>No view tracking</li><li>Long, ugly URLs</li></ul></div>
+          </div>
+        </div>
+        <div>
+          <h4>Scores</h4>
+          <div class="meter"><span>Security</span><span class="bar"><i style="width:50%"></i></span><span>2.5</span></div>
+          <div class="meter"><span>Client ease</span><span class="bar"><i style="width:100%"></i></span><span>5/5</span></div>
+          <div class="meter"><span>Build ease</span><span class="bar"><i style="width:100%"></i></span><span>5/5</span></div>
+          <p class="best"><b>Best for:</b> short-lived links, like a 48-hour "sneak peek" or the slideshow URL. Not a good fit for the main gallery.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- 6 -->
+    <article class="concept">
+      <div class="concept-top">
+        <span class="num">06</span>
+        <div><h3>Claim-once link (device binding)</h3><p class="tagline">The first device that opens the link claims it. After that, the link stops working on new devices unless the client approves them. Netflix-style device pairing works the same way.</p></div>
+        <span class="pill alt">Key that locks</span>
+      </div>
+      <div class="diagram">
+        <svg viewBox="0 0 900 230" role="img" aria-label="First phone opens link and claims it; a second unknown device is blocked until approved by email">
+          <rect class="n" x="10" y="20" width="150" height="56" rx="10"/><text class="t" x="85" y="45" text-anchor="middle">Link in email</text><text class="tm" x="85" y="63" text-anchor="middle">/g/x7Kq…</text>
+          <path class="a" d="M160 48 H220"/>
+          <rect class="n" x="220" y="10" width="64" height="100" rx="12"/><rect x="232" y="24" width="40" height="60" rx="3" fill="#DDE8DD"/><text class="ts" x="252" y="124" text-anchor="middle">Phone A</text>
+          <path class="a" d="M284 48 H340"/>
+          <rect class="n-ok" x="340" y="20" width="220" height="56" rx="10"/><text class="t" x="450" y="45" text-anchor="middle">Link claimed ✓</text><text class="ts" x="450" y="63" text-anchor="middle">device cookie / passkey saved · 1 of 3 slots</text>
+          <path class="a-dash" d="M85 76 V170 H220"/><text class="ts" x="92" y="160">forwarded</text>
+          <rect class="n" x="220" y="130" width="64" height="90" rx="12"/><rect x="232" y="142" width="40" height="55" rx="3" fill="#F0DCD3"/><text class="ts" x="252" y="228" text-anchor="middle">Device B</text>
+          <path class="a" d="M284 170 H340"/>
+          <rect class="n-bad" x="340" y="142" width="220" height="56" rx="10"/><text class="t" x="450" y="166" text-anchor="middle">New device</text><text class="ts" x="450" y="184" text-anchor="middle">“Approve this device?” sent to owner</text>
+          <path class="a" d="M560 170 H620"/>
+          <rect class="n-acc" x="620" y="142" width="140" height="56" rx="10"/><text class="t" x="690" y="166" text-anchor="middle">Owner taps</text><text class="t" x="690" y="184" text-anchor="middle">Approve</text>
+          <path class="a" d="M760 170 H800"/>
+          <rect class="n-ok" x="800" y="142" width="90" height="56" rx="10"/><text class="t" x="845" y="175" text-anchor="middle">Gallery</text>
+        </svg>
+      </div>
+      <div class="cols">
+        <div>
+          <h4>How it works</h4>
+          <ol class="steps">
+            <li>On first open, the server binds the link to that browser with a long-lived httpOnly cookie (or, optionally, a passkey) and records it in <code>share_link_devices</code>.</li>
+            <li>Each link gets a device limit, for example 3. Once all slots are used, a new device triggers an approval email to the owner.</li>
+            <li>Kyle can see claimed devices in Studio and remove any of them.</li>
+          </ol>
+          <div class="pc">
+            <div class="pro"><b>Pros</b><ul><li>A leaked link becomes useless once it's claimed</li><li>No codes or emails for the first open</li></ul></div>
+            <div class="con"><b>Cons</b><ul><li>A cleared browser counts as a "new device"</li><li>If someone else opens the link first, they claim it</li><li>Most complex flow and the most support questions</li></ul></div>
+          </div>
+        </div>
+        <div>
+          <h4>Scores</h4>
+          <div class="meter"><span>Security</span><span class="bar"><i style="width:90%"></i></span><span>4.5</span></div>
+          <div class="meter"><span>Client ease</span><span class="bar"><i style="width:70%"></i></span><span>3.5</span></div>
+          <div class="meter"><span>Build ease</span><span class="bar"><i style="width:35%"></i></span><span>2/5</span></div>
+          <p class="best"><b>Best for:</b> high-value deliveries where the client uses one or two devices.</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ───────────── COMPARE ───────────── -->
+  <section>
+    <div class="section-head">
+      <div><p class="label">Side by side</p><h2>Comparison</h2></div>
+      <p>Each row is a property you'd care about as the studio owner.</p>
+    </div>
+    <table>
+      <thead><tr><th>Concept</th><th>Forwarded link opens it?</th><th>Revoke one link</th><th>Extra client step</th><th>New tables</th><th>Security</th></tr></thead>
+      <tbody>
+        <tr class="rec"><td><b>01</b> Anyone with link</td><td>Yes</td><td>Yes</td><td>None</td><td>1</td><td class="c dots">●●●○○</td></tr>
+        <tr><td><b>02</b> Restricted (email)</td><td>No</td><td>Yes</td><td>Email code, once per device</td><td>2</td><td class="c dots">●●●●●</td></tr>
+        <tr class="rec"><td><b>03</b> Role-based links</td><td>Yes, limited by role</td><td>Yes</td><td>None</td><td>1 (adds role column to 01)</td><td class="c dots">●●●●○</td></tr>
+        <tr class="rec"><td><b>04</b> Link + PIN</td><td>Only with the PIN</td><td>Yes</td><td>4-digit PIN</td><td>1 (adds PIN column to 01)</td><td class="c dots">●●●●○</td></tr>
+        <tr><td><b>05</b> Signed URL</td><td>Yes, until it expires</td><td>No</td><td>None</td><td>0</td><td class="c dots">●●○○○</td></tr>
+        <tr><td><b>06</b> Claim-once</td><td>No, once claimed</td><td>Yes, per device</td><td>Approve new devices</td><td>2</td><td class="c dots">●●●●○</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ───────────── RECOMMENDATION ───────────── -->
+  <section>
+    <div class="rec-box">
+      <p class="label">Recommendation</p>
+      <h2>Combine 01 + 03 + 04 into one share panel</h2>
+      <p style="max-width:68ch;margin-top:10px">These three are really one feature: a share link with a <b>role</b>, an <b>expiry</b>, a <b>revoke</b> button, and an <b>optional download PIN</b>. All of them use a single new table and reuse your existing JWT flow. Add concept 02's "Restricted" mode later as a per-gallery toggle for sensitive sessions.</p>
+      <div class="rec-grid">
+        <div><p class="label">Phase 1</p><h4>Share link</h4><ul><li><code>gallery_share_links</code> table</li><li><code>/g/:token</code> route + <code>/api/gallery-share</code></li><li>Studio: create / copy / revoke / expiry</li><li>Gallery APIs check <code>shareId</code> isn't revoked</li></ul></div>
+        <div><p class="label">Phase 2</p><h4>Roles + PIN</h4><ul><li><code>role</code>: view / pick / owner</li><li>Download endpoints enforce role</li><li>Optional bcrypt PIN on downloads</li><li>Lockout counter in Supabase</li></ul></div>
+        <div><p class="label">Phase 3</p><h4>Restricted mode</h4><ul><li>Invite list per gallery</li><li>Email code via Resend</li><li>Toggle: "Anyone with link" / "Restricted"</li><li>View log (who / when)</li></ul></div>
+      </div>
+      <div class="impl">
+        <div>
+          <p class="label" style="margin-bottom:10px">Sketch of the table</p>
+<pre>create table gallery_share_links (
+  id           uuid primary key default gen_random_uuid(),
+  client_code  text not null references clients(access_code)
+               on delete cascade,
+  token_hash   text not null unique,   -- sha256, never the raw token
+  role         text not null default 'owner'
+               check (role in ('view','pick','owner')),
+  pin_hash     text,                   -- optional, bcrypt
+  expires_at   timestamptz,
+  revoked_at   timestamptz,
+  failed_pins  int  not null default 0,
+  last_used_at timestamptz,
+  created_at   timestamptz not null default now()
+);
+alter table gallery_share_links enable row level security;
+revoke all on gallery_share_links from anon;</pre>
+        </div>
+        <div>
+          <p class="label" style="margin-bottom:10px">Security checklist</p>
+          <ul class="checklist">
+            <li>Token = 32 bytes from <code>crypto.randomBytes</code>, base64url</li>
+            <li>Store only the SHA-256 hash, so a database leak doesn't expose working links</li>
+            <li>Exchange the token for a JWT once, then remove it from the URL</li>
+            <li><code>Referrer-Policy: no-referrer</code> + <code>X-Robots-Tag: noindex</code> on <code>/g/*</code></li>
+            <li>JWT carries <code>shareId</code> + <code>role</code>, and is checked against <code>revoked_at</code></li>
+            <li>Shorter JWT lifetime for share sessions (e.g. 24h, auto-refreshed)</li>
+            <li>Never log full URLs containing tokens</li>
+            <li>Same generic error for invalid, revoked, and expired links</li>
+            <li>Also: stop putting the access code in <code>/slideshow/:accessCode</code></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

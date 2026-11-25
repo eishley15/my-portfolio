@@ -1,11 +1,16 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { memo, useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Check } from "lucide-react";
 import { usePickGallery, submitPickSelections, getPickPhotoUrl } from "../hooks/usePickGallery";
+import { useBodyScrollLock, scrollIntoViewInstant, isInViewport } from "../hooks/useBodyScrollLock";
+import LightboxStage from "../components/lightbox/LightboxStage";
+import "./ClientPicks.css";
+
+const IS_TOUCH = typeof window !== "undefined" && window.matchMedia("(hover: none)").matches;
 
 // ─── Minimal top nav (no CardNav, no hamburger — just the brand) ──────────────
-function PicksNavbar({ galleryName, selectionCount, maxSelections }) {
+function PicksNavbar({ selectionCount, maxSelections }) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 40);
@@ -65,447 +70,233 @@ function PicksNavbar({ galleryName, selectionCount, maxSelections }) {
 }
 
 // ─── Photo card ───────────────────────────────────────────────────────────────
-function PhotoCard({ photo, index, isSelected, onClick }) {
-  const [loaded, setLoaded] = useState(false);
+// Tap the photo to view it; tap the circle to select without leaving the grid.
+const PhotoCard = memo(function PhotoCard({ photo, index, isSelected, onOpen, onToggle }) {
+  const [loaded,  setLoaded]  = useState(false);
   const [errored, setErrored] = useState(false);
-  const url = getPickPhotoUrl(photo.storage_path);
+  const num = String(index + 1).padStart(3, "0");
 
-  // Above-fold images load eagerly at high priority; rest defer
-  const isAboveFold = index < 12;
-  const loadingAttr = isAboveFold ? "eager" : "lazy";
-  const priorityAttr = index < 6 ? "high" : "auto";
+  // Cached images can finish before React attaches onLoad
+  const imgRef = useCallback((img) => {
+    if (img?.complete && img.naturalWidth > 0) setLoaded(true);
+  }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.025, 0.3), duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      onClick={onClick}
-      style={{
-        position:   "relative",
-        cursor:     "pointer",
-        overflow:   "hidden",
-        background: "var(--surface)",
-        outline:    isSelected ? "2px solid var(--ink)" : "2px solid transparent",
-        outlineOffset: "-2px",
-        transition: "outline-color 0.2s",
-        aspectRatio: "3/2",
+    <div
+      className="pk-card"
+      data-pick-index={index}
+      data-selected={isSelected ? "true" : undefined}
+      role="button"
+      tabIndex={0}
+      aria-label={`View photo ${index + 1}`}
+      onClick={() => onOpen(index)}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(index); }
       }}
     >
-      {/* Loading skeleton */}
-      {!loaded && !errored && (
-        <div
-          style={{
-            position: "absolute", inset: 0,
-            background: "linear-gradient(90deg, var(--surface) 25%, var(--bg-dim) 50%, var(--surface) 75%)",
-            backgroundSize: "200% 100%",
-            animation: "shimmer 1.5s infinite",
-          }}
+      {!loaded && !errored && <div className="pk-shimmer" aria-hidden="true" />}
+
+      {errored ? (
+        <span className="pk-card-error">{num}</span>
+      ) : (
+        <img
+          ref={imgRef}
+          src={getPickPhotoUrl(photo.storage_path)}
+          alt={`Photo ${index + 1}`}
+          loading={index < 6 ? "eager" : "lazy"}
+          fetchpriority={index < 4 ? "high" : undefined}
+          decoding="async"
+          draggable={false}
+          data-loaded={loaded ? "true" : "false"}
+          onLoad={() => setLoaded(true)}
+          onError={() => setErrored(true)}
         />
       )}
 
-      {/* Error state */}
-      {errored && (
-        <div
-          style={{
-            position: "absolute", inset: 0,
-            background: "var(--surface)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-        >
-          <span style={{ fontFamily: "var(--font-body)", fontSize: "9px", letterSpacing: "1.5px", color: "rgba(14,12,11,0.2)", textTransform: "uppercase" }}>
-            {String(index + 1).padStart(3, "0")}
-          </span>
-        </div>
-      )}
+      <span className="pk-num">{num}</span>
 
-      <img
-        src={url}
-        alt={`Photo ${index + 1}`}
-        loading={loadingAttr}
-        fetchpriority={priorityAttr}
-        decoding={isAboveFold ? "sync" : "async"}
-        onLoad={() => setLoaded(true)}
-        onError={() => { setLoaded(true); setErrored(true); }}
-        style={{
-          width: "100%", height: "100%",
-          objectFit: "cover",
-          display: "block",
-          transition: "opacity 0.3s",
-          opacity: loaded && !errored ? 1 : 0,
-        }}
-      />
-
-      {/* Hover overlay */}
-      <div
-        style={{
-          position: "absolute", inset: 0,
-          background: "rgba(14,12,11,0.0)",
-          transition: "background 0.2s",
-        }}
-        className="photo-hover-overlay"
-      />
-
-      {/* Photo number */}
-      <span
-        style={{
-          position:      "absolute",
-          bottom:         10,
-          left:           12,
-          fontFamily:    "var(--font-body)",
-          fontSize:       "10px",
-          letterSpacing:  "1.5px",
-          color:          "rgba(255,252,242,0.5)",
-          textShadow:    "0 1px 3px rgba(0,0,0,0.5)",
-        }}
+      <button
+        type="button"
+        className="pk-select"
+        aria-pressed={isSelected}
+        aria-label={isSelected ? `Deselect photo ${index + 1}` : `Select photo ${index + 1}`}
+        onClick={(e) => { e.stopPropagation(); onToggle(photo.id); }}
       >
-        {String(index + 1).padStart(3, "0")}
-      </span>
-
-      {/* Selection badge */}
-      <AnimatePresence>
-        {isSelected && (
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1,   opacity: 1 }}
-            exit={{   scale: 0.5, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            style={{
-              position:       "absolute",
-              top:             10,
-              right:           10,
-              width:           26,
-              height:          26,
-              borderRadius:   "50%",
-              background:     "var(--ink)",
-              display:        "flex",
-              alignItems:     "center",
-              justifyContent: "center",
-            }}
-          >
-            <Check size={13} color="var(--off-white)" strokeWidth={2.5} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Unselected ring hint */}
-      {!isSelected && (
-        <div
-          style={{
-            position:   "absolute",
-            top:         10,
-            right:       10,
-            width:       26,
-            height:      26,
-            borderRadius: "50%",
-            border:      "1.5px solid rgba(255,252,242,0.35)",
-          }}
-        />
-      )}
-    </motion.div>
+        <span className="pk-select-dot">{isSelected && <Check size={13} strokeWidth={2.5} />}</span>
+      </button>
+    </div>
   );
-}
+});
 
 // ─── Lightbox ─────────────────────────────────────────────────────────────────
-function Lightbox({ photos, index, selections, onClose, onNav, onToggle, onCommentChange }) {
-  const photo = photos[index];
-  const photoId = photo?.id;
+const getPickSrc = (p) => getPickPhotoUrl(p.storage_path);
+const getPickKey = (p) => p.id;
+const getPickAlt = (p, i) => `Photo ${i + 1}`;
+
+function Lightbox({ photos, index, selections, atLimit, maxSelections, onClose, onIndexChange, onToggle, onCommentChange }) {
+  const rootRef  = useRef(null);
+  const stageRef = useRef(null);
+  const backdrop = useMotionValue(1);
+  const photo      = photos[index];
+  const photoId    = photo?.id;
   const isSelected = selections.has(photoId);
-  const comment = selections.get(photoId) ?? "";
+  const comment    = selections.get(photoId) ?? "";
+  const blocked    = !isSelected && atLimit;
+
+  useBodyScrollLock(true);
+
+  useEffect(() => { rootRef.current?.focus({ preventScroll: true }); }, []);
+
+  // iOS shrinks only the visual viewport when the keyboard opens — follow it so
+  // the note field and Select button stay visible above the keyboard.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const el = rootRef.current;
+    if (!vv || !el) return undefined;
+    const update = () => {
+      el.style.height = `${vv.height}px`;
+      el.style.top    = `${vv.offsetTop}px`;
+    };
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
 
   useEffect(() => {
     const fn = (e) => {
       const inText = e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT";
-      if (e.key === "Escape")                    onClose();
-      if (e.key === "ArrowLeft"  && !inText)     onNav(-1);
-      if (e.key === "ArrowRight" && !inText)     onNav(1);
-      if (e.key === " "          && !inText)     { e.preventDefault(); onToggle(); }
+      if (e.key === "Escape")                onClose();
+      if (e.key === "ArrowLeft"  && !inText) stageRef.current?.prev();
+      if (e.key === "ArrowRight" && !inText) stageRef.current?.next();
+      if (e.key === " "          && !inText) { e.preventDefault(); onToggle(); }
     };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
-  }, [onClose, onNav, onToggle]);
+  }, [onClose, onToggle]);
 
   if (!photo) return null;
 
   return (
     <motion.div
+      ref={rootRef}
+      className="pk-lb"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Photo viewer"
+      tabIndex={-1}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{   opacity: 0 }}
       transition={{ duration: 0.25 }}
-      style={{
-        position:       "fixed",
-        inset:           0,
-        zIndex:          200,
-        background:     "rgba(14,12,11,0.94)",
-        backdropFilter: "blur(8px)",
-        display:        "flex",
-        flexDirection:  "column",
-      }}
-      onClick={onClose}
     >
+      <motion.div className="pk-lb-bg" style={{ opacity: backdrop }} />
+
       {/* Top bar */}
-      <div
-        style={{
-          display:        "flex",
-          alignItems:     "center",
-          justifyContent: "space-between",
-          padding:        "16px 20px",
-          borderBottom:   "0.5px solid rgba(255,252,242,0.08)",
-          flexShrink:      0,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span
-          style={{
-            fontFamily:    "var(--font-body)",
-            fontSize:       "10px",
-            letterSpacing:  "2px",
-            textTransform:  "uppercase",
-            color:          "rgba(255,252,242,0.3)",
-          }}
-        >
-          {index + 1} / {photos.length}
-        </span>
-        <button
-          onClick={onClose}
-          style={{
-            background: "none", border: "none",
-            color: "rgba(255,252,242,0.5)", cursor: "pointer",
-            display: "flex", alignItems: "center", gap: 6,
-            fontFamily: "var(--font-body)", fontSize: "10px",
-            letterSpacing: "2px", textTransform: "uppercase",
-            transition: "color 0.2s",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.9)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.5)")}
-        >
-          <X size={14} strokeWidth={1.5} /> Close
+      <motion.div className="pk-lb-top" style={{ opacity: backdrop }}>
+        <span className="pk-lb-count" aria-live="polite">{index + 1} / {photos.length}</span>
+        <button type="button" className="pk-lb-close" onClick={onClose}>
+          <X size={16} strokeWidth={1.5} /> Close
         </button>
-      </div>
+      </motion.div>
 
-      {/* Image area */}
-      <div
-        style={{
-          flex: 1, display: "flex", alignItems: "center",
-          justifyContent: "center", position: "relative",
-          padding: "20px 60px", overflow: "hidden",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={photo.id}
-            src={getPickPhotoUrl(photo.storage_path)}
-            alt=""
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{   opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              maxWidth: "100%", maxHeight: "100%",
-              objectFit: "contain",
-              boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
-            }}
-          />
-        </AnimatePresence>
-
-        {/* Nav arrows */}
+      {/* Photo — swipe to browse, pinch / double-tap to zoom, swipe down to close */}
+      <div className="pk-lb-stage">
+        <LightboxStage
+          ref={stageRef}
+          items={photos}
+          index={index}
+          onIndexChange={onIndexChange}
+          getSrc={getPickSrc}
+          getKey={getPickKey}
+          getAlt={getPickAlt}
+          onClose={onClose}
+          backdropOpacity={backdrop}
+        />
         {index > 0 && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onNav(-1); }}
-            style={arrowStyle("left")}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--off-white)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.4)")}
-          >
+          <button type="button" className="pk-lb-arrow pk-lb-arrow-prev" onClick={() => stageRef.current?.prev()} aria-label="Previous photo">
             <ChevronLeft size={28} strokeWidth={1.5} />
           </button>
         )}
         {index < photos.length - 1 && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onNav(1); }}
-            style={arrowStyle("right")}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--off-white)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,252,242,0.4)")}
-          >
+          <button type="button" className="pk-lb-arrow pk-lb-arrow-next" onClick={() => stageRef.current?.next()} aria-label="Next photo">
             <ChevronRight size={28} strokeWidth={1.5} />
           </button>
         )}
       </div>
 
-      {/* Bottom panel */}
-      <div
-        style={{
-          borderTop:   "0.5px solid rgba(255,252,242,0.08)",
-          padding:     "16px 24px",
-          background:  "rgba(14,12,11,0.6)",
-          flexShrink:   0,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Label sits above the row so it doesn't affect flex alignment */}
-        <label
-          style={{
-            display:       "block",
-            fontFamily:    "var(--font-body)",
-            fontSize:       "9px",
-            letterSpacing:  "2px",
-            textTransform:  "uppercase",
-            color:          "rgba(255,252,242,0.25)",
-            marginBottom:   7,
-          }}
-        >
-          Add a comment (optional)
-        </label>
-
-        {/* Flex row: textarea + button, same height */}
-        <div style={{ display: "flex", gap: 16, alignItems: "stretch" }}>
-          <textarea
-            value={comment}
-            onChange={(e) => onCommentChange(photoId, e.target.value)}
-            placeholder="Notes for the photographer…"
-            rows={2}
-            style={{
-              flex:        1,
-              height:      "54px",
-              background:  "rgba(255,252,242,0.05)",
-              border:      "0.5px solid rgba(255,252,242,0.15)",
-              padding:     "10px 14px",
-              color:       "rgba(255,252,242,0.85)",
-              fontFamily:  "var(--font-body)",
-              fontSize:     "13px",
-              resize:      "none",
-              outline:     "none",
-              transition:  "border-color 0.2s",
-              boxSizing:   "border-box",
-            }}
-            onFocus={(e)  => (e.target.style.borderColor = "rgba(255,252,242,0.4)")}
-            onBlur={(e)   => (e.target.style.borderColor = "rgba(255,252,242,0.15)")}
-          />
-
-        {/* Select / Deselect */}
-        <button
-          onClick={onToggle}
-          style={{
-            height:        "54px",
-            padding:       "0 24px",
-            background:    isSelected ? "var(--off-white)" : "transparent",
-            color:         isSelected ? "var(--ink)" : "rgba(255,252,242,0.7)",
-            border:        `0.5px solid ${isSelected ? "var(--off-white)" : "rgba(255,252,242,0.3)"}`,
-            fontFamily:    "var(--font-body)",
-            fontSize:       "10px",
-            letterSpacing:  "2.5px",
-            textTransform:  "uppercase",
-            cursor:        "pointer",
-            display:       "flex",
-            alignItems:    "center",
-            gap:            8,
-            transition:    "all 0.2s",
-            flexShrink:     0,
-            minWidth:       140,
-            justifyContent: "center",
-            boxSizing:     "border-box",
-          }}
-          onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(255,252,242,0.7)"; e.currentTarget.style.color = "var(--off-white)"; }}}
-          onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "rgba(255,252,242,0.3)"; e.currentTarget.style.color = "rgba(255,252,242,0.7)"; }}}
-        >
-          {isSelected ? <><Check size={12} strokeWidth={2.5} /> Selected</> : "Select Photo"}
-        </button>
-        </div>{/* end inner flex row */}
-      </div>{/* end bottom panel */}
+      {/* Bottom panel — notes belong to a selection, so the field appears once selected */}
+      <motion.div className="pk-lb-panel" style={{ opacity: backdrop }}>
+        {isSelected && (
+          <label className="pk-lb-label" htmlFor="pk-note">Note for the photographer (optional)</label>
+        )}
+        {blocked && (
+          <p className="pk-lb-label" data-tone="limit">
+            You&rsquo;ve chosen {maxSelections} — deselect one to pick this photo
+          </p>
+        )}
+        <div className="pk-lb-row">
+          {isSelected && (
+            <textarea
+              id="pk-note"
+              className="pk-note"
+              value={comment}
+              onChange={(e) => onCommentChange(photoId, e.target.value)}
+              placeholder="Notes for the photographer…"
+              rows={2}
+            />
+          )}
+          <button
+            type="button"
+            className="pk-lb-select"
+            data-selected={isSelected ? "true" : undefined}
+            aria-pressed={isSelected}
+            disabled={blocked}
+            onClick={onToggle}
+          >
+            {isSelected ? <><Check size={12} strokeWidth={2.5} /> Selected</> : blocked ? "Limit reached" : "Select Photo"}
+          </button>
+        </div>
+      </motion.div>
     </motion.div>
   );
 }
 
-const arrowStyle = (side) => ({
-  position:   "absolute",
-  [side]:      0,
-  top:        "50%",
-  transform:  "translateY(-50%)",
-  background: "none",
-  border:     "none",
-  color:      "rgba(255,252,242,0.4)",
-  cursor:     "pointer",
-  padding:    "16px",
-  transition: "color 0.2s",
-  display:    "flex",
-});
-
 // ─── Sticky footer bar ────────────────────────────────────────────────────────
-function FooterBar({ count, maxSelections, onSubmit, submitting, submitted }) {
-  const over = maxSelections > 0 && count > maxSelections;
+function FooterBar({ count, maxSelections, onSubmit, submitting, submitted, limitHit }) {
+  const over   = maxSelections > 0 && count > maxSelections;
+  const active = count > 0 && !submitting && !over;
 
   return (
-    <motion.div
-      initial={{ y: 80 }}
-      animate={{ y: 0 }}
-      style={{
-        position:       "fixed",
-        bottom: 0, left: 0, right: 0,
-        zIndex:          100,
-        background:     "rgba(237,232,220,0.95)",
-        backdropFilter: "blur(18px)",
-        borderTop:      "0.5px solid var(--border)",
-        padding:        "14px clamp(20px, 5vw, 48px)",
-        display:        "flex",
-        alignItems:     "center",
-        justifyContent: "space-between",
-        gap:             12,
-      }}
-    >
-      <p
-        style={{
-          fontFamily:    "var(--font-body)",
-          fontSize:       "11px",
-          letterSpacing:  "1.5px",
-          textTransform:  "uppercase",
-          color:          over ? "#c0392b" : "var(--ink-muted)",
-          margin:          0,
-        }}
-      >
-        {count} photo{count !== 1 ? "s" : ""} selected
-        {maxSelections > 0 && (
-          <span style={{ color: over ? "#c0392b" : "var(--ink-faint)" }}>
-            {" "}/ {maxSelections} max
-          </span>
+    <motion.div className="pk-footer" initial={{ y: 80 }} animate={{ y: 0 }}>
+      <div className="pk-footer-count" aria-live="polite">
+        {limitHit ? (
+          <span className="pk-footer-limit">Limit of {maxSelections} reached — deselect one first</span>
+        ) : (
+          <>
+            <span className="pk-footer-num" data-over={over ? "true" : undefined}>
+              {count}
+              {maxSelections > 0 && <span className="pk-footer-max"> / {maxSelections}</span>}
+            </span>
+            <span className="pk-footer-label">
+              {count === 1 ? "photo" : "photos"} selected{submitted ? " · ✓ Sent" : ""}
+            </span>
+          </>
         )}
-      </p>
-
-      <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        {submitted && (
-          <span
-            style={{
-              fontFamily:    "var(--font-body)",
-              fontSize:       "10px",
-              letterSpacing:  "1.5px",
-              textTransform:  "uppercase",
-              color:          "var(--ink-muted)",
-            }}
-          >
-            ✓ Sent
-          </span>
-        )}
-        <button
-          onClick={onSubmit}
-          disabled={count === 0 || submitting || over}
-          style={{
-            padding:        "11px 24px",
-            background:     count === 0 || over ? "transparent" : "var(--ink)",
-            color:          count === 0 || over ? "var(--ink-faint)" : "var(--off-white)",
-            border:         `0.5px solid ${count === 0 || over ? "var(--border)" : "var(--ink)"}`,
-            fontFamily:     "var(--font-body)",
-            fontSize:        "10px",
-            letterSpacing:   "2.5px",
-            textTransform:   "uppercase",
-            cursor:         count === 0 || over ? "not-allowed" : "pointer",
-            transition:     "all 0.2s",
-          }}
-          onMouseEnter={(e) => { if (count > 0 && !over) e.currentTarget.style.background = "rgba(14,12,11,0.75)"; }}
-          onMouseLeave={(e) => { if (count > 0 && !over) e.currentTarget.style.background = "var(--ink)"; }}
-        >
-          {submitting ? "Sending…" : "Send to Photographer"}
-        </button>
       </div>
+
+      <button className="pk-send" onClick={onSubmit} disabled={!active} data-active={active ? "true" : undefined}>
+        {submitting ? "Sending…" : (
+          <>
+            <span className="pk-send-long">Send to Photographer</span>
+            <span className="pk-send-short">Send picks</span>
+          </>
+        )}
+      </button>
     </motion.div>
   );
 }
@@ -577,44 +368,57 @@ export default function ClientPicks() {
   const { gallery, photos, selections: initialSelections, submittedAt, loading, error } = usePickGallery(galleryId);
 
   // selections: Map<photoId, comment>
-  const [selections, setSelections] = useState(new Map());
-  const [lbIndex, setLbIndex]       = useState(null); // null = closed
-  const [submitting, setSubmitting]   = useState(false);
-  const [submitted, setSubmitted]     = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
+  const [selections, setSelections]     = useState(new Map());
+  const [hydratedFrom, setHydratedFrom] = useState(null);
+  const [lbIndex, setLbIndex]           = useState(null); // null = closed
+  const [submitting, setSubmitting]     = useState(false);
+  const [submittedNow, setSubmittedNow] = useState(false);
+  const [showSuccess, setShowSuccess]   = useState(false);
+  const [submitError, setSubmitError]   = useState(null);
+  const [limitHit, setLimitHit]         = useState(false);
+  const selectionsRef = useRef(selections);
+  const limitTimer    = useRef(0);
+  const lastViewed    = useRef(null);
 
-  // Hydrate selections from DB on load
-  useEffect(() => {
-    if (initialSelections.length > 0) {
-      const map = new Map(initialSelections.map(s => [s.photo_id, s.comment || ""]));
-      setSelections(map);
-    }
-    if (submittedAt) setSubmitted(true);
-  }, [initialSelections, submittedAt]);
+  const max       = gallery?.max_selections || 0;
+  const submitted = submittedNow || Boolean(submittedAt);
 
-  // Lock body scroll when lightbox open
+  // Hydrate selections from the DB once they arrive
+  if (!loading && initialSelections !== hydratedFrom) {
+    setHydratedFrom(initialSelections);
+    setSelections(new Map(initialSelections.map((s) => [s.photo_id, s.comment || ""])));
+  }
+
+  useEffect(() => { selectionsRef.current = selections; });
+  useEffect(() => () => clearTimeout(limitTimer.current), []);
+
+  // No film grain over client photos on this page
   useEffect(() => {
-    document.body.style.overflow = lbIndex !== null ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [lbIndex]);
+    document.body.classList.add("client-view");
+    return () => document.body.classList.remove("client-view");
+  }, []);
+
+  const flashLimit = useCallback(() => {
+    setLimitHit(true);
+    clearTimeout(limitTimer.current);
+    limitTimer.current = setTimeout(() => setLimitHit(false), 2600);
+  }, []);
 
   const toggleSelection = useCallback((photoId) => {
-    setSelections(prev => {
+    const current = selectionsRef.current;
+    if (!current.has(photoId) && max > 0 && current.size >= max) { flashLimit(); return; }
+    setSelections((prev) => {
       const next = new Map(prev);
-      const max  = gallery?.max_selections || 0;
-      if (next.has(photoId)) {
-        next.delete(photoId);
-      } else {
-        if (max > 0 && next.size >= max) return prev; // at limit
-        next.set(photoId, "");
-      }
+      if (next.has(photoId)) next.delete(photoId);
+      else if (max > 0 && next.size >= max) return prev; // at limit
+      else next.set(photoId, "");
       return next;
     });
-  }, [gallery]);
+  }, [max, flashLimit]);
 
+  // Notes only attach to selected photos (so typing can't bypass the limit)
   const setComment = useCallback((photoId, comment) => {
-    setSelections(prev => {
+    setSelections((prev) => {
       if (!prev.has(photoId)) return prev;
       const next = new Map(prev);
       next.set(photoId, comment);
@@ -622,28 +426,44 @@ export default function ClientPicks() {
     });
   }, []);
 
+  const openLightbox = useCallback((index) => {
+    lastViewed.current = index;
+    setLbIndex(index);
+  }, []);
+
+  const changeLightboxIndex = useCallback((index) => {
+    lastViewed.current = index;
+    setLbIndex(index);
+  }, []);
+
+  const closeLightbox = useCallback(() => setLbIndex(null), []);
+  const hideSuccess   = useCallback(() => setShowSuccess(false), []);
+
   const handleLbToggle = useCallback(() => {
     if (lbIndex === null) return;
     toggleSelection(photos[lbIndex]?.id);
   }, [lbIndex, photos, toggleSelection]);
 
-  const handleLbCommentChange = useCallback((photoId, comment) => {
-    setSelections(prev => {
-      const next = new Map(prev);
-      // Allow writing comment even if not yet selected (pending)
-      next.set(photoId, comment);
-      return next;
-    });
+  // After closing, bring the last photo viewed into view (it may be far from where the viewer opened)
+  const revealLastViewed = useCallback(() => {
+    const i = lastViewed.current;
+    if (i === null) return;
+    let frames = 0;
+    const tick = () => {
+      if (document.body.style.position === "fixed" && frames++ < 10) { requestAnimationFrame(tick); return; }
+      const el = document.querySelector(`[data-pick-index="${i}"]`);
+      if (el && !isInViewport(el, 90)) scrollIntoViewInstant(el, "center");
+    };
+    requestAnimationFrame(tick);
   }, []);
 
   const handleSubmit = async () => {
     setSubmitting(true);
     setSubmitError(null);
-    // Only submit photos that are actually in selections Map AND have been marked (not just typed a comment)
-    const { error } = await submitPickSelections(galleryId, selections);
+    const { error: err } = await submitPickSelections(galleryId, selections);
     setSubmitting(false);
-    if (error) { setSubmitError(error); return; }
-    setSubmitted(true);
+    if (err) { setSubmitError(err); return; }
+    setSubmittedNow(true);
     setShowSuccess(true);
   };
 
@@ -673,15 +493,13 @@ export default function ClientPicks() {
   }
 
   const selCount = selections.size;
-  const max = gallery.max_selections || 0;
+  const howTo = IS_TOUCH
+    ? "Tap ○ to select · Tap a photo to view & add a note · Send when done"
+    : "Click ○ to select · Click a photo to view & add a note · Send when done";
 
   return (
     <>
-      <PicksNavbar
-        galleryName={gallery.name}
-        selectionCount={selCount}
-        maxSelections={max}
-      />
+      <PicksNavbar selectionCount={selCount} maxSelections={max} />
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -694,8 +512,8 @@ export default function ClientPicks() {
         <div
           style={{
             background:    "var(--ink)",
-            padding:       "clamp(100px, 14vh, 140px) clamp(24px, 6vw, 80px) clamp(48px, 7vh, 80px)",
-            minHeight:      "50svh",
+            padding:       "clamp(100px, 14vh, 140px) clamp(24px, 6vw, 80px) clamp(40px, 7vh, 80px)",
+            minHeight:      "clamp(360px, 50svh, 640px)",
             display:       "flex",
             flexDirection: "column",
             justifyContent: "flex-end",
@@ -711,7 +529,7 @@ export default function ClientPicks() {
                 fontSize:       "10px",
                 letterSpacing:  "3px",
                 textTransform:  "uppercase",
-                color:          "rgba(255,252,242,0.3)",
+                color:          "rgba(255,252,242,0.45)",
                 marginBottom:   "clamp(12px, 2vh, 20px)",
               }}
             >
@@ -733,6 +551,7 @@ export default function ClientPicks() {
               color:                  "var(--off-white)",
               fontVariationSettings:  "'opsz' 144",
               margin:                 0,
+              overflowWrap:          "anywhere",
             }}
           >
             {gallery.name}
@@ -748,7 +567,7 @@ export default function ClientPicks() {
               fontWeight:    300,
               fontSize:      "clamp(20px, 2.8vw, 36px)",
               letterSpacing: "-0.01em",
-              color:         "rgba(255,252,242,0.35)",
+              color:         "rgba(255,252,242,0.45)",
               margin:        "8px 0 0",
             }}
           >
@@ -761,7 +580,7 @@ export default function ClientPicks() {
             transition={{ delay: 0.45 }}
             style={{
               display:    "flex",
-              gap:         24,
+              gap:        "10px 24px",
               marginTop:  "clamp(24px, 4vh, 40px)",
               flexWrap:   "wrap",
               alignItems: "center",
@@ -769,7 +588,7 @@ export default function ClientPicks() {
           >
             <span style={tagStyle}>{photos.length} photos</span>
             {max > 0 && <span style={tagStyle}>Choose up to {max}</span>}
-            <span style={tagStyle}>Click a photo to select · Add a comment · Send when done</span>
+            <span style={{ ...tagStyle, lineHeight: 1.6 }}>{howTo}</span>
           </motion.div>
 
           {submitted && (
@@ -799,7 +618,7 @@ export default function ClientPicks() {
         <div
           style={{
             background: "var(--bg)",
-            padding:    "clamp(28px, 4vh, 48px) clamp(16px, 4vw, 40px) 120px",
+            padding:    "clamp(16px, 4vh, 48px) clamp(4px, 4vw, 40px) calc(env(safe-area-inset-bottom, 0px) + 120px)",
           }}
         >
           {photos.length === 0 ? (
@@ -827,20 +646,15 @@ export default function ClientPicks() {
                 </motion.div>
               )}
 
-              <div
-                style={{
-                  display:               "grid",
-                  gridTemplateColumns:   "repeat(auto-fill, minmax(260px, 1fr))",
-                  gap:                   "8px",
-                }}
-              >
+              <div className="pk-grid">
                 {photos.map((photo, i) => (
                   <PhotoCard
                     key={photo.id}
                     photo={photo}
                     index={i}
                     isSelected={selections.has(photo.id)}
-                    onClick={() => setLbIndex(i)}
+                    onOpen={openLightbox}
+                    onToggle={toggleSelection}
                   />
                 ))}
               </div>
@@ -850,16 +664,19 @@ export default function ClientPicks() {
       </motion.div>
 
       {/* Lightbox */}
-      <AnimatePresence>
+      <AnimatePresence onExitComplete={revealLastViewed}>
         {lbIndex !== null && (
           <Lightbox
+            key="lightbox"
             photos={photos}
             index={lbIndex}
             selections={selections}
-            onClose={() => setLbIndex(null)}
-            onNav={(dir) => setLbIndex(i => Math.max(0, Math.min(photos.length - 1, i + dir)))}
+            atLimit={max > 0 && selCount >= max}
+            maxSelections={max}
+            onClose={closeLightbox}
+            onIndexChange={changeLightboxIndex}
             onToggle={handleLbToggle}
-            onCommentChange={handleLbCommentChange}
+            onCommentChange={setComment}
           />
         )}
       </AnimatePresence>
@@ -867,7 +684,7 @@ export default function ClientPicks() {
       {/* Success toast */}
       <AnimatePresence>
         {showSuccess && (
-          <SuccessToast onDone={() => setShowSuccess(false)} />
+          <SuccessToast onDone={hideSuccess} />
         )}
       </AnimatePresence>
 
@@ -878,15 +695,8 @@ export default function ClientPicks() {
         onSubmit={handleSubmit}
         submitting={submitting}
         submitted={submitted}
+        limitHit={limitHit}
       />
-
-      {/* Shimmer keyframe */}
-      <style>{`
-        @keyframes shimmer {
-          0%   { background-position: -200% 0; }
-          100% { background-position:  200% 0; }
-        }
-      `}</style>
     </>
   );
 }
@@ -896,5 +706,5 @@ const tagStyle = {
   fontSize:       "10px",
   letterSpacing:  "2px",
   textTransform:  "uppercase",
-  color:          "rgba(255,252,242,0.2)",
+  color:          "rgba(255,252,242,0.5)",
 };

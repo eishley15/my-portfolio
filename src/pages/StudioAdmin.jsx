@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Copy, ExternalLink, Trash2, Eye, Plus, X, Check, Settings, ToggleLeft, ToggleRight, RefreshCw, ChevronUp, ChevronDown, Heart, Download, Music2, MessageSquare, Home, CheckCircle, XCircle } from "lucide-react";
+import { Copy, ExternalLink, Trash2, Eye, Plus, X, Check, Settings, ToggleLeft, ToggleRight, RefreshCw, ChevronUp, ChevronDown, Heart, Download, Music2, MessageSquare, Home, CheckCircle, XCircle, Share2 } from "lucide-react";
 import {
   useAllPickGalleries,
   createPickGallery,
@@ -12,6 +12,7 @@ import {
 import { supabase } from "../lib/supabase";
 import { studioLogin, isStudioLoggedIn, clearStudioToken, studioAuthHeaders } from "../lib/studioAuth";
 import ThumbnailPicker from "../components/ThumbnailPicker";
+import SharePanel from "../components/studio/SharePanel";
 import { useNavThumbnails, saveNavThumbnails } from "../hooks/useNavThumbnails";
 import { useCategories, setCategoryThumbnail } from "../hooks/usePortfolio";
 
@@ -1702,7 +1703,7 @@ function CGEditModal({ gallery, onClose, onSaved }) {
 }
 
 // ─── Client: Gallery row ──────────────────────────────────────────────────────
-function CGRow({ g, onEdit, onToggleActive, onViewFavorites }) {
+function CGRow({ g, onEdit, onToggleActive, onViewFavorites, onShare }) {
   const [copied, setCopied] = useState(false);
   const status = galleryStatus(g);
   const galleryUrl = `${window.location.origin}/gallery`;
@@ -1743,6 +1744,11 @@ function CGRow({ g, onEdit, onToggleActive, onViewFavorites }) {
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(14,12,11,0.2)"; e.currentTarget.style.color = "var(--ink-muted)"; }}>
           <ExternalLink size={11} /> Preview
         </a>
+        <button onClick={() => onShare(g)} style={{ ...ghostBtn, display: "flex", alignItems: "center", gap: 5 }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--ink)"; e.currentTarget.style.color = "var(--ink)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(14,12,11,0.2)"; e.currentTarget.style.color = "var(--ink-muted)"; }}>
+          <Share2 size={11} /> Share
+        </button>
         <button onClick={() => onViewFavorites(g)} style={{ ...ghostBtn, display: "flex", alignItems: "center", gap: 5 }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--ink)"; e.currentTarget.style.color = "var(--ink)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(14,12,11,0.2)"; e.currentTarget.style.color = "var(--ink-muted)"; }}>
@@ -1770,6 +1776,7 @@ function ClientGalleriesTab() {
   const [loading, setLoading]       = useState(true);
   const [editTarget, setEditTarget] = useState(null);
   const [favGallery, setFavGallery] = useState(null);
+  const [shareGallery, setShareGallery] = useState(null);
   const [fetchError, setFetchError] = useState("");
 
   const fetchGalleries = useCallback(async () => {
@@ -1842,7 +1849,7 @@ function ClientGalleriesTab() {
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {galleries.map((g) => <CGRow key={g.access_code} g={g} onEdit={setEditTarget} onToggleActive={handleToggleActive} onViewFavorites={setFavGallery} />)}
+          {galleries.map((g) => <CGRow key={g.access_code} g={g} onEdit={setEditTarget} onToggleActive={handleToggleActive} onViewFavorites={setFavGallery} onShare={setShareGallery} />)}
         </div>
       )}
 
@@ -1857,6 +1864,17 @@ function ClientGalleriesTab() {
               style={{ position: "fixed", inset: 0, zIndex: 199, background: "var(--ink)", cursor: "pointer" }}
               onClick={() => setFavGallery(null)} />
             <CGFavoritesPanel gallery={favGallery} onClose={() => setFavGallery(null)} />
+          </>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {shareGallery && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} exit={{ opacity: 0 }}
+              style={{ position: "fixed", inset: 0, zIndex: 199, background: "var(--ink)", cursor: "pointer" }}
+              onClick={() => setShareGallery(null)} />
+            <SharePanel gallery={shareGallery} onClose={() => setShareGallery(null)} />
           </>
         )}
       </AnimatePresence>

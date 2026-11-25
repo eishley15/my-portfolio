@@ -76,3 +76,6 @@ e2e/
 playwright-report/
 
 *.mjs
+# Tests (local only)
+tests/
+test-results/

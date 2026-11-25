@@ -1,22 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
+import { getSupabase } from './_lib/supabase.js';
+import { resolveGallerySession, downloadDenial } from './_lib/gallerySession.js';
 
-const supabaseUrl         = process.env.SUPABASE_URL;
-const supabaseServiceKey  = process.env.SUPABASE_SERVICE_KEY;
-const downloadTokenSecret = process.env.DOWNLOAD_TOKEN_SECRET;
-const trueNasZipBaseUrl   = process.env.TRUENAS_ZIP_BASE || 'https://cdn.kylepayawal.studio';
-const corsOrigin          = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
-
-function verifyGalleryToken(req) {
-  const auth  = req.headers['authorization'] || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  if (!token) return null;
-  try {
-    return jwt.verify(token, downloadTokenSecret);
-  } catch {
-    return null;
-  }
-}
+const corsOrigin = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin',  corsOrigin);
@@ -27,15 +13,17 @@ export default async function handler(req, res) {
   if (req.method !== 'POST')   return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { files } = req.body;
-    const supabase  = createClient(supabaseUrl, supabaseServiceKey);
+    const { files } = req.body || {};
+    const supabase  = getSupabase();
+    const session   = await resolveGallerySession(req, supabase);
 
     let accessCode;
-    const tokenPayload = verifyGalleryToken(req);
 
-    if (tokenPayload) {
-      accessCode = tokenPayload.accessCode;
-    } else if (req.body.accessCode) {
+    if (session) {
+      const denial = downloadDenial(session);
+      if (denial) return res.status(denial.status).json(denial.body);
+      accessCode = session.accessCode;
+    } else if (req.body?.accessCode) {
       // Legacy path
       const { data, error } = await supabase
         .from('clients')
@@ -69,11 +57,12 @@ export default async function handler(req, res) {
 
     const token = jwt.sign(
       { accessCode, files: fileList.length > 0 ? fileList : null },
-      downloadTokenSecret,
+      process.env.DOWNLOAD_TOKEN_SECRET,
       { expiresIn: '30m' }
     );
 
-    let zipUrl = `${trueNasZipBaseUrl}/zip/${accessCode}?token=${token}`;
+    const zipBase = process.env.TRUENAS_ZIP_BASE || 'https://cdn.kylepayawal.studio';
+    let zipUrl = `${zipBase}/zip/${accessCode}?token=${token}`;
     if (fileList.length > 0) {
       zipUrl += `&files=${encodeURIComponent(fileList.join(','))}`;
     }

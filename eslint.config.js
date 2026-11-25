@@ -28,7 +28,7 @@ export default defineConfig([
   },
   // Vercel serverless functions — Node.js environment
   {
-    files: ['api/**/*.js'],
+    files: ['api/**/*.js', 'tests/**/*.js', 'e2e/**/*.js'],
     languageOptions: {
       globals: { ...globals.node },
     },

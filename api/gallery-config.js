@@ -1,20 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { getSupabase } from './_lib/supabase.js';
+import { resolveGallerySession, publicSession } from './_lib/gallerySession.js';
 
-const supabaseUrl        = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const jwtSecret          = process.env.DOWNLOAD_TOKEN_SECRET;
-const corsOrigin         = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
+const corsOrigin = process.env.CORS_ORIGIN || 'https://kylepayawal.studio';
 
-function verifyToken(req) {
-  const auth  = req.headers['authorization'] || '';
-  const token = auth.startsWith('Bearer ') ? auth.slice(7) : null;
-  if (!token) return null;
-  try {
-    return jwt.verify(token, jwtSecret);
-  } catch {
-    return null;
-  }
+// Fields a share-link visitor must not receive: the access code would let a
+// limited-role guest sign in as the owner, and the email is personal data.
+const SHARE_HIDDEN_CONFIG_FIELDS = ['access_code', 'email'];
+
+function stripForShare(rows) {
+  return (rows || []).map((row) => {
+    const rest = { ...row };
+    delete rest.client_code;
+    return rest;
+  });
 }
 
 export default async function handler(req, res) {
@@ -25,13 +23,12 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET')    return res.status(405).json({ error: 'Method not allowed' });
 
-  const payload = verifyToken(req);
-  if (!payload) return res.status(401).json({ error: 'Unauthorized' });
-
-  const { accessCode } = payload;
-
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = getSupabase();
+    const session  = await resolveGallerySession(req, supabase);
+    if (!session) return res.status(401).json({ error: 'Unauthorized' });
+
+    const { accessCode } = session;
 
     const { data: client, error: clientErr } = await supabase
       .from('clients')
@@ -59,10 +56,24 @@ export default async function handler(req, res) {
         .order('order_index', { ascending: true }),
     ]);
 
+    if (!session.isShare) {
+      return res.status(200).json({
+        config:  client,
+        scenes:  scenes || [],
+        files:   files  || [],
+        session: publicSession(session),
+      });
+    }
+
+    const config = Object.fromEntries(
+      Object.entries(client).filter(([k]) => !SHARE_HIDDEN_CONFIG_FIELDS.includes(k)),
+    );
+
     return res.status(200).json({
-      config: client,
-      scenes: scenes || [],
-      files:  files  || [],
+      config,
+      scenes:  stripForShare(scenes),
+      files:   stripForShare(files),
+      session: publicSession(session),
     });
 
   } catch (err) {

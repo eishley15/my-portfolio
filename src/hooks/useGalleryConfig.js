@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { authHeaders, clearToken } from '../lib/galleryAuth';
 
 export function useGalleryConfig() {
@@ -8,6 +8,8 @@ export function useGalleryConfig() {
   const [loading, setLoading] = useState(true);
   const [expired, setExpired] = useState(false);
   const [error,   setError]   = useState(null);
+  // What this visitor may do. Missing (older API) means full owner access.
+  const [session, setSession] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -24,6 +26,7 @@ export function useGalleryConfig() {
       setConfig(data.config);
       setScenes(data.scenes || []);
       setFiles(data.files   || []);
+      setSession(data.session || null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -33,8 +36,9 @@ export function useGalleryConfig() {
 
   useEffect(() => { load(); }, [load]);
 
-  const photos = files.filter((f) => f.type === 'photo');
-  const videos = files.filter((f) => f.type === 'video');
+  // Memoised so downstream grids/lightbox lists keep stable identities
+  const photos = useMemo(() => files.filter((f) => f.type === 'photo'), [files]);
+  const videos = useMemo(() => files.filter((f) => f.type === 'video'), [files]);
 
-  return { config, scenes, files, photos, videos, loading, expired, error, refetch: load };
+  return { config, scenes, files, photos, videos, loading, expired, error, session, refetch: load };
 }
